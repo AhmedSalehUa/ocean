@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../core/utils/app_log.dart';
 import '../../data/models/vendor_po.dart';
 import '../../data/repositories/delivery_repository.dart';
 import '../dashboard/master_pos_provider.dart';
@@ -30,7 +31,8 @@ class VendorListProvider extends ChangeNotifier {
       _items = r.vendors;
       _masterPoNumber = r.masterPoNumber;
       _state = LoadState.ready;
-    } catch (e) {
+    } catch (e, st) {
+      AppLog.error('VendorListProvider.load', e, st);
       _error = e.toString();
       _state = LoadState.error;
     }

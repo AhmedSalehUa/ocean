@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/colors.dart';
 import '../../core/theme/typography.dart';
+import '../../core/utils/app_log.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/captured_photo.dart';
@@ -53,7 +54,8 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen> {
         _gpsBusy = false;
         if (fix == null) _gpsError = AppL10n.of(context).gpsBlocked;
       });
-    } catch (e) {
+    } catch (e, st) {
+      AppLog.error('ShipmentCaptureScreen._acquireGps', e, st);
       setState(() {
         _gpsBusy = false;
         _gpsError = e.toString();

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../../core/errors/api_exception.dart';
+import '../../core/utils/app_log.dart';
 import '../../data/models/proof_log.dart';
 import '../../data/models/vendor_po.dart';
 import '../../data/repositories/delivery_repository.dart';
@@ -36,7 +37,8 @@ class VendorDetailProvider extends ChangeNotifier {
       final v = await _repo.vendor(vendorPoId);
       _vendor = v;
       _state = LoadState.ready;
-    } catch (e) {
+    } catch (e, st) {
+      AppLog.error('VendorDetailProvider.load', e, st);
       _error = _readableError(e);
       _state = LoadState.error;
     }
@@ -48,7 +50,8 @@ class VendorDetailProvider extends ChangeNotifier {
     try {
       _proofs = await _repo.proofs(_vendorPoId!);
       notifyListeners();
-    } catch (e) {
+    } catch (e, st) {
+      AppLog.error('VendorDetailProvider.loadProofs', e, st);
       _error = _readableError(e);
       notifyListeners();
     }
@@ -122,7 +125,8 @@ class VendorDetailProvider extends ChangeNotifier {
       _busy = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      AppLog.error('VendorDetailProvider._wrap', e, st);
       _busy = false;
       _error = _readableError(e);
       notifyListeners();

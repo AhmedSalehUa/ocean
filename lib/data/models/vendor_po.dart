@@ -81,6 +81,8 @@ class VendorPo {
   factory VendorPo.fromJson(Map<String, dynamic> json) {
     int _asInt(dynamic v) =>
         v is int ? v : (v is String ? int.tryParse(v) ?? 0 : (v as num?)?.toInt() ?? 0);
+    num _asNum(dynamic v) =>
+        v is num ? v : (v is String ? num.tryParse(v) ?? 0 : 0);
     DateTime? _date(dynamic v) => v == null ? null : DateTime.tryParse(v.toString());
 
     final itemsRaw = (json['items'] as List?) ?? const [];
@@ -92,7 +94,7 @@ class VendorPo {
       masterPoNumber: (json['master_po_number'] as String?) ?? '',
       supplierName: json['supplier_name'] as String,
       status: PoStatusX.parse(json['status'] as String?),
-      totalAmount: (json['total_amount'] as num?) ?? 0,
+      totalAmount: _asNum(json['total_amount']),
       currency: json['currency'] as String? ?? 'USD',
       vendorRef: json['vendor_ref'] as String?,
       operationDate: _date(json['operation_date']),

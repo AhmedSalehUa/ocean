@@ -57,7 +57,18 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
               v != null ? context.push(Routes.proofsPath(v.id)) : null,
         ),
       ),
-      body: p.state == LoadState.loading || v == null
+      body: p.state == LoadState.error && v == null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  p.error ?? 'Failed to load',
+                  textAlign: TextAlign.center,
+                  style: AppType.bodyLg,
+                ),
+              ),
+            )
+          : p.state == LoadState.loading || v == null
           ? const Center(child: CircularProgressIndicator(color: AppColors.accentInk))
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 120),

@@ -38,16 +38,20 @@ class VendorPoItem {
         status: status ?? this.status,
       );
 
-  factory VendorPoItem.fromJson(Map<String, dynamic> json) => VendorPoItem(
-        id: json['id'] as String,
-        vendorPoId: json['vendor_po_id'] as String,
-        itemCode: json['item_code'] as String,
-        itemName: json['item_name'] as String,
-        serial: json['serial'] as String?,
-        quantity: json['quantity'] as num,
-        unit: json['unit'] as String,
-        unitPrice: json['unit_price'] as num,
-        totalPrice: json['total_price'] as num,
-        status: ItemStatusX.parse(json['status'] as String?),
-      );
+  factory VendorPoItem.fromJson(Map<String, dynamic> json) {
+    num _asNum(dynamic v) =>
+        v is num ? v : (v is String ? num.tryParse(v) ?? 0 : 0);
+    return VendorPoItem(
+      id: json['id'] as String,
+      vendorPoId: json['vendor_po_id'] as String,
+      itemCode: json['item_code'] as String,
+      itemName: json['item_name'] as String,
+      serial: json['serial']?.toString(),
+      quantity: _asNum(json['quantity']),
+      unit: json['unit'] as String,
+      unitPrice: _asNum(json['unit_price']),
+      totalPrice: _asNum(json['total_price']),
+      status: ItemStatusX.parse(json['status'] as String?),
+    );
+  }
 }

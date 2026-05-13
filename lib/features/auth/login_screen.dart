@@ -20,7 +20,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _username = TextEditingController(text: 'rep1');
+  final _username = TextEditingController(text: 'rep_one');
   final _password = TextEditingController(text: 'Rep@123');
   bool _obscure = true;
 

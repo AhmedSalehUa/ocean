@@ -3,7 +3,7 @@ import 'enums.dart';
 class MasterPo {
   final String id;
   final String masterPoNumber;
-  final DateTime operationDate;
+  final DateTime? operationDate;
   final MasterStatus status;
   final DateTime createdAt;
   final int vendorPoCount;
@@ -19,7 +19,7 @@ class MasterPo {
   const MasterPo({
     required this.id,
     required this.masterPoNumber,
-    required this.operationDate,
+    this.operationDate,
     required this.status,
     required this.createdAt,
     required this.vendorPoCount,
@@ -56,13 +56,14 @@ class MasterPo {
   factory MasterPo.fromJson(Map<String, dynamic> json) {
     int _asInt(dynamic v) =>
         v is int ? v : (v is String ? int.tryParse(v) ?? 0 : (v as num?)?.toInt() ?? 0);
+    DateTime? _date(dynamic v) => v == null ? null : DateTime.tryParse(v.toString());
 
     return MasterPo(
       id: json['id'] as String,
       masterPoNumber: json['master_po_number'] as String,
-      operationDate: DateTime.parse(json['operation_date'] as String),
+      operationDate: _date(json['operation_date']),
       status: MasterStatusX.parse(json['status'] as String?),
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: _date(json['created_at']) ?? DateTime.now(),
       vendorPoCount: _asInt(json['vendor_po_count']),
       deliveredVendorPoCount: _asInt(json['delivered_vendor_po_count']),
       site: json['site'] as String?,

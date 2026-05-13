@@ -62,10 +62,11 @@ class MasterPoCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      Fmt.relativeDay(master.operationDate, locale: t.locale.languageCode),
-                      style: AppType.caption,
-                    ),
+                    if (master.operationDate != null)
+                      Text(
+                        Fmt.relativeDay(master.operationDate!, locale: t.locale.languageCode),
+                        style: AppType.caption,
+                      ),
                   ],
                 ),
               ),

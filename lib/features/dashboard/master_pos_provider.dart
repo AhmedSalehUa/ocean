@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../core/utils/app_log.dart';
 import '../../data/models/master_po.dart';
 import '../../data/repositories/delivery_repository.dart';
 
@@ -29,7 +30,8 @@ class MasterPosProvider extends ChangeNotifier {
     try {
       _items = await _repo.listMasters();
       _state = LoadState.ready;
-    } catch (e) {
+    } catch (e, st) {
+      AppLog.error('MasterPosProvider.refresh', e, st);
       _error = e.toString();
       _state = LoadState.error;
     }

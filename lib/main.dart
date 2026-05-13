@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/utils/app_log.dart';
 import 'data/api/delivery_api.dart';
 import 'data/api/http_delivery_api.dart';
 import 'data/api/mock_delivery_api.dart';
@@ -21,10 +22,21 @@ import 'services/location_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  FlutterError.onError = (details) {
+    AppLog.error('FlutterError', details.exception, details.stack);
+    FlutterError.presentError(details);
+  };
+  WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+    AppLog.error('PlatformDispatcher', error, stack);
+    return false;
+  };
+
   try {
     await dotenv.load();
-  } catch (_) {
+  } catch (e, st) {
     // .env is optional in production; rely on --dart-define.
+    AppLog.info('dotenv', 'no .env loaded ($e)');
+    AppLog.error('dotenv', e, st);
   }
 
   await initializeDateFormatting();

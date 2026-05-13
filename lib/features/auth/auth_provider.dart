@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/errors/api_exception.dart';
+import '../../core/utils/app_log.dart';
 import '../../data/models/user.dart';
 import '../../data/repositories/auth_repository.dart';
 
@@ -35,12 +36,14 @@ class AuthProvider extends ChangeNotifier {
       _status = AuthStatus.signedIn;
       notifyListeners();
       return true;
-    } on ApiException catch (e) {
+    } on ApiException catch (e, st) {
+      AppLog.error('AuthProvider.signIn (ApiException)', e, st);
       _error = e.message;
       _status = AuthStatus.error;
       notifyListeners();
       return false;
-    } catch (e) {
+    } catch (e, st) {
+      AppLog.error('AuthProvider.signIn', e, st);
       _error = e.toString();
       _status = AuthStatus.error;
       notifyListeners();
@@ -51,6 +54,8 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signOut() async {
     try {
       await _repo.logout();
+    } catch (e, st) {
+      AppLog.error('AuthProvider.signOut', e, st);
     } finally {
       _user = null;
       _status = AuthStatus.signedOut;

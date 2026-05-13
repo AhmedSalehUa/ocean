@@ -12,6 +12,7 @@ import '../models/workflow_step.dart';
 import 'delivery_api.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/envelope_interceptor.dart';
+import 'interceptors/logging_interceptor.dart';
 
 class HttpDeliveryApi implements DeliveryApi {
   HttpDeliveryApi({required this.baseUrl, FlutterSecureStorage? storage})
@@ -23,7 +24,7 @@ class HttpDeliveryApi implements DeliveryApi {
       contentType: 'application/json',
       responseType: ResponseType.json,
     ));
-    _dio.interceptors.addAll([_auth, EnvelopeInterceptor()]);
+    _dio.interceptors.addAll([_auth, LoggingInterceptor(), EnvelopeInterceptor()]);
   }
 
   final String baseUrl;

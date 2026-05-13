@@ -20,7 +20,7 @@ class AppL10n {
   String _t(String en, String ar) => isAr ? ar : en;
 
   // ─── Login & shell ───
-  String get appName => _t('Trail', 'تريل');
+  String get appName => _t('Ocean Delivery', 'أوشن للتوصيل');
   String get tagline => _t('Chain of custody,\nverified at the bay.',
       'سلسلة الحراسة،\nمُتحقَّقة عند الرصيف.');
   String get loginEyebrow => _t('Representative sign-in', 'تسجيل دخول الممثل');
@@ -29,8 +29,8 @@ class AppL10n {
   String get continueAction => _t('Continue', 'متابعة');
   String get verifyingToken => _t('Verifying token…', 'جارٍ التحقق من الرمز…');
   String get jwtFooter => _t('JWT · Role REPRESENTATIVE only', 'JWT · للممثلين فقط');
-  String get copyright => _t('© Trail Procurement · Audit ledger',
-      '© تريل للمشتريات · سجل التدقيق');
+  String get copyright => _t('© Ocean Delivery · Audit ledger',
+      '© أوشن للتوصيل · سجل التدقيق');
 
   // ─── Dashboard ───
   String greeting(String name, String role) =>

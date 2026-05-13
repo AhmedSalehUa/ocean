@@ -1,7 +1,7 @@
 {
   "@@locale": "ar",
 
-  "appName": "تريل",
+  "appName": "أوشن للتوصيل",
   "tagline": "سلسلة الحراسة،\nمُتحقَّقة عند الرصيف.",
   "loginEyebrow": "تسجيل دخول الممثل",
   "username": "اسم المستخدم",
@@ -9,7 +9,7 @@
   "continueAction": "متابعة",
   "verifyingToken": "جارٍ التحقق من الرمز…",
   "jwtFooter": "JWT · للممثلين فقط",
-  "copyright": "© تريل للمشتريات · سجل التدقيق",
+  "copyright": "© أوشن للتوصيل · سجل التدقيق",
 
   "greeting": "مرحباً، {name} · {role}",
   "@greeting": {"placeholders": {"name": {}, "role": {}}},

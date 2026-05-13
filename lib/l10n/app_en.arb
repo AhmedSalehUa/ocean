@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
 
-  "appName": "Trail",
+  "appName": "Ocean Delivery",
   "tagline": "Chain of custody,\nverified at the bay.",
   "loginEyebrow": "Representative sign-in",
   "username": "Username",
@@ -9,7 +9,7 @@
   "continueAction": "Continue",
   "verifyingToken": "Verifying token…",
   "jwtFooter": "JWT · Role REPRESENTATIVE only",
-  "copyright": "© Trail Procurement · Audit ledger",
+  "copyright": "© Ocean Delivery · Audit ledger",
 
   "greeting": "Hi, {name} · {role}",
   "@greeting": {"placeholders": {"name": {}, "role": {}}},

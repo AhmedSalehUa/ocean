@@ -18,7 +18,7 @@ class TrailLogo extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          'Trail',
+          'Ocean',
           style: TextStyle(
             color: color,
             fontWeight: FontWeight.w600,

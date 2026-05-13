@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/typography.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_chip.dart';
 import '../../core/widgets/captured_photo.dart';

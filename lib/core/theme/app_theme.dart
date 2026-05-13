@@ -21,7 +21,7 @@ class AppTheme {
         error: AppColors.danger,
         onError: Colors.white,
       ),
-      textTheme: GoogleFonts.geistTextTheme(base.textTheme).apply(
+      textTheme: GoogleFonts.interTextTheme(base.textTheme).apply(
         bodyColor: AppColors.ink,
         displayColor: AppColors.ink,
       ),

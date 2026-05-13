@@ -17,6 +17,7 @@ import '../../data/models/vendor_po.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
 import '../../services/locale_service.dart';
+import '../dashboard/master_pos_provider.dart';
 import 'vendor_detail_provider.dart';
 
 class VendorDetailScreen extends StatefulWidget {

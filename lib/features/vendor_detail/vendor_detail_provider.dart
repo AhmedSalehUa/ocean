@@ -58,8 +58,10 @@ class VendorDetailProvider extends ChangeNotifier {
   }
 
   Future<bool> startVendor() => _wrap(() async {
-        final updated = await _repo.start(_vendorPoId!);
-        _vendor = updated;
+        await _repo.start(_vendorPoId!);
+        // The /start response is thin (no items/steps). Refetch full detail
+        // so the next screen has items and a populated current step.
+        _vendor = await _repo.vendor(_vendorPoId!);
       });
 
   Future<bool> uploadShipmentPhoto({

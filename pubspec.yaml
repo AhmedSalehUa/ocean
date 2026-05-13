@@ -1,0 +1,55 @@
+name: trail
+description: Trail — PO Verification mobile app for delivery REPRESENTATIVE role.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.24.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State / DI
+  provider: ^6.1.2
+
+  # Routing
+  go_router: ^14.6.2
+
+  # Networking
+  dio: ^5.7.0
+
+  # Storage
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.3.3
+
+  # Camera + Location
+  image_picker: ^1.1.2
+  geolocator: ^13.0.2
+  permission_handler: ^11.3.1
+
+  # i18n
+  intl: ^0.19.0
+
+  # UI
+  google_fonts: ^6.2.1
+  cached_network_image: ^3.4.1
+  cupertino_icons: ^1.0.8
+
+  # Config
+  flutter_dotenv: ^5.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - .env

@@ -73,7 +73,8 @@ class _VendorListScreenState extends State<VendorListScreen> {
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      AppChip(label: Fmt.relativeDay(master.operationDate, locale: t.locale.languageCode)),
+                      if (master.operationDate != null)
+                        AppChip(label: Fmt.relativeDay(master.operationDate!, locale: t.locale.languageCode)),
                       AppChip(label: t.vendors(master.vendorPoCount)),
                       AppChip(
                         label: t.clearedShort(master.deliveredVendorPoCount, master.vendorPoCount),

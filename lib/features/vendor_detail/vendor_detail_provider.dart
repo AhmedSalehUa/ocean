@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/errors/api_exception.dart';
 import '../../core/utils/app_log.dart';
+import '../../data/models/enums.dart';
 import '../../data/models/proof_log.dart';
 import '../../data/models/vendor_po.dart';
 import '../../data/models/workflow_step.dart';
@@ -128,7 +129,19 @@ class VendorDetailProvider extends ChangeNotifier {
           lat: lat,
           lng: lng,
         );
-        _vendor = await _fetchHydrated(_vendorPoId!);
+        final fresh = await _fetchHydrated(_vendorPoId!);
+        // Backend doesn't always flip the item to DELIVERED on photo upload.
+        // The proof itself is a successful confirmation, so apply the status
+        // locally if the server still reports it as pending/in-progress.
+        final patchedItems = fresh.items.map((i) {
+          if (i.id == itemId && !i.status.isResolved) {
+            AppLog.info('VendorDetailProvider.uploadItemPhoto',
+                'optimistically marking item $itemId as DELIVERED');
+            return i.copyWith(status: ItemStatus.delivered);
+          }
+          return i;
+        }).toList();
+        _vendor = fresh.copyWith(items: patchedItems);
       });
 
   Future<bool> markItemMissing(String itemId) => _wrap(() async {

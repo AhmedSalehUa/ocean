@@ -12,7 +12,7 @@ class ProofLog {
   final String actionType;
   final bool isAutoCompleted;
   final DateTime loggedAt;
-  final Attachment attachment;
+  final Attachment? attachment;
   final ProofKind kind;
 
   const ProofLog({
@@ -27,7 +27,7 @@ class ProofLog {
     required this.actionType,
     this.isAutoCompleted = false,
     required this.loggedAt,
-    required this.attachment,
+    this.attachment,
     required this.kind,
   });
 
@@ -46,7 +46,9 @@ class ProofLog {
       actionType: json['action_type'] as String? ?? 'PHOTO',
       isAutoCompleted: json['is_auto_completed'] as bool? ?? false,
       loggedAt: DateTime.parse(json['logged_at'] as String),
-      attachment: Attachment.fromJson(json['attachment'] as Map<String, dynamic>),
+      attachment: json['attachment'] is Map<String, dynamic>
+          ? Attachment.fromJson(json['attachment'] as Map<String, dynamic>)
+          : null,
       kind: kind,
     );
   }

@@ -123,7 +123,8 @@ class _ProofTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppL10n.of(context);
     final repo = context.read<DeliveryRepository>();
-    final url = repo.attachmentUrl(log.attachment.id);
+    final attachment = log.attachment;
+    final url = attachment == null ? '' : repo.attachmentUrl(attachment.id);
     final isHttp = url.startsWith('http');
 
     return AppCard(
@@ -170,7 +171,8 @@ class _ProofTile extends StatelessWidget {
                   runSpacing: 4,
                   children: [
                     AppChip(label: Fmt.time(log.loggedAt)),
-                    AppChip(label: log.attachment.prettySize),
+                    if (log.attachment != null)
+                      AppChip(label: log.attachment!.prettySize),
                     if (log.isAutoCompleted)
                       AppChip(label: t.autoCompleted, tone: ChipTone.green),
                   ],

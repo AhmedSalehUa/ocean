@@ -61,7 +61,7 @@ android:usesCleartextTraffic="true"
 
 ## Android — `android/app/build.gradle`
 
-Make sure `minSdkVersion` is **23+** (geolocator + image_picker require it):
+Make sure `minSdkVersion` is **23+** (geolocator + image_picker + camera require it):
 
 ```gradle
 defaultConfig {

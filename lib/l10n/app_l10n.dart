@@ -96,6 +96,12 @@ class AppL10n {
   String get openSettings => _t('Open settings', 'فتح الإعدادات');
   String get gpsBlocked => _t('Location permission is required', 'إذن الموقع مطلوب');
   String get cameraBlocked => _t('Camera permission is required', 'إذن الكاميرا مطلوب');
+  String get shipmentProofEyebrow => _t('SHIPMENT PROOF', 'إثبات الشحنة');
+  String get frameUnloadingScene =>
+      _t('Frame the entire unloading scene', 'اضبط مشهد التفريغ بالكامل');
+  String get flip => _t('Flip', 'تبديل');
+  String get hdr => _t('HDR', 'HDR');
+  String get retry => _t('Retry', 'إعادة');
 
   // ─── Item loop ───
   String get itemLoopTitle => _t('Per-item verification', 'التحقق من كل بند');

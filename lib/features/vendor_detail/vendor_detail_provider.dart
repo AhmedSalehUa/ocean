@@ -6,6 +6,7 @@ import '../../core/errors/api_exception.dart';
 import '../../core/utils/app_log.dart';
 import '../../data/models/proof_log.dart';
 import '../../data/models/vendor_po.dart';
+import '../../data/models/workflow_step.dart';
 import '../../data/repositories/delivery_repository.dart';
 import '../dashboard/master_pos_provider.dart';
 
@@ -34,8 +35,7 @@ class VendorDetailProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final v = await _repo.vendor(vendorPoId);
-      _vendor = v;
+      _vendor = await _fetchHydrated(vendorPoId);
       _state = LoadState.ready;
     } catch (e, st) {
       AppLog.error('VendorDetailProvider.load', e, st);
@@ -43,6 +43,36 @@ class VendorDetailProvider extends ChangeNotifier {
       _state = LoadState.error;
     }
     notifyListeners();
+  }
+
+  /// GET /vendor-pos/:id returns items but no steps, and /start returns
+  /// neither. Fetch both in parallel and merge so currentStep is available.
+  Future<VendorPo> _fetchHydrated(String vendorPoId) async {
+    final results = await Future.wait([
+      _repo.vendor(vendorPoId),
+      _repo.steps(vendorPoId),
+    ]);
+    final v = results[0] as VendorPo;
+    final steps = (results[1] as List<WorkflowStep>)
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    AppLog.info(
+      'VendorDetailProvider._fetchHydrated',
+      'vendor=$vendorPoId status=${v.status} items=${v.items.length} '
+          'steps=${steps.length} currentStepId=${v.currentStepId}',
+    );
+    String? currentStepId = v.currentStepId;
+    if (currentStepId == null && steps.isNotEmpty) {
+      final next = steps.firstWhere(
+        (s) => !s.isComplete,
+        orElse: () => steps.last,
+      );
+      currentStepId = next.id;
+      AppLog.info(
+        'VendorDetailProvider._fetchHydrated',
+        'derived currentStepId=$currentStepId from steps',
+      );
+    }
+    return v.copyWith(steps: steps, currentStepId: currentStepId);
   }
 
   Future<void> loadProofs() async {
@@ -61,7 +91,7 @@ class VendorDetailProvider extends ChangeNotifier {
         await _repo.start(_vendorPoId!);
         // The /start response is thin (no items/steps). Refetch full detail
         // so the next screen has items and a populated current step.
-        _vendor = await _repo.vendor(_vendorPoId!);
+        _vendor = await _fetchHydrated(_vendorPoId!);
       });
 
   Future<bool> uploadShipmentPhoto({
@@ -79,7 +109,7 @@ class VendorDetailProvider extends ChangeNotifier {
           lng: lng,
         );
         // refresh the vendor so steps + current_step_id are current
-        _vendor = await _repo.vendor(_vendorPoId!);
+        _vendor = await _fetchHydrated(_vendorPoId!);
       });
 
   Future<bool> uploadItemPhoto({
@@ -98,12 +128,12 @@ class VendorDetailProvider extends ChangeNotifier {
           lat: lat,
           lng: lng,
         );
-        _vendor = await _repo.vendor(_vendorPoId!);
+        _vendor = await _fetchHydrated(_vendorPoId!);
       });
 
   Future<bool> markItemMissing(String itemId) => _wrap(() async {
         await _repo.markMissing(vendorPoId: _vendorPoId!, itemId: itemId);
-        _vendor = await _repo.vendor(_vendorPoId!);
+        _vendor = await _fetchHydrated(_vendorPoId!);
       });
 
   Future<bool> finalize() => _wrap(() async {

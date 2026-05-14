@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:geolocator/geolocator.dart';
+
+import '../core/utils/app_log.dart';
 
 /// Thin wrapper around `geolocator` so the UI never imports the plugin directly.
 class LocationService {
@@ -14,10 +18,18 @@ class LocationService {
       return null;
     }
 
-    final pos = await Geolocator.getCurrentPosition(
-      locationSettings: LocationSettings(accuracy: LocationAccuracy.high, timeLimit: timeout),
-    );
-    return GpsFix(lat: pos.latitude, lng: pos.longitude, accuracyMeters: pos.accuracy);
+    try {
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: LocationSettings(accuracy: LocationAccuracy.high, timeLimit: timeout),
+      );
+      return GpsFix(lat: pos.latitude, lng: pos.longitude, accuracyMeters: pos.accuracy);
+    } on TimeoutException catch (e, st) {
+      AppLog.error('LocationService.currentFix (timeout)', e, st);
+      return null;
+    } catch (e, st) {
+      AppLog.error('LocationService.currentFix', e, st);
+      return null;
+    }
   }
 }
 

@@ -61,17 +61,26 @@ class _ItemLoopScreenState extends State<ItemLoopScreen> {
       ),
       body: v == null
           ? const Center(child: CircularProgressIndicator(color: AppColors.accentInk))
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 120),
-              children: [
-                _LoopHeader(vendor: v),
-                const SizedBox(height: 14),
-                for (var i = 0; i < v.items.length; i++) ...[
-                  _ItemRow(vendor: v, item: v.items[i]),
-                  const SizedBox(height: 10),
+          : Builder(builder: (_) {
+              final sorted = [...v.items]..sort((a, b) {
+                  final ar = a.status.isResolved ? 1 : 0;
+                  final br = b.status.isResolved ? 1 : 0;
+                  if (ar != br) return ar - br;
+                  return (int.tryParse(a.serial ?? '') ?? 0)
+                      .compareTo(int.tryParse(b.serial ?? '') ?? 0);
+                });
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 120),
+                children: [
+                  _LoopHeader(vendor: v),
+                  const SizedBox(height: 14),
+                  for (var i = 0; i < sorted.length; i++) ...[
+                    _ItemRow(vendor: v, item: sorted[i]),
+                    const SizedBox(height: 10),
+                  ],
                 ],
-              ],
-            ),
+              );
+            }),
       bottomNavigationBar: v == null ? null : _LoopBottom(vendor: v),
     );
   }
@@ -227,7 +236,13 @@ class _ItemRow extends StatelessWidget {
       lng: fix?.lng,
     );
     if (!ok || !context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${item.itemCode}: ${t.done}')));
+    final fresh = detail.vendor;
+    final remaining =
+        fresh?.items.where((i) => !i.status.isResolved).length ?? 0;
+    final message = remaining == 0
+        ? t.allItemsCaptured
+        : t.capturedItem(item.itemCode, remaining);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _missing(BuildContext context) async {
@@ -297,7 +312,15 @@ class _ItemRow extends StatelessWidget {
       },
     );
     if (ok != true || !context.mounted) return;
-    await context.read<VendorDetailProvider>().markItemMissing(item.id);
+    final detail = context.read<VendorDetailProvider>();
+    final success = await detail.markItemMissing(item.id);
+    if (!success || !context.mounted) return;
+    final remaining =
+        detail.vendor?.items.where((i) => !i.status.isResolved).length ?? 0;
+    final message = remaining == 0
+        ? t.allItemsCaptured
+        : t.markedMissingItem(item.itemCode, remaining);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 

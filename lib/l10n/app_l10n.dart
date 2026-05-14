@@ -109,6 +109,16 @@ class AppL10n {
   String deliveredCount(int count) => _t('$count delivered', '$count مُسلَّمة');
   String missingCount(int count) => _t('$count missing', '$count مفقودة');
   String pendingCount(int count) => _t('$count pending', '$count قيد الانتظار');
+  String itemsRemaining(int count) =>
+      _t('$count items remaining', 'بقي $count عناصر');
+  String capturedItem(String code, int remaining) => _t(
+      '$code captured · $remaining items remaining',
+      'تم التقاط $code · بقي $remaining عناصر');
+  String markedMissingItem(String code, int remaining) => _t(
+      '$code marked missing · $remaining items remaining',
+      'تم تحديد $code كمفقود · بقي $remaining عناصر');
+  String get allItemsCaptured =>
+      _t('All items captured', 'تم التقاط جميع البنود');
   String get markMissingTitle => _t('Mark this item as missing?', 'تحديد هذا البند كمفقود؟');
   String get markMissingBody => _t(
       "This item won't be re-introduced into this Vendor PO. The Master PO will be recomputed.",

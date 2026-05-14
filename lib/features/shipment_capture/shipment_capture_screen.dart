@@ -186,15 +186,33 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
   void _retake() => setState(() => _photo = null);
 
   Future<void> _submit() async {
+    final t = AppL10n.of(context);
     final p = context.read<VendorDetailProvider>();
     final step = p.vendor?.currentStep;
     if (_photo == null || step == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(
+      duration: const Duration(minutes: 1),
+      content: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(t.uploadingShipment)),
+        ],
+      ),
+    ));
     final ok = await p.uploadShipmentPhoto(
       stepId: step.id,
       file: _photo!,
       lat: _fix?.lat,
       lng: _fix?.lng,
     );
+    messenger.hideCurrentSnackBar();
     if (!ok || !mounted) return;
     final v = p.vendor;
     if (v == null) return;

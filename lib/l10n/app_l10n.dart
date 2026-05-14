@@ -114,6 +114,10 @@ class AppL10n {
   String capturedItem(String code, int remaining) => _t(
       '$code captured · $remaining items remaining',
       'تم التقاط $code · بقي $remaining عناصر');
+  String uploadingItem(String code) => _t(
+      'Uploading photo for $code…', 'جارٍ رفع صورة $code…');
+  String get uploadingShipment =>
+      _t('Uploading shipment photo…', 'جارٍ رفع صورة الشحنة…');
   String markedMissingItem(String code, int remaining) => _t(
       '$code marked missing · $remaining items remaining',
       'تم تحديد $code كمفقود · بقي $remaining عناصر');

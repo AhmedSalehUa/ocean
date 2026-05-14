@@ -7,6 +7,7 @@ import '../../core/utils/app_log.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/proof_log.dart';
 import '../../data/models/vendor_po.dart';
+import '../../data/models/vendor_po_item.dart';
 import '../../data/models/workflow_step.dart';
 import '../../data/repositories/delivery_repository.dart';
 import '../dashboard/master_pos_provider.dart';
@@ -22,6 +23,10 @@ class VendorDetailProvider extends ChangeNotifier {
   LoadState _state = LoadState.idle;
   String? _error;
   bool _busy = false;
+  // Items the user has successfully photographed in this session. We re-apply
+  // DELIVERED locally on every hydrate because the backend doesn't always flip
+  // the item status on photo upload.
+  final Set<String> _locallyDelivered = <String>{};
 
   String? get vendorPoId => _vendorPoId;
   VendorPo? get vendor => _vendor;
@@ -31,6 +36,9 @@ class VendorDetailProvider extends ChangeNotifier {
   bool get busy => _busy;
 
   Future<void> load(String vendorPoId) async {
+    if (_vendorPoId != vendorPoId) {
+      _locallyDelivered.clear();
+    }
     _vendorPoId = vendorPoId;
     _state = LoadState.loading;
     _error = null;
@@ -73,7 +81,22 @@ class VendorDetailProvider extends ChangeNotifier {
         'derived currentStepId=$currentStepId from steps',
       );
     }
-    return v.copyWith(steps: steps, currentStepId: currentStepId);
+    final items = _applyLocalDelivered(v.items);
+    return v.copyWith(
+      steps: steps,
+      currentStepId: currentStepId,
+      items: items,
+    );
+  }
+
+  List<VendorPoItem> _applyLocalDelivered(List<VendorPoItem> items) {
+    if (_locallyDelivered.isEmpty) return items;
+    return items.map((i) {
+      if (_locallyDelivered.contains(i.id) && !i.status.isResolved) {
+        return i.copyWith(status: ItemStatus.delivered);
+      }
+      return i;
+    }).toList();
   }
 
   Future<void> loadProofs() async {
@@ -129,19 +152,14 @@ class VendorDetailProvider extends ChangeNotifier {
           lat: lat,
           lng: lng,
         );
-        final fresh = await _fetchHydrated(_vendorPoId!);
         // Backend doesn't always flip the item to DELIVERED on photo upload.
-        // The proof itself is a successful confirmation, so apply the status
-        // locally if the server still reports it as pending/in-progress.
-        final patchedItems = fresh.items.map((i) {
-          if (i.id == itemId && !i.status.isResolved) {
-            AppLog.info('VendorDetailProvider.uploadItemPhoto',
-                'optimistically marking item $itemId as DELIVERED');
-            return i.copyWith(status: ItemStatus.delivered);
-          }
-          return i;
-        }).toList();
-        _vendor = fresh.copyWith(items: patchedItems);
+        // A successful proof is the authoritative confirmation, so remember
+        // the id and re-apply DELIVERED on every hydrate while this vendor
+        // is loaded.
+        _locallyDelivered.add(itemId);
+        AppLog.info('VendorDetailProvider.uploadItemPhoto',
+            'optimistically marking item $itemId as DELIVERED');
+        _vendor = await _fetchHydrated(_vendorPoId!);
       });
 
   Future<bool> markItemMissing(String itemId) => _wrap(() async {

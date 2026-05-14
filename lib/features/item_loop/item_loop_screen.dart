@@ -228,6 +228,23 @@ class _ItemRow extends StatelessWidget {
     );
     if (preview != true || !context.mounted) return;
 
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(
+      duration: const Duration(minutes: 1),
+      content: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(t.uploadingItem(item.itemCode))),
+        ],
+      ),
+    ));
+
     final ok = await detail.uploadItemPhoto(
       itemId: item.id,
       stepId: step.id,
@@ -235,6 +252,7 @@ class _ItemRow extends StatelessWidget {
       lat: fix?.lat,
       lng: fix?.lng,
     );
+    messenger.hideCurrentSnackBar();
     if (!ok || !context.mounted) return;
     final fresh = detail.vendor;
     final remaining =
@@ -242,7 +260,7 @@ class _ItemRow extends StatelessWidget {
     final message = remaining == 0
         ? t.allItemsCaptured
         : t.capturedItem(item.itemCode, remaining);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _missing(BuildContext context) async {

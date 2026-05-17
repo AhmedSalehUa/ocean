@@ -27,6 +27,10 @@ class VendorDetailProvider extends ChangeNotifier {
   // DELIVERED locally on every hydrate because the backend doesn't always flip
   // the item status on photo upload.
   final Set<String> _locallyDelivered = <String>{};
+  // Shipment-photo steps we've successfully uploaded a photo for. Backend
+  // doesn't always set shipment_completed=true on next fetch, so we patch it
+  // locally to ensure the workflow advances past the shipment step.
+  final Set<String> _locallyCompletedShipmentSteps = <String>{};
   // Background upload queue used by the guided capture flow so the camera can
   // immediately advance to the next item while the previous photo uploads.
   final List<_PendingItemUpload> _queue = [];
@@ -48,6 +52,7 @@ class VendorDetailProvider extends ChangeNotifier {
   Future<void> load(String vendorPoId) async {
     if (_vendorPoId != vendorPoId) {
       _locallyDelivered.clear();
+      _locallyCompletedShipmentSteps.clear();
       _queue.clear();
       _failed.clear();
     }
@@ -74,14 +79,22 @@ class VendorDetailProvider extends ChangeNotifier {
       _repo.steps(vendorPoId),
     ]);
     final v = results[0] as VendorPo;
-    final steps = (results[1] as List<WorkflowStep>)
+    final rawSteps = (results[1] as List<WorkflowStep>)
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final steps = _applyLocalShipmentComplete(rawSteps);
     AppLog.info(
       'VendorDetailProvider._fetchHydrated',
       'vendor=$vendorPoId status=${v.status} items=${v.items.length} '
-          'steps=${steps.length} currentStepId=${v.currentStepId}',
+          'steps=${steps.length} currentStepId=${v.currentStepId} '
+          'localShipmentDone=$_locallyCompletedShipmentSteps',
     );
     String? currentStepId = v.currentStepId;
+    // If the server still points at a shipment step we've locally completed,
+    // advance to the next incomplete step instead of staying put.
+    if (currentStepId != null &&
+        _locallyCompletedShipmentSteps.contains(currentStepId)) {
+      currentStepId = null;
+    }
     if (currentStepId == null && steps.isNotEmpty) {
       final next = steps.firstWhere(
         (s) => !s.isComplete,
@@ -108,6 +121,16 @@ class VendorDetailProvider extends ChangeNotifier {
         return i.copyWith(status: ItemStatus.delivered);
       }
       return i;
+    }).toList();
+  }
+
+  List<WorkflowStep> _applyLocalShipmentComplete(List<WorkflowStep> steps) {
+    if (_locallyCompletedShipmentSteps.isEmpty) return steps;
+    return steps.map((s) {
+      if (_locallyCompletedShipmentSteps.contains(s.id) && !s.shipmentCompleted) {
+        return s.copyWith(shipmentCompleted: true);
+      }
+      return s;
     }).toList();
   }
 
@@ -144,7 +167,11 @@ class VendorDetailProvider extends ChangeNotifier {
           lat: lat,
           lng: lng,
         );
-        // refresh the vendor so steps + current_step_id are current
+        // Backend doesn't reliably flip shipment_completed on the step, so
+        // remember the upload locally and patch on every hydrate.
+        _locallyCompletedShipmentSteps.add(stepId);
+        AppLog.info('VendorDetailProvider.uploadShipmentPhoto',
+            'optimistically marking step $stepId as shipmentCompleted');
         _vendor = await _fetchHydrated(_vendorPoId!);
       });
 

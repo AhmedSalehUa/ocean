@@ -213,7 +213,11 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
       lng: _fix?.lng,
     );
     messenger.hideCurrentSnackBar();
-    if (!ok || !mounted) return;
+    if (!mounted) return;
+    if (!ok) {
+      messenger.showSnackBar(SnackBar(content: Text(p.error ?? 'Upload failed')));
+      return;
+    }
     final v = p.vendor;
     if (v == null) return;
     final next = v.currentStep;

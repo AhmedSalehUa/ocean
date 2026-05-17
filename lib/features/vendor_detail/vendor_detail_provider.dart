@@ -31,6 +31,11 @@ class VendorDetailProvider extends ChangeNotifier {
   // doesn't always set shipment_completed=true on next fetch, so we patch it
   // locally to ensure the workflow advances past the shipment step.
   final Set<String> _locallyCompletedShipmentSteps = <String>{};
+  // Per-step record of item ids whose photo we've uploaded (or queued) in
+  // this session. Item-photo steps repeat per workflow step, so we need to
+  // know which items still need a photo for the *current* step rather than
+  // relying on the item's global delivered/missing status.
+  final Map<String, Set<String>> _stepItemUploads = <String, Set<String>>{};
   // Background upload queue used by the guided capture flow so the camera can
   // immediately advance to the next item while the previous photo uploads.
   final List<_PendingItemUpload> _queue = [];
@@ -41,6 +46,13 @@ class VendorDetailProvider extends ChangeNotifier {
   int get failedUploadCount => _failed.length;
   bool get hasUploadActivity =>
       _queue.isNotEmpty || _draining || _failed.isNotEmpty;
+
+  /// Item ids that have a photo uploaded (or queued) for the given workflow
+  /// step during this session. Used by the guided capture loop so each step
+  /// independently asks for every item, regardless of the item's overall
+  /// delivered/missing status.
+  Set<String> uploadedItemsForStep(String stepId) =>
+      _stepItemUploads[stepId] ?? const <String>{};
 
   String? get vendorPoId => _vendorPoId;
   VendorPo? get vendor => _vendor;
@@ -53,6 +65,7 @@ class VendorDetailProvider extends ChangeNotifier {
     if (_vendorPoId != vendorPoId) {
       _locallyDelivered.clear();
       _locallyCompletedShipmentSteps.clear();
+      _stepItemUploads.clear();
       _queue.clear();
       _failed.clear();
     }
@@ -217,14 +230,17 @@ class VendorDetailProvider extends ChangeNotifier {
         // the id and re-apply DELIVERED on every hydrate while this vendor
         // is loaded.
         _locallyDelivered.add(itemId);
+        _stepItemUploads
+            .putIfAbsent(stepId, () => <String>{})
+            .add(itemId);
         AppLog.info('VendorDetailProvider.uploadItemPhoto',
-            'optimistically marking item $itemId as DELIVERED');
+            'recorded item $itemId for step $stepId');
         _vendor = await _fetchHydrated(_vendorPoId!);
       });
 
-  /// Adds a photo to the background upload queue and immediately marks the
-  /// item as delivered locally so the guided capture screen can move on to the
-  /// next item. The actual POST runs sequentially in [_drainQueue].
+  /// Adds a photo to the background upload queue and immediately records the
+  /// upload locally so the guided capture screen advances to the next item.
+  /// The actual POST runs sequentially in [_drainQueue].
   void queueItemPhoto({
     required String itemId,
     required String stepId,
@@ -235,6 +251,9 @@ class VendorDetailProvider extends ChangeNotifier {
   }) {
     if (_vendorPoId == null) return;
     _locallyDelivered.add(itemId);
+    _stepItemUploads
+        .putIfAbsent(stepId, () => <String>{})
+        .add(itemId);
     _queue.add(_PendingItemUpload(
       vendorPoId: _vendorPoId!,
       itemId: itemId,

@@ -319,6 +319,27 @@ class MockDeliveryApi implements DeliveryApi {
   }
 
   @override
+  Future<void> markItemRejected({
+    required String vendorPoId,
+    required String itemId,
+    required String stepId,
+  }) async {
+    await _latency();
+    final v = _findVendor(vendorPoId);
+    final idx = v.items.indexWhere((i) => i.id == itemId);
+    if (idx < 0) throw const ApiException('Item not found', statusCode: 404);
+    final items = List<VendorPoItem>.from(v.items);
+    final wasUnresolved = !items[idx].status.isResolved;
+    items[idx] = items[idx].copyWith(status: ItemStatus.rejected);
+    final updated = v.copyWith(
+      items: items,
+      resolvedItemCount: wasUnresolved ? v.resolvedItemCount + 1 : v.resolvedItemCount,
+    );
+    _replaceVendor(updated);
+    _recomputeMaster(updated.masterPoId);
+  }
+
+  @override
   Future<VendorPo> finalizeVendorPo(String vendorPoId) async {
     await _latency(400, 700);
     final v = _findVendor(vendorPoId);

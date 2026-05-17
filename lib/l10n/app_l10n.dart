@@ -137,6 +137,12 @@ class AppL10n {
   String get markMissingBody => _t(
       "This item won't be re-introduced into this Vendor PO. The Master PO will be recomputed.",
       'لن يُعاد إدخال هذا البند في أمر المورّد. سيُعاد احتساب الأمر الرئيسي.');
+  String get markRejected => _t('Reject', 'رفض');
+  String get markRejectedTitle =>
+      _t('Reject this item at the final step?', 'رفض هذا البند في الخطوة النهائية؟');
+  String get markRejectedBody => _t(
+      'Rejection is recorded against this final step only. The item stays on the PO but is flagged.',
+      'يُسجَّل الرفض على الخطوة النهائية فقط. يبقى البند ضمن الأمر مع وضع علامة الرفض.');
   String get confirm => _t('Confirm', 'تأكيد');
   String get cancel => _t('Cancel', 'إلغاء');
 

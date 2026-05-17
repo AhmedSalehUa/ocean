@@ -203,6 +203,83 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
         _pendingForItemId = null;
       });
 
+  Future<void> _markMissing(VendorPoItem item) async {
+    final t = AppL10n.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dCtx) => AlertDialog(
+        title: Text(t.markMissingTitle),
+        content: Text(t.markMissingBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dCtx, false),
+            child: Text(t.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dCtx, true),
+            child: Text(t.confirm),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final p = context.read<VendorDetailProvider>();
+    final success = await p.markItemMissing(item.id);
+    if (!mounted) return;
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(p.error ?? 'Failed to mark missing')),
+      );
+      return;
+    }
+    _afterResolution(item);
+  }
+
+  Future<void> _markRejected(VendorPoItem item) async {
+    final t = AppL10n.of(context);
+    final p = context.read<VendorDetailProvider>();
+    final step = p.vendor?.currentStep;
+    if (step == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dCtx) => AlertDialog(
+        title: Text(t.markRejectedTitle),
+        content: Text(t.markRejectedBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dCtx, false),
+            child: Text(t.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dCtx, true),
+            child: Text(t.confirm),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final success = await p.markItemRejected(itemId: item.id, stepId: step.id);
+    if (!mounted) return;
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(p.error ?? 'Failed to reject')),
+      );
+      return;
+    }
+    _afterResolution(item);
+  }
+
+  /// After missing/rejected, advance to the next item or to step-done.
+  void _afterResolution(VendorPoItem item) {
+    final p = context.read<VendorDetailProvider>();
+    final v = p.vendor;
+    final step = v?.currentStep;
+    if (v == null || step == null) return;
+    if (_nextItem(p) == null) {
+      context.replace(Routes.stepDonePath(v.id, step.id));
+    }
+  }
+
   void _confirm() {
     final p = context.read<VendorDetailProvider>();
     final step = p.vendor?.currentStep;
@@ -262,6 +339,14 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
     final done = step == null ? 0 : p.uploadedItemsForStep(step.id).length;
     final target = _nextItem(p);
     final hasPending = _pendingPhoto != null && _pendingForItemId != null;
+    // The "Reject" option is only available on the last workflow step that
+    // requires item photos. All other item-photo steps offer capture + missing.
+    final itemSteps = (v?.steps ?? const [])
+        .where((s) => s.requiresItemPhoto)
+        .toList();
+    final canReject = step != null &&
+        itemSteps.isNotEmpty &&
+        itemSteps.last.id == step.id;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -319,6 +404,10 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
                 canFlip: _cameras.length > 1,
                 onFlip: _flip,
                 onShutter: () => target == null ? null : _shutter(target),
+                onMissing: target == null ? null : () => _markMissing(target),
+                onReject: target == null || !canReject
+                    ? null
+                    : () => _markRejected(target),
               ),
             const SizedBox(height: 16),
           ],
@@ -694,54 +783,91 @@ class _CaptureBar extends StatelessWidget {
     required this.canFlip,
     required this.onFlip,
     required this.onShutter,
+    this.onMissing,
+    this.onReject,
   });
   final AppL10n t;
   final bool canFlip;
   final VoidCallback onFlip;
   final VoidCallback? onShutter;
+  final VoidCallback? onMissing;
+  final VoidCallback? onReject;
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _IconLabel(
-            icon: Icons.cached_rounded,
-            label: t.flip,
-            onTap: canFlip ? onFlip : null,
-          ),
-          GestureDetector(
-            onTap: onShutter,
-            child: Container(
-              width: 78,
-              height: 78,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: onShutter == null ? Colors.white38 : Colors.white,
-                  width: 4,
-                ),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _IconLabel(
+                icon: Icons.cached_rounded,
+                label: t.flip,
+                onTap: canFlip ? onFlip : null,
               ),
-              child: Center(
+              GestureDetector(
+                onTap: onShutter,
                 child: Container(
-                  width: 60,
-                  height: 60,
+                  width: 78,
+                  height: 78,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: onShutter == null ? Colors.white38 : Colors.white,
+                    border: Border.all(
+                      color: onShutter == null ? Colors.white38 : Colors.white,
+                      width: 4,
+                    ),
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: onShutter == null ? Colors.white38 : Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+              _IconLabel(
+                icon: Icons.auto_awesome_outlined,
+                label: t.hdr,
+                onTap: null,
+              ),
+            ],
           ),
-          _IconLabel(
-            icon: Icons.auto_awesome_outlined,
-            label: t.hdr,
-            onTap: null,
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: t.markMissing,
+                  variant: AppBtnVariant.danger,
+                  height: 44,
+                  leading: const Icon(Icons.block_rounded, size: 18),
+                  onPressed: onMissing,
+                ),
+              ),
+              if (onReject != null) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: AppButton(
+                    label: t.markRejected,
+                    variant: AppBtnVariant.danger,
+                    height: 44,
+                    leading: const Icon(Icons.do_not_disturb_alt_rounded, size: 18),
+                    onPressed: onReject,
+                  ),
+                ),
+              ],
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

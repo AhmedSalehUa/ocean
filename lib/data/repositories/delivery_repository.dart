@@ -61,6 +61,17 @@ class DeliveryRepository {
   Future<void> markMissing({required String vendorPoId, required String itemId}) =>
       _api.markItemMissing(vendorPoId: vendorPoId, itemId: itemId);
 
+  Future<void> markRejected({
+    required String vendorPoId,
+    required String itemId,
+    required String stepId,
+  }) =>
+      _api.markItemRejected(
+        vendorPoId: vendorPoId,
+        itemId: itemId,
+        stepId: stepId,
+      );
+
   Future<VendorPo> finalize(String id) => _api.finalizeVendorPo(id);
 
   String attachmentUrl(String id) => _api.attachmentUrl(id);

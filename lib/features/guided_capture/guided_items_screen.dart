@@ -206,6 +206,7 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
       file: file,
       lat: _fix?.lat,
       lng: _fix?.lng,
+      accuracyMeters: _fix?.accuracyMeters,
     );
     setState(() {
       _pendingPhoto = null;

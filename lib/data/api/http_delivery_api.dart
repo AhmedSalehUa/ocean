@@ -137,11 +137,13 @@ class HttpDeliveryApi implements DeliveryApi {
     required File file,
     double? lat,
     double? lng,
+    double? accuracyMeters,
   }) async {
     final form = FormData.fromMap({
       'file': await MultipartFile.fromFile(file.path),
-      if (lat != null) 'lat': lat,
-      if (lng != null) 'lng': lng,
+      if (lat != null) 'location_latitude': lat,
+      if (lng != null) 'location_longitude': lng,
+      if (accuracyMeters != null) 'location_accuracy_meters': accuracyMeters,
     });
     final r = await _dio.post(
       '/api/delivery/mobile/vendor-pos/$vendorPoId/shipment-steps/$stepId/photo',
@@ -160,11 +162,13 @@ class HttpDeliveryApi implements DeliveryApi {
     required File file,
     double? lat,
     double? lng,
+    double? accuracyMeters,
   }) async {
     final form = FormData.fromMap({
       'file': await MultipartFile.fromFile(file.path),
-      if (lat != null) 'lat': lat,
-      if (lng != null) 'lng': lng,
+      if (lat != null) 'location_latitude': lat,
+      if (lng != null) 'location_longitude': lng,
+      if (accuracyMeters != null) 'location_accuracy_meters': accuracyMeters,
     });
     final r = await _dio.post(
       '/api/delivery/mobile/vendor-pos/$vendorPoId/items/$itemId/steps/$stepId/photo',

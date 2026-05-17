@@ -158,6 +158,7 @@ class VendorDetailProvider extends ChangeNotifier {
     required File file,
     double? lat,
     double? lng,
+    double? accuracyMeters,
   }) =>
       _wrap(() async {
         await _repo.shipmentPhoto(
@@ -166,6 +167,7 @@ class VendorDetailProvider extends ChangeNotifier {
           file: file,
           lat: lat,
           lng: lng,
+          accuracyMeters: accuracyMeters,
         );
         // Backend doesn't reliably flip shipment_completed on the step, so
         // remember the upload locally and patch on every hydrate.
@@ -181,6 +183,7 @@ class VendorDetailProvider extends ChangeNotifier {
     required File file,
     double? lat,
     double? lng,
+    double? accuracyMeters,
   }) =>
       _wrap(() async {
         await _repo.itemPhoto(
@@ -190,6 +193,7 @@ class VendorDetailProvider extends ChangeNotifier {
           file: file,
           lat: lat,
           lng: lng,
+          accuracyMeters: accuracyMeters,
         );
         // Backend doesn't always flip the item to DELIVERED on photo upload.
         // A successful proof is the authoritative confirmation, so remember
@@ -210,6 +214,7 @@ class VendorDetailProvider extends ChangeNotifier {
     required File file,
     double? lat,
     double? lng,
+    double? accuracyMeters,
   }) {
     if (_vendorPoId == null) return;
     _locallyDelivered.add(itemId);
@@ -220,6 +225,7 @@ class VendorDetailProvider extends ChangeNotifier {
       file: file,
       lat: lat,
       lng: lng,
+      accuracyMeters: accuracyMeters,
     ));
     // Reflect optimistic state in the current vendor snapshot right away.
     final v = _vendor;
@@ -253,6 +259,7 @@ class VendorDetailProvider extends ChangeNotifier {
           file: job.file,
           lat: job.lat,
           lng: job.lng,
+          accuracyMeters: job.accuracyMeters,
         );
         AppLog.info('VendorDetailProvider._drainQueue',
             'uploaded item ${job.itemId}');
@@ -315,6 +322,7 @@ class _PendingItemUpload {
     required this.file,
     this.lat,
     this.lng,
+    this.accuracyMeters,
   });
   final String vendorPoId;
   final String itemId;
@@ -322,4 +330,5 @@ class _PendingItemUpload {
   final File file;
   final double? lat;
   final double? lng;
+  final double? accuracyMeters;
 }

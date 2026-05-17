@@ -28,9 +28,16 @@ class DeliveryRepository {
     required File file,
     double? lat,
     double? lng,
+    double? accuracyMeters,
   }) =>
       _api.uploadShipmentPhoto(
-          vendorPoId: vendorPoId, stepId: stepId, file: file, lat: lat, lng: lng);
+        vendorPoId: vendorPoId,
+        stepId: stepId,
+        file: file,
+        lat: lat,
+        lng: lng,
+        accuracyMeters: accuracyMeters,
+      );
 
   Future<ProofLog> itemPhoto({
     required String vendorPoId,
@@ -39,6 +46,7 @@ class DeliveryRepository {
     required File file,
     double? lat,
     double? lng,
+    double? accuracyMeters,
   }) =>
       _api.uploadItemPhoto(
         vendorPoId: vendorPoId,
@@ -47,6 +55,7 @@ class DeliveryRepository {
         file: file,
         lat: lat,
         lng: lng,
+        accuracyMeters: accuracyMeters,
       );
 
   Future<void> markMissing({required String vendorPoId, required String itemId}) =>

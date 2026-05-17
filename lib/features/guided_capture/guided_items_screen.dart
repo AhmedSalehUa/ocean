@@ -160,10 +160,19 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
     }
   }
 
+  /// Returns the next item that still needs a photo for the *current* step.
+  /// Each item-photo step re-asks for every item independently of the item's
+  /// overall delivered/missing status — except items already marked missing,
+  /// which are skipped for good.
   VendorPoItem? _nextItem(VendorDetailProvider p) {
-    final items = p.vendor?.items ?? const [];
-    for (final i in items) {
-      if (!i.status.isResolved) return i;
+    final v = p.vendor;
+    final step = v?.currentStep;
+    if (v == null || step == null) return null;
+    final done = p.uploadedItemsForStep(step.id);
+    for (final i in v.items) {
+      if (i.status == ItemStatus.missing) continue;
+      if (done.contains(i.id)) continue;
+      return i;
     }
     return null;
   }
@@ -228,8 +237,11 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
     final p = context.read<VendorDetailProvider>();
     final v = p.vendor;
     final step = v?.currentStep;
-    if (v == null) return;
-    if (v.items.every((i) => i.status.isResolved) && step != null) {
+    if (v == null || step == null) {
+      context.pop();
+      return;
+    }
+    if (_nextItem(p) == null) {
       context.replace(Routes.stepDonePath(v.id, step.id));
     } else {
       context.pop();
@@ -241,9 +253,13 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
     final t = AppL10n.of(context);
     final p = context.watch<VendorDetailProvider>();
     final v = p.vendor;
+    final step = v?.currentStep;
     final items = v?.items ?? const [];
-    final total = items.length;
-    final resolved = items.where((i) => i.status.isResolved).length;
+    // Items that still need a photo this step (everything except missing).
+    final stepEligible =
+        items.where((i) => i.status != ItemStatus.missing).toList();
+    final total = stepEligible.length;
+    final done = step == null ? 0 : p.uploadedItemsForStep(step.id).length;
     final target = _nextItem(p);
     final hasPending = _pendingPhoto != null && _pendingForItemId != null;
 
@@ -255,7 +271,7 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
             _Header(
               t: t,
               target: target,
-              index: resolved + 1,
+              index: done + 1,
               total: total,
               onClose: () => context.pop(),
             ),

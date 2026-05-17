@@ -94,19 +94,23 @@ class VendorDetailProvider extends ChangeNotifier {
     final v = results[0] as VendorPo;
     final rawSteps = (results[1] as List<WorkflowStep>)
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    final steps = _applyLocalShipmentComplete(rawSteps);
+    final steps = _applyLocalStepProgress(rawSteps, v.items.length);
     AppLog.info(
       'VendorDetailProvider._fetchHydrated',
       'vendor=$vendorPoId status=${v.status} items=${v.items.length} '
           'steps=${steps.length} currentStepId=${v.currentStepId} '
-          'localShipmentDone=$_locallyCompletedShipmentSteps',
+          'localShipmentDone=$_locallyCompletedShipmentSteps '
+          'stepItemUploads=${_stepItemUploads.map((k, vv) => MapEntry(k, vv.length))}',
     );
     String? currentStepId = v.currentStepId;
-    // If the server still points at a shipment step we've locally completed,
-    // advance to the next incomplete step instead of staying put.
-    if (currentStepId != null &&
-        _locallyCompletedShipmentSteps.contains(currentStepId)) {
-      currentStepId = null;
+    // If the server still points at a step we've locally completed, advance
+    // to the next incomplete one instead of staying put.
+    if (currentStepId != null) {
+      final cur = steps.firstWhere(
+        (s) => s.id == currentStepId,
+        orElse: () => steps.first,
+      );
+      if (cur.isComplete) currentStepId = null;
     }
     if (currentStepId == null && steps.isNotEmpty) {
       final next = steps.firstWhere(
@@ -137,13 +141,33 @@ class VendorDetailProvider extends ChangeNotifier {
     }).toList();
   }
 
-  List<WorkflowStep> _applyLocalShipmentComplete(List<WorkflowStep> steps) {
-    if (_locallyCompletedShipmentSteps.isEmpty) return steps;
+  /// Patches each step with our local view of progress so [WorkflowStep.isComplete]
+  /// is true once the user has finished a step in-app — even if the backend
+  /// hasn't bumped its shipment_completed flag or item_completed_count yet.
+  List<WorkflowStep> _applyLocalStepProgress(
+    List<WorkflowStep> steps,
+    int vendorItemsCount,
+  ) {
+    if (_locallyCompletedShipmentSteps.isEmpty && _stepItemUploads.isEmpty) {
+      return steps;
+    }
     return steps.map((s) {
-      if (_locallyCompletedShipmentSteps.contains(s.id) && !s.shipmentCompleted) {
-        return s.copyWith(shipmentCompleted: true);
-      }
-      return s;
+      final shipmentDone =
+          s.shipmentCompleted || _locallyCompletedShipmentSteps.contains(s.id);
+      final localItemCount = _stepItemUploads[s.id]?.length ?? 0;
+      final effectiveTotal = s.totalItems > 0 ? s.totalItems : vendorItemsCount;
+      final mergedItemCount = localItemCount > s.itemCompletedCount
+          ? localItemCount
+          : s.itemCompletedCount;
+      final changed = shipmentDone != s.shipmentCompleted ||
+          mergedItemCount != s.itemCompletedCount ||
+          effectiveTotal != s.totalItems;
+      if (!changed) return s;
+      return s.copyWith(
+        shipmentCompleted: shipmentDone,
+        itemCompletedCount: mergedItemCount,
+        totalItems: effectiveTotal,
+      );
     }).toList();
   }
 

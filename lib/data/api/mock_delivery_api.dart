@@ -214,6 +214,7 @@ class MockDeliveryApi implements DeliveryApi {
     required File file,
     double? lat,
     double? lng,
+    double? accuracyMeters,
   }) async {
     await _latency(550, 900);
     final v = _findVendor(vendorPoId);
@@ -253,6 +254,7 @@ class MockDeliveryApi implements DeliveryApi {
     required File file,
     double? lat,
     double? lng,
+    double? accuracyMeters,
   }) async {
     await _latency(550, 900);
     final v = _findVendor(vendorPoId);

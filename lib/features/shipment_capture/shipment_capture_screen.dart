@@ -211,6 +211,7 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
       file: _photo!,
       lat: _fix?.lat,
       lng: _fix?.lng,
+      accuracyMeters: _fix?.accuracyMeters,
     );
     messenger.hideCurrentSnackBar();
     if (!mounted) return;

@@ -90,7 +90,7 @@ class AppButton extends StatelessWidget {
     switch (v) {
       case AppBtnVariant.primary:
         return _BtnColors(
-          bg: disabled ? AppColors.accentInk.withAlpha(102) : AppColors.accentInk,
+          bg: disabled ? AppColors.navy.withAlpha(102) : AppColors.navy,
           fg: Colors.white,
         );
       case AppBtnVariant.dark:

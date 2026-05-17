@@ -251,6 +251,7 @@ class _ItemRow extends StatelessWidget {
       file: file,
       lat: fix?.lat,
       lng: fix?.lng,
+      accuracyMeters: fix?.accuracyMeters,
     );
     messenger.hideCurrentSnackBar();
     if (!ok || !context.mounted) return;

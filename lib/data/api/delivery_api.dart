@@ -31,6 +31,7 @@ abstract class DeliveryApi {
     required File file,
     double? lat,
     double? lng,
+    double? accuracyMeters,
   });
   Future<ProofLog> uploadItemPhoto({
     required String vendorPoId,
@@ -39,6 +40,7 @@ abstract class DeliveryApi {
     required File file,
     double? lat,
     double? lng,
+    double? accuracyMeters,
   });
   Future<void> markItemMissing({required String vendorPoId, required String itemId});
   Future<VendorPo> finalizeVendorPo(String vendorPoId);

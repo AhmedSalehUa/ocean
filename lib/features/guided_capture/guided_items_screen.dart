@@ -212,14 +212,25 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
       _pendingPhoto = null;
       _pendingForItemId = null;
     });
+    // queueItemPhoto immediately marks the item DELIVERED locally, so if
+    // there are no more pending items this was the last one — move on to
+    // the step-done screen.
+    final remaining = _nextItem(p);
+    if (remaining == null) {
+      final v = p.vendor;
+      if (v != null) {
+        context.replace(Routes.stepDonePath(v.id, step.id));
+      }
+    }
   }
 
   void _finishOut() {
     final p = context.read<VendorDetailProvider>();
     final v = p.vendor;
+    final step = v?.currentStep;
     if (v == null) return;
-    if (v.items.every((i) => i.status.isResolved)) {
-      context.replace(Routes.finalizePath(v.id));
+    if (v.items.every((i) => i.status.isResolved) && step != null) {
+      context.replace(Routes.stepDonePath(v.id, step.id));
     } else {
       context.pop();
     }

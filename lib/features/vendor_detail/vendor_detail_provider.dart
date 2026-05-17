@@ -134,6 +134,23 @@ class VendorDetailProvider extends ChangeNotifier {
     }).toList();
   }
 
+  /// Re-fetches vendor + steps for the currently-loaded vendor without
+  /// touching the load state. Used by the step-done screen to pick up the
+  /// new status / current step after a step's uploads complete.
+  Future<bool> refreshVendor() async {
+    if (_vendorPoId == null) return false;
+    try {
+      _vendor = await _fetchHydrated(_vendorPoId!);
+      notifyListeners();
+      return true;
+    } catch (e, st) {
+      AppLog.error('VendorDetailProvider.refreshVendor', e, st);
+      _error = _readableError(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> loadProofs() async {
     if (_vendorPoId == null) return;
     try {

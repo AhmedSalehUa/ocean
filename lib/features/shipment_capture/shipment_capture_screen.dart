@@ -222,14 +222,19 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
     final v = p.vendor;
     if (v == null) return;
     final next = v.currentStep;
-    if (next != null && next.requiresShipmentPhoto && !next.shipmentCompleted) {
+    // Still on the same shipment step (rare — multiple shipment photos for
+    // one step). Stay and let the user shoot the next one.
+    if (next != null &&
+        next.id == step.id &&
+        next.requiresShipmentPhoto &&
+        !next.shipmentCompleted) {
       setState(() => _photo = null);
       _acquireGps();
-    } else if (next != null && next.requiresItemPhoto) {
-      context.replace(Routes.guidedItemsPath(v.id));
-    } else {
-      context.pop();
+      return;
     }
+    // Step transitioned → show the "step done" page; user taps Continue to
+    // move into the next capture screen (or finalize for the last step).
+    context.replace(Routes.stepDonePath(v.id, step.id));
   }
 
   @override

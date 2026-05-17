@@ -165,6 +165,19 @@ class AppL10n {
       'أُعيد حساب تقدُّم الأمر الرئيسي. تم إشعار المشتريات.');
   String get backToDashboard => _t('Back to dashboard', 'العودة إلى لوحة التحكم');
 
+  // ─── Step done ───
+  String get stepDoneTitle => _t('Step complete', 'اكتملت الخطوة');
+  String stepDoneSubtitle(String stepName) =>
+      _t('$stepName captured and uploaded.', 'تم التقاط ورفع $stepName.');
+  String get stepDoneContinue => _t('Continue to next step', 'الانتقال إلى الخطوة التالية');
+  String get stepDoneFinalize => _t('Finalize delivery', 'إنهاء التسليم');
+  String get stepDoneAwaitingUploads =>
+      _t('Waiting for background uploads to finish…',
+          'في انتظار اكتمال الرفع في الخلفية…');
+  String stepDoneFailedUploads(int n) => _t(
+      '$n upload(s) failed — retry before continuing.',
+      'فشل رفع $n عنصر — أعد المحاولة قبل المتابعة.');
+
   // ─── Settings ───
   String get languageEnglish => 'English';
   String get languageArabic => 'العربية';

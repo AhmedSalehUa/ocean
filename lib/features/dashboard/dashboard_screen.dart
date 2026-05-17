@@ -22,12 +22,20 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  String _query = '';
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MasterPosProvider>().refresh();
     });
+  }
+
+  bool _matches(String poNumber) {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    return poNumber.toLowerCase().contains(q);
   }
 
   @override
@@ -68,7 +76,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
             const SizedBox(height: 16),
-            _SearchBar(hint: t.searchHint),
+            _SearchBar(
+              hint: t.searchHint,
+              value: _query,
+              onChanged: (v) => setState(() => _query = v),
+            ),
             const SizedBox(height: 18),
             if (p.state == LoadState.loading)
               const Padding(
@@ -78,28 +90,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
             else if (p.state == LoadState.error)
               _ErrorBox(message: p.error ?? '—', onRetry: p.refresh)
             else ...[
-              Eyebrow('● ${t.openSection} · ${p.open.length}'),
-              const SizedBox(height: 10),
-              for (final m in p.open) ...[
-                MasterPoCard(
-                  master: m,
-                  onTap: () => context.push(Routes.vendorListPath(m.id)),
-                ),
-                const SizedBox(height: 12),
-              ],
-              if (p.closed.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Eyebrow('${t.recentlyClosedSection} · ${p.closed.length}'),
-                const SizedBox(height: 10),
-                for (final m in p.closed) ...[
-                  MasterPoCard(
-                    master: m,
-                    muted: true,
-                    onTap: () => context.push(Routes.vendorListPath(m.id)),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ],
+              () {
+                final open = p.open.where((m) => _matches(m.masterPoNumber)).toList();
+                final closed = p.closed.where((m) => _matches(m.masterPoNumber)).toList();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Eyebrow('● ${t.openSection} · ${open.length}'),
+                    const SizedBox(height: 10),
+                    for (final m in open) ...[
+                      MasterPoCard(
+                        master: m,
+                        onTap: () => context.push(Routes.vendorListPath(m.id)),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (closed.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Eyebrow('${t.recentlyClosedSection} · ${closed.length}'),
+                      const SizedBox(height: 10),
+                      for (final m in closed) ...[
+                        MasterPoCard(
+                          master: m,
+                          muted: true,
+                          onTap: () => context.push(Routes.vendorListPath(m.id)),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ],
+                    if (_query.trim().isNotEmpty && open.isEmpty && closed.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 40),
+                        child: Text(
+                          '—',
+                          textAlign: TextAlign.center,
+                          style: AppType.bodyMuted,
+                        ),
+                      ),
+                  ],
+                );
+              }(),
             ],
           ],
         ),
@@ -163,13 +193,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _SearchBar extends StatelessWidget {
-  const _SearchBar({required this.hint});
+class _SearchBar extends StatefulWidget {
+  const _SearchBar({
+    required this.hint,
+    required this.value,
+    required this.onChanged,
+  });
   final String hint;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_SearchBar> createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<_SearchBar> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.value);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border.all(color: AppColors.line),
@@ -180,16 +231,33 @@ class _SearchBar extends StatelessWidget {
           const Icon(Icons.search, size: 16, color: AppColors.muted),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              hint,
-              style: AppType.body.copyWith(color: AppColors.muted2),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: TextField(
+              controller: _controller,
+              onChanged: widget.onChanged,
+              textInputAction: TextInputAction.search,
+              style: AppType.body,
+              decoration: InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                hintText: widget.hint,
+                hintStyle: AppType.body.copyWith(color: AppColors.muted2),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
           ),
-          Container(width: 1, height: 16, color: AppColors.line),
-          const SizedBox(width: 10),
-          const Icon(Icons.qr_code_2, size: 16, color: AppColors.ink2),
+          if (_controller.text.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                _controller.clear();
+                widget.onChanged('');
+              },
+              child: const Icon(Icons.close_rounded, size: 16, color: AppColors.muted),
+            )
+          else ...[
+            Container(width: 1, height: 16, color: AppColors.line),
+            const SizedBox(width: 10),
+            const Icon(Icons.qr_code_2, size: 16, color: AppColors.ink2),
+          ],
         ],
       ),
     );

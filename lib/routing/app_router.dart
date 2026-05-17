@@ -11,6 +11,7 @@ import '../features/guided_capture/guided_items_screen.dart';
 import '../features/item_loop/item_loop_screen.dart';
 import '../features/proofs/proofs_screen.dart';
 import '../features/shipment_capture/shipment_capture_screen.dart';
+import '../features/step_done/step_done_screen.dart';
 import '../features/vendor_detail/vendor_detail_screen.dart';
 import '../features/vendor_list/vendor_list_screen.dart';
 import 'routes.dart';
@@ -61,6 +62,13 @@ GoRouter buildRouter(AuthProvider auth) {
       GoRoute(
         path: Routes.handoff,
         builder: (_, s) => HandoffScreen(vendorId: s.pathParameters['vendorId']!),
+      ),
+      GoRoute(
+        path: Routes.stepDone,
+        builder: (_, s) => StepDoneScreen(
+          vendorId: s.pathParameters['vendorId']!,
+          completedStepId: s.pathParameters['stepId']!,
+        ),
       ),
     ],
   );

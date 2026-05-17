@@ -27,6 +27,16 @@ class VendorDetailProvider extends ChangeNotifier {
   // DELIVERED locally on every hydrate because the backend doesn't always flip
   // the item status on photo upload.
   final Set<String> _locallyDelivered = <String>{};
+  // Background upload queue used by the guided capture flow so the camera can
+  // immediately advance to the next item while the previous photo uploads.
+  final List<_PendingItemUpload> _queue = [];
+  final List<_PendingItemUpload> _failed = [];
+  bool _draining = false;
+
+  int get pendingUploadCount => _queue.length + (_draining ? 1 : 0);
+  int get failedUploadCount => _failed.length;
+  bool get hasUploadActivity =>
+      _queue.isNotEmpty || _draining || _failed.isNotEmpty;
 
   String? get vendorPoId => _vendorPoId;
   VendorPo? get vendor => _vendor;
@@ -38,6 +48,8 @@ class VendorDetailProvider extends ChangeNotifier {
   Future<void> load(String vendorPoId) async {
     if (_vendorPoId != vendorPoId) {
       _locallyDelivered.clear();
+      _queue.clear();
+      _failed.clear();
     }
     _vendorPoId = vendorPoId;
     _state = LoadState.loading;
@@ -162,6 +174,71 @@ class VendorDetailProvider extends ChangeNotifier {
         _vendor = await _fetchHydrated(_vendorPoId!);
       });
 
+  /// Adds a photo to the background upload queue and immediately marks the
+  /// item as delivered locally so the guided capture screen can move on to the
+  /// next item. The actual POST runs sequentially in [_drainQueue].
+  void queueItemPhoto({
+    required String itemId,
+    required String stepId,
+    required File file,
+    double? lat,
+    double? lng,
+  }) {
+    if (_vendorPoId == null) return;
+    _locallyDelivered.add(itemId);
+    _queue.add(_PendingItemUpload(
+      vendorPoId: _vendorPoId!,
+      itemId: itemId,
+      stepId: stepId,
+      file: file,
+      lat: lat,
+      lng: lng,
+    ));
+    // Reflect optimistic state in the current vendor snapshot right away.
+    final v = _vendor;
+    if (v != null) {
+      _vendor = v.copyWith(items: _applyLocalDelivered(v.items));
+    }
+    notifyListeners();
+    _drainQueue();
+  }
+
+  Future<void> retryFailedUploads() async {
+    if (_failed.isEmpty) return;
+    _queue.addAll(_failed);
+    _failed.clear();
+    notifyListeners();
+    await _drainQueue();
+  }
+
+  Future<void> _drainQueue() async {
+    if (_draining) return;
+    _draining = true;
+    notifyListeners();
+    while (_queue.isNotEmpty) {
+      final job = _queue.removeAt(0);
+      notifyListeners();
+      try {
+        await _repo.itemPhoto(
+          vendorPoId: job.vendorPoId,
+          itemId: job.itemId,
+          stepId: job.stepId,
+          file: job.file,
+          lat: job.lat,
+          lng: job.lng,
+        );
+        AppLog.info('VendorDetailProvider._drainQueue',
+            'uploaded item ${job.itemId}');
+      } catch (e, st) {
+        AppLog.error('VendorDetailProvider._drainQueue', e, st);
+        _failed.add(job);
+      }
+      notifyListeners();
+    }
+    _draining = false;
+    notifyListeners();
+  }
+
   Future<bool> markItemMissing(String itemId) => _wrap(() async {
         await _repo.markMissing(vendorPoId: _vendorPoId!, itemId: itemId);
         _vendor = await _fetchHydrated(_vendorPoId!);
@@ -201,4 +278,21 @@ class VendorDetailProvider extends ChangeNotifier {
     if (e is ApiException) return e.message;
     return e.toString();
   }
+}
+
+class _PendingItemUpload {
+  _PendingItemUpload({
+    required this.vendorPoId,
+    required this.itemId,
+    required this.stepId,
+    required this.file,
+    this.lat,
+    this.lng,
+  });
+  final String vendorPoId;
+  final String itemId;
+  final String stepId;
+  final File file;
+  final double? lat;
+  final double? lng;
 }

@@ -118,6 +118,16 @@ class AppL10n {
       'Uploading photo for $code…', 'جارٍ رفع صورة $code…');
   String get uploadingShipment =>
       _t('Uploading shipment photo…', 'جارٍ رفع صورة الشحنة…');
+  String itemOfTotal(int index, int total) =>
+      _t('Item $index of $total', 'البند $index من $total');
+  String uploadingBadge(int count) =>
+      _t('Uploading $count…', 'جارٍ رفع $count…');
+  String failedBadge(int count) =>
+      _t('$count failed · tap to retry', '$count فشل · اضغط لإعادة المحاولة');
+  String get startItemCapture => _t('Start item capture', 'بدء التقاط البنود');
+  String get confirmPhoto => _t('OK', 'موافق');
+  String get nextItem => _t('Next', 'التالي');
+  String get noPendingItems => _t('No pending items', 'لا توجد بنود معلقة');
   String markedMissingItem(String code, int remaining) => _t(
       '$code marked missing · $remaining items remaining',
       'تم تحديد $code كمفقود · بقي $remaining عناصر');

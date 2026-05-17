@@ -47,6 +47,10 @@ class TrailLogo extends StatelessWidget {
 }
 
 /// Large branded lockup for the login / splash screen.
+///
+/// Tries to render `assets/images/ocean_ship_logo.png` first; if the asset
+/// isn't bundled yet, falls back to the painted mark + typeset wordmark so
+/// the screen stays useful before the PNG is added.
 class OceanShipLockup extends StatelessWidget {
   const OceanShipLockup({
     super.key,
@@ -55,8 +59,36 @@ class OceanShipLockup extends StatelessWidget {
     this.accentColor = AppColors.gold,
     this.subtitle = 'supply & services',
     this.tagline = 'Egyptian ports and Suez Canal',
+    this.assetPath = 'assets/images/ocean_ship_logo.png',
   });
 
+  final double markSize;
+  final Color color;
+  final Color accentColor;
+  final String subtitle;
+  final String tagline;
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      assetPath,
+      height: markSize * 2.4,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) =>
+          _PaintedLockup(markSize: markSize, color: color, accentColor: accentColor, subtitle: subtitle, tagline: tagline),
+    );
+  }
+}
+
+class _PaintedLockup extends StatelessWidget {
+  const _PaintedLockup({
+    required this.markSize,
+    required this.color,
+    required this.accentColor,
+    required this.subtitle,
+    required this.tagline,
+  });
   final double markSize;
   final Color color;
   final Color accentColor;

@@ -62,34 +62,31 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  const TrailLogo(size: 20),
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: locale.toggle,
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          locale.isRtl ? t.languageEnglish : t.languageArabic,
-                          style: AppType.mono11,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const AppChip(label: 'v 2.4.1', tone: ChipTone.ghost),
-                    ],
+                  TextButton(
+                    onPressed: locale.toggle,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      locale.isRtl ? t.languageEnglish : t.languageArabic,
+                      style: AppType.mono11,
+                    ),
                   ),
+                  const SizedBox(width: 4),
+                  const AppChip(label: 'v 2.4.1', tone: ChipTone.ghost),
                 ],
               ),
+              const SizedBox(height: 24),
+              const Center(child: OceanShipLockup(markSize: 140)),
               const Spacer(),
               Eyebrow(t.loginEyebrow),
               const SizedBox(height: 10),
               Text(t.tagline, style: AppType.h1),
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
               _Field(
                 controller: _username,
                 hint: t.username,

@@ -6,22 +6,28 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/theme/colors.dart';
 import '../../core/theme/typography.dart';
 import '../../core/utils/app_log.dart';
 import '../../core/widgets/app_button.dart';
+import '../../data/models/enums.dart';
+import '../../data/models/vendor_po_item.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
 import '../../services/location_service.dart';
 import '../vendor_detail/vendor_detail_provider.dart';
 
-class ShipmentCaptureScreen extends StatefulWidget {
-  const ShipmentCaptureScreen({super.key, required this.vendorId});
+/// Guided per-item capture: live camera + banner with the next pending item.
+/// Confirming a photo enqueues the upload and immediately advances to the
+/// next item so the user can keep snapping without waiting.
+class GuidedItemsScreen extends StatefulWidget {
+  const GuidedItemsScreen({super.key, required this.vendorId});
   final String vendorId;
   @override
-  State<ShipmentCaptureScreen> createState() => _ShipmentCaptureScreenState();
+  State<GuidedItemsScreen> createState() => _GuidedItemsScreenState();
 }
 
-class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
+class _GuidedItemsScreenState extends State<GuidedItemsScreen>
     with WidgetsBindingObserver {
   CameraController? _camera;
   List<CameraDescription> _cameras = const [];
@@ -33,16 +39,13 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
   bool _gpsBusy = true;
   String? _gpsError;
 
-  File? _photo;
-  Timer? _clock;
-  String _now = '';
+  File? _pendingPhoto;
+  String? _pendingForItemId;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _tickClock();
-    _clock = Timer.periodic(const Duration(seconds: 1), (_) => _tickClock());
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final p = context.read<VendorDetailProvider>();
       if (p.vendor?.id != widget.vendorId) {
@@ -56,7 +59,6 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _clock?.cancel();
     _camera?.dispose();
     super.dispose();
   }
@@ -69,13 +71,6 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
     } else if (state == AppLifecycleState.resumed) {
       _bootstrapCamera();
     }
-  }
-
-  void _tickClock() {
-    final now = DateTime.now();
-    final hh = now.hour.toString().padLeft(2, '0');
-    final mm = now.minute.toString().padLeft(2, '0');
-    if (mounted) setState(() => _now = '$hh:$mm');
   }
 
   Future<void> _bootstrapCamera() async {
@@ -97,7 +92,7 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
       _cameraIndex = rearIndex >= 0 ? rearIndex : 0;
       await _initController(_cameras[_cameraIndex]);
     } catch (e, st) {
-      AppLog.error('ShipmentCaptureScreen._bootstrapCamera', e, st);
+      AppLog.error('GuidedItemsScreen._bootstrapCamera', e, st);
       if (!mounted) return;
       setState(() {
         _initializing = false;
@@ -126,7 +121,7 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
       });
       await old?.dispose();
     } catch (e, st) {
-      AppLog.error('ShipmentCaptureScreen._initController', e, st);
+      AppLog.error('GuidedItemsScreen._initController', e, st);
       if (!mounted) return;
       setState(() {
         _initializing = false;
@@ -156,7 +151,7 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
         if (fix == null) _gpsError = AppL10n.of(context).gpsBlocked;
       });
     } catch (e, st) {
-      AppLog.error('ShipmentCaptureScreen._acquireGps', e, st);
+      AppLog.error('GuidedItemsScreen._acquireGps', e, st);
       if (!mounted) return;
       setState(() {
         _gpsBusy = false;
@@ -165,7 +160,15 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
     }
   }
 
-  Future<void> _shutter() async {
+  VendorPoItem? _nextItem(VendorDetailProvider p) {
+    final items = p.vendor?.items ?? const [];
+    for (final i in items) {
+      if (!i.status.isResolved) return i;
+    }
+    return null;
+  }
+
+  Future<void> _shutter(VendorPoItem target) async {
     final c = _camera;
     if (c == null || !c.value.isInitialized || c.value.isTakingPicture) return;
     if (_fix == null) {
@@ -177,51 +180,45 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
     try {
       final shot = await c.takePicture();
       if (!mounted) return;
-      setState(() => _photo = File(shot.path));
+      setState(() {
+        _pendingPhoto = File(shot.path);
+        _pendingForItemId = target.id;
+      });
     } catch (e, st) {
-      AppLog.error('ShipmentCaptureScreen._shutter', e, st);
+      AppLog.error('GuidedItemsScreen._shutter', e, st);
     }
   }
 
-  void _retake() => setState(() => _photo = null);
+  void _retake() => setState(() {
+        _pendingPhoto = null;
+        _pendingForItemId = null;
+      });
 
-  Future<void> _submit() async {
-    final t = AppL10n.of(context);
+  void _confirm() {
     final p = context.read<VendorDetailProvider>();
     final step = p.vendor?.currentStep;
-    if (_photo == null || step == null) return;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(
-      duration: const Duration(minutes: 1),
-      content: Row(
-        children: [
-          const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Text(t.uploadingShipment)),
-        ],
-      ),
-    ));
-    final ok = await p.uploadShipmentPhoto(
+    final file = _pendingPhoto;
+    final itemId = _pendingForItemId;
+    if (file == null || itemId == null || step == null) return;
+    p.queueItemPhoto(
+      itemId: itemId,
       stepId: step.id,
-      file: _photo!,
+      file: file,
       lat: _fix?.lat,
       lng: _fix?.lng,
     );
-    messenger.hideCurrentSnackBar();
-    if (!ok || !mounted) return;
+    setState(() {
+      _pendingPhoto = null;
+      _pendingForItemId = null;
+    });
+  }
+
+  void _finishOut() {
+    final p = context.read<VendorDetailProvider>();
     final v = p.vendor;
     if (v == null) return;
-    final next = v.currentStep;
-    if (next != null && next.requiresShipmentPhoto && !next.shipmentCompleted) {
-      setState(() => _photo = null);
-      _acquireGps();
-    } else if (next != null && next.requiresItemPhoto) {
-      context.replace(Routes.guidedItemsPath(v.id));
+    if (v.items.every((i) => i.status.isResolved)) {
+      context.replace(Routes.finalizePath(v.id));
     } else {
       context.pop();
     }
@@ -231,13 +228,12 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
   Widget build(BuildContext context) {
     final t = AppL10n.of(context);
     final p = context.watch<VendorDetailProvider>();
-    final step = p.vendor?.currentStep;
-    final ref = p.vendor?.vendorRef ?? p.vendor?.supplierName ?? '';
-    final stepEn = step?.nameEn ?? '';
-    final stepAr = step?.nameAr ?? '';
-    final stepLine = stepEn.isEmpty
-        ? stepAr
-        : (stepAr.isEmpty ? stepEn : '$stepEn · $stepAr');
+    final v = p.vendor;
+    final items = v?.items ?? const [];
+    final total = items.length;
+    final resolved = items.where((i) => i.status.isResolved).length;
+    final target = _nextItem(p);
+    final hasPending = _pendingPhoto != null && _pendingForItemId != null;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -245,8 +241,10 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
         child: Column(
           children: [
             _Header(
-              eyebrow: t.shipmentProofEyebrow,
-              stepLine: stepLine,
+              t: t,
+              target: target,
+              index: resolved + 1,
+              total: total,
               onClose: () => context.pop(),
             ),
             const SizedBox(height: 8),
@@ -257,7 +255,14 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
               onRetry: _acquireGps,
               t: t,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
+            _UploadBadge(
+              pending: p.pendingUploadCount,
+              failed: p.failedUploadCount,
+              onRetry: p.failedUploadCount > 0 ? p.retryFailedUploads : null,
+              t: t,
+            ),
+            const SizedBox(height: 10),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -267,25 +272,26 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
                     initializing: _initializing,
                     error: _cameraError,
                     camera: _camera,
-                    photo: _photo,
-                    hint: t.frameUnloadingScene,
-                    refCode: ref,
-                    timeText: _now,
+                    photo: _pendingPhoto,
+                    target: target,
+                    allDone: target == null,
+                    t: t,
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 18),
-            _BottomBar(
-              t: t,
-              hasPhoto: _photo != null,
-              busy: p.busy,
-              canFlip: _cameras.length > 1 && _photo == null,
-              onFlip: _flip,
-              onShutter: _shutter,
-              onRetake: _retake,
-              onSubmit: _submit,
-            ),
+            if (target == null && !hasPending)
+              _AllDoneBar(t: t, onFinalize: _finishOut)
+            else if (hasPending)
+              _ConfirmBar(t: t, busy: false, onRetake: _retake, onConfirm: _confirm)
+            else
+              _CaptureBar(
+                t: t,
+                canFlip: _cameras.length > 1,
+                onFlip: _flip,
+                onShutter: () => target == null ? null : _shutter(target),
+              ),
             const SizedBox(height: 16),
           ],
         ),
@@ -296,39 +302,51 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
 
 class _Header extends StatelessWidget {
   const _Header({
-    required this.eyebrow,
-    required this.stepLine,
+    required this.t,
+    required this.target,
+    required this.index,
+    required this.total,
     required this.onClose,
   });
-  final String eyebrow;
-  final String stepLine;
+  final AppL10n t;
+  final VendorPoItem? target;
+  final int index;
+  final int total;
   final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
+    final eyebrow = target == null
+        ? t.allItemsCaptured
+        : t.itemOfTotal(index.clamp(1, total), total);
+    final line = target == null
+        ? t.noPendingItems
+        : '${target!.itemCode} · ${target!.itemName}';
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _RoundButton(icon: Icons.close_rounded, onTap: onClose),
           Expanded(
             child: Column(
               children: [
                 Text(
-                  eyebrow,
+                  eyebrow.toUpperCase(),
                   style: AppType.mono10.copyWith(
-                    color: Colors.white70,
+                    color: AppColors.gold,
                     letterSpacing: 1.5,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  stepLine,
+                  line,
+                  textAlign: TextAlign.center,
                   style: AppType.bodyLg.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -390,7 +408,16 @@ class _GpsPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _StatusDot(busy: busy, ready: ready),
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: ready
+                  ? const Color(0xFF7CD992)
+                  : (busy ? Colors.orangeAccent : Colors.redAccent),
+              shape: BoxShape.circle,
+            ),
+          ),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
@@ -419,21 +446,76 @@ class _GpsPill extends StatelessWidget {
   }
 }
 
-class _StatusDot extends StatelessWidget {
-  const _StatusDot({required this.busy, required this.ready});
-  final bool busy;
-  final bool ready;
+class _UploadBadge extends StatelessWidget {
+  const _UploadBadge({
+    required this.pending,
+    required this.failed,
+    required this.onRetry,
+    required this.t,
+  });
+  final int pending;
+  final int failed;
+  final VoidCallback? onRetry;
+  final AppL10n t;
+
   @override
   Widget build(BuildContext context) {
-    final color = ready
-        ? const Color(0xFF7CD992)
-        : (busy ? Colors.orangeAccent : Colors.redAccent);
-    return Container(
-      width: 8,
-      height: 8,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    if (pending == 0 && failed == 0) return const SizedBox.shrink();
+    final children = <Widget>[];
+    if (pending > 0) {
+      children.add(_Pill(
+        bg: AppColors.teal.withAlpha(60),
+        border: AppColors.teal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white),
+            ),
+            const SizedBox(width: 8),
+            Text(t.uploadingBadge(pending),
+                style: AppType.mono10.copyWith(color: Colors.white)),
+          ],
+        ),
+      ));
+    }
+    if (failed > 0) {
+      children.add(GestureDetector(
+        onTap: onRetry,
+        child: _Pill(
+          bg: AppColors.danger.withAlpha(60),
+          border: AppColors.danger,
+          child: Text(t.failedBadge(failed),
+              style: AppType.mono10.copyWith(color: Colors.white)),
+        ),
+      ));
+    }
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      alignment: WrapAlignment.center,
+      children: children,
     );
   }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({required this.bg, required this.border, required this.child});
+  final Color bg;
+  final Color border;
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: border),
+        ),
+        child: child,
+      );
 }
 
 class _Viewfinder extends StatelessWidget {
@@ -442,18 +524,17 @@ class _Viewfinder extends StatelessWidget {
     required this.error,
     required this.camera,
     required this.photo,
-    required this.hint,
-    required this.refCode,
-    required this.timeText,
+    required this.target,
+    required this.allDone,
+    required this.t,
   });
-
   final bool initializing;
   final String? error;
   final CameraController? camera;
   final File? photo;
-  final String hint;
-  final String refCode;
-  final String timeText;
+  final VendorPoItem? target;
+  final bool allDone;
+  final AppL10n t;
 
   @override
   Widget build(BuildContext context) {
@@ -486,51 +567,45 @@ class _Viewfinder extends StatelessWidget {
                 child: CameraPreview(camera!),
               ),
             ),
-          if (photo == null) ...[
-            const _GridOverlay(),
-            const Center(child: _FocusBrackets()),
+          if (photo == null && !allDone) ...[
+            const IgnorePointer(child: _Grid()),
+            const Center(child: _Brackets()),
+          ],
+          if (allDone)
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.check_circle, color: Color(0xFF7CD992), size: 64),
+                  const SizedBox(height: 12),
+                  Text(t.allItemsCaptured,
+                      style: AppType.h2.copyWith(color: Colors.white)),
+                ],
+              ),
+            ),
+          if (photo == null && target != null)
             Positioned(
               left: 0,
               right: 0,
               top: 14,
               child: Center(
                 child: Text(
-                  hint,
-                  style: AppType.body.copyWith(color: const Color(0xFFFFE07A)),
+                  target!.itemCode,
+                  style: AppType.mono12.copyWith(color: const Color(0xFFFFE07A)),
                 ),
               ),
             ),
-            Positioned(
-              left: 14,
-              right: 14,
-              bottom: 12,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    refCode,
-                    style: AppType.mono10.copyWith(color: Colors.white70),
-                  ),
-                  Text(
-                    timeText,
-                    style: AppType.mono10.copyWith(color: Colors.white70),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
-class _GridOverlay extends StatelessWidget {
-  const _GridOverlay();
+class _Grid extends StatelessWidget {
+  const _Grid();
   @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(child: CustomPaint(painter: _GridPainter()));
-  }
+  Widget build(BuildContext context) =>
+      CustomPaint(painter: _GridPainter());
 }
 
 class _GridPainter extends CustomPainter {
@@ -551,19 +626,17 @@ class _GridPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _FocusBrackets extends StatelessWidget {
-  const _FocusBrackets();
+class _Brackets extends StatelessWidget {
+  const _Brackets();
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 96,
-      height: 96,
-      child: CustomPaint(painter: _FocusPainter()),
-    );
-  }
+  Widget build(BuildContext context) => SizedBox(
+        width: 96,
+        height: 96,
+        child: CustomPaint(painter: _BracketsPainter()),
+      );
 }
 
-class _FocusPainter extends CustomPainter {
+class _BracketsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -575,83 +648,35 @@ class _FocusPainter extends CustomPainter {
     canvas.drawLine(Offset.zero, const Offset(0, len), paint);
     canvas.drawLine(Offset(size.width - len, 0), Offset(size.width, 0), paint);
     canvas.drawLine(Offset(size.width, 0), Offset(size.width, len), paint);
-    canvas.drawLine(
-        Offset(0, size.height - len), Offset(0, size.height), paint);
+    canvas.drawLine(Offset(0, size.height - len), Offset(0, size.height), paint);
     canvas.drawLine(Offset(0, size.height), Offset(len, size.height), paint);
     canvas.drawLine(Offset(size.width - len, size.height),
         Offset(size.width, size.height), paint);
     canvas.drawLine(Offset(size.width, size.height - len),
         Offset(size.width, size.height), paint);
-    final innerPaint = Paint()
-      ..color = Colors.white.withAlpha(160)
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-    final cx = size.width / 2, cy = size.height / 2;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(cx, cy), width: 28, height: 28),
-        const Radius.circular(6),
-      ),
-      innerPaint,
-    );
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({
+class _CaptureBar extends StatelessWidget {
+  const _CaptureBar({
     required this.t,
-    required this.hasPhoto,
-    required this.busy,
     required this.canFlip,
     required this.onFlip,
     required this.onShutter,
-    required this.onRetake,
-    required this.onSubmit,
   });
   final AppL10n t;
-  final bool hasPhoto;
-  final bool busy;
   final bool canFlip;
   final VoidCallback onFlip;
-  final VoidCallback onShutter;
-  final VoidCallback onRetake;
-  final VoidCallback onSubmit;
-
+  final VoidCallback? onShutter;
   @override
   Widget build(BuildContext context) {
-    if (hasPhoto) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: AppButton(
-                label: t.retake,
-                variant: AppBtnVariant.ghost,
-                onPressed: busy ? null : onRetake,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: AppButton(
-                label: t.submit,
-                loading: busy,
-                trailing: const Icon(Icons.check_rounded),
-                onPressed: busy ? null : onSubmit,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _IconLabel(
             icon: Icons.cached_rounded,
@@ -665,15 +690,18 @@ class _BottomBar extends StatelessWidget {
               height: 78,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 4),
+                border: Border.all(
+                  color: onShutter == null ? Colors.white38 : Colors.white,
+                  width: 4,
+                ),
               ),
               child: Center(
                 child: Container(
                   width: 60,
                   height: 60,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
+                    color: onShutter == null ? Colors.white38 : Colors.white,
                   ),
                 ),
               ),
@@ -682,9 +710,64 @@ class _BottomBar extends StatelessWidget {
           _IconLabel(
             icon: Icons.auto_awesome_outlined,
             label: t.hdr,
-            onTap: null, // HDR is cosmetic for now
+            onTap: null,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ConfirmBar extends StatelessWidget {
+  const _ConfirmBar({
+    required this.t,
+    required this.busy,
+    required this.onRetake,
+    required this.onConfirm,
+  });
+  final AppL10n t;
+  final bool busy;
+  final VoidCallback onRetake;
+  final VoidCallback onConfirm;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: AppButton(
+              label: t.retake,
+              variant: AppBtnVariant.ghost,
+              onPressed: busy ? null : onRetake,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: AppButton(
+              label: t.confirmPhoto,
+              trailing: const Icon(Icons.check_rounded),
+              onPressed: busy ? null : onConfirm,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AllDoneBar extends StatelessWidget {
+  const _AllDoneBar({required this.t, required this.onFinalize});
+  final AppL10n t;
+  final VoidCallback onFinalize;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: AppButton(
+        label: t.finalize,
+        trailing: const Icon(Icons.arrow_forward_rounded),
+        onPressed: onFinalize,
       ),
     );
   }
@@ -706,10 +789,8 @@ class _IconLabel extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 22),
           const SizedBox(height: 4),
-          Text(
-            label.toUpperCase(),
-            style: AppType.mono10.copyWith(color: color, letterSpacing: 1),
-          ),
+          Text(label.toUpperCase(),
+              style: AppType.mono10.copyWith(color: color, letterSpacing: 1)),
         ],
       ),
     );

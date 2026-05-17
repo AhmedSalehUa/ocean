@@ -254,7 +254,7 @@ class _BottomCta extends StatelessWidget {
         if (s.requiresShipmentPhoto && !s.shipmentCompleted) {
           context.push(Routes.shipmentPath(vendor.id));
         } else if (s.requiresItemPhoto) {
-          context.push(Routes.itemLoopPath(vendor.id));
+          context.push(Routes.guidedItemsPath(vendor.id));
         }
         return;
       }
@@ -264,7 +264,7 @@ class _BottomCta extends StatelessWidget {
         return;
       }
       if (step != null && step.requiresItemPhoto) {
-        context.push(Routes.itemLoopPath(vendor.id));
+        context.push(Routes.guidedItemsPath(vendor.id));
         return;
       }
       if (vendor.allItemsResolved) {

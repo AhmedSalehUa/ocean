@@ -1,45 +1,57 @@
 import 'package:flutter/material.dart';
 
-/// Trail palette — ported verbatim from the Claude Design prototype.
-/// oklch values from the original CSS were converted to sRGB once;
-/// the hex values below are the canonical reference for the app.
+/// Ocean Ship · Egyptian Ports & Suez Canal palette.
+///
+/// Brand swatches (1–5):
+///   1. Main Navy     #012169
+///   2. Teal Accent   #008080
+///   3. Muted Gold    #D4AF37
+///   4. Sand Gray     #E0DED7
+///   5. Sea Spray     #F5F7FA
 class AppColors {
   AppColors._();
 
-  // Background
-  static const Color bg = Color(0xFFF4F2EC);
-  static const Color bgDeep = Color(0xFFECE9E0);
-  static const Color bgWarmHi = Color(0xFFFBFAF5);
-  static const Color bgWarmLo = Color(0xFFEAE6D9);
+  // ── Brand ─────────────────────────────────────────────────────────────────
+  static const Color navy = Color(0xFF012169);
+  static const Color teal = Color(0xFF008080);
+  static const Color gold = Color(0xFFD4AF37);
+  static const Color sand = Color(0xFFE0DED7);
+  static const Color sea = Color(0xFFF5F7FA);
 
-  // Surface
+  // ── Background ────────────────────────────────────────────────────────────
+  static const Color bg = sea;
+  static const Color bgDeep = sand;
+  static const Color bgWarmHi = Color(0xFFFAFBFD);
+  static const Color bgWarmLo = sand;
+
+  // ── Surface ───────────────────────────────────────────────────────────────
   static const Color surface = Color(0xFFFFFFFF);
 
-  // Ink (text)
-  static const Color ink = Color(0xFF16170F);
-  static const Color ink2 = Color(0xFF3A3B33);
-  static const Color muted = Color(0xFF7A7B6F);
-  static const Color muted2 = Color(0xFFA6A79A);
+  // ── Ink (text) ────────────────────────────────────────────────────────────
+  static const Color ink = navy;
+  static const Color ink2 = Color(0xFF1E3A8A);
+  static const Color muted = Color(0xFF6B7280);
+  static const Color muted2 = Color(0xFF9CA3AF);
 
-  // Lines
-  static const Color line = Color(0xFFE4E1D5);
-  static const Color lineSoft = Color(0xFFEFEDE3);
+  // ── Lines ─────────────────────────────────────────────────────────────────
+  static const Color line = Color(0xFFD6D4CC);
+  static const Color lineSoft = Color(0xFFE6E4DC);
 
-  // Accent (signed-off green, oklch(0.52 0.13 152))
-  static const Color accent = Color(0xFF3E7A57);
-  static const Color accentInk = Color(0xFF295240);
-  static const Color accentSoft = Color(0xFFE0EDDE);
+  // ── Accent (teal) ─────────────────────────────────────────────────────────
+  static const Color accent = teal;
+  static const Color accentInk = Color(0xFF005F5F);
+  static const Color accentSoft = Color(0xFFD6ECEC);
 
-  // Warn (amber, oklch(0.65 0.16 65))
-  static const Color warn = Color(0xFFC78A35);
-  static const Color warnSoft = Color(0xFFF7EEDC);
-  static const Color warnInk = Color(0xFF8A5C20);
+  // ── Warn (gold) ───────────────────────────────────────────────────────────
+  static const Color warn = gold;
+  static const Color warnSoft = Color(0xFFFAEFCB);
+  static const Color warnInk = Color(0xFF7A6420);
 
-  // Danger (red, oklch(0.55 0.18 25))
+  // ── Danger ────────────────────────────────────────────────────────────────
   static const Color danger = Color(0xFFB94A3D);
   static const Color dangerSoft = Color(0xFFF6E1DC);
 
-  /// Dark camera surface (used by shipment + item-loop capture screens).
-  static const Color darkBg = Color(0xFF111210);
-  static const Color darkSurface = Color(0xFF1B1C18);
+  /// Dark camera surface (shipment + guided item capture).
+  static const Color darkBg = Color(0xFF0A0E1F);
+  static const Color darkSurface = Color(0xFF111733);
 }

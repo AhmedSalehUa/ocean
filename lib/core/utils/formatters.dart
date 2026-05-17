@@ -3,11 +3,13 @@ import 'package:intl/intl.dart';
 class Fmt {
   Fmt._();
 
-  static final _money = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
-  static final _moneyDecimal = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+  static final _money = NumberFormat.decimalPattern();
+  static final _moneyDecimal = NumberFormat.decimalPattern()
+    ..maximumFractionDigits = 2
+    ..minimumFractionDigits = 2;
 
   static String money(num value, {bool decimals = false}) =>
-      decimals ? _moneyDecimal.format(value) : _money.format(value);
+      decimals ? _moneyDecimal.format(value) : _money.format(value.round());
 
   static String quantity(num value, String unit) {
     final v = value == value.toInt() ? value.toInt().toString() : value.toString();

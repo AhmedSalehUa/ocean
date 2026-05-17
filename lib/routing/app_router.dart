@@ -7,6 +7,7 @@ import '../features/auth/login_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 import '../features/handoff/handoff_screen.dart';
 import '../features/finalize/finalize_screen.dart';
+import '../features/guided_capture/guided_items_screen.dart';
 import '../features/item_loop/item_loop_screen.dart';
 import '../features/proofs/proofs_screen.dart';
 import '../features/shipment_capture/shipment_capture_screen.dart';
@@ -43,6 +44,11 @@ GoRouter buildRouter(AuthProvider auth) {
       GoRoute(
         path: Routes.itemLoop,
         builder: (_, s) => ItemLoopScreen(vendorId: s.pathParameters['vendorId']!),
+      ),
+      GoRoute(
+        path: Routes.guidedItems,
+        builder: (_, s) =>
+            GuidedItemsScreen(vendorId: s.pathParameters['vendorId']!),
       ),
       GoRoute(
         path: Routes.proofs,

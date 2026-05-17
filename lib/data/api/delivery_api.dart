@@ -43,6 +43,11 @@ abstract class DeliveryApi {
     double? accuracyMeters,
   });
   Future<void> markItemMissing({required String vendorPoId, required String itemId});
+  Future<void> markItemRejected({
+    required String vendorPoId,
+    required String itemId,
+    required String stepId,
+  });
   Future<VendorPo> finalizeVendorPo(String vendorPoId);
 
   /// For [HttpDeliveryApi] this returns the auth-aware URL the UI should

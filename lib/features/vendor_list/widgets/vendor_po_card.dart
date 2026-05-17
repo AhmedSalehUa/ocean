@@ -106,6 +106,7 @@ class VendorPoCard extends StatelessWidget {
       ItemStatus.inProgress => AppColors.warn,
       ItemStatus.delivered => AppColors.accent,
       ItemStatus.missing => AppColors.danger,
+      ItemStatus.rejected => AppColors.danger,
     };
   }
 }

@@ -31,6 +31,7 @@ class ItemStatusPill extends StatelessWidget {
       ItemStatus.inProgress => const AppChip(label: 'In progress', tone: ChipTone.warn),
       ItemStatus.delivered => const AppChip(label: 'Delivered', tone: ChipTone.green),
       ItemStatus.missing => const AppChip(label: 'Missing', tone: ChipTone.danger),
+      ItemStatus.rejected => const AppChip(label: 'Rejected', tone: ChipTone.danger),
     };
   }
 }

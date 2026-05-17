@@ -186,6 +186,18 @@ class HttpDeliveryApi implements DeliveryApi {
   }
 
   @override
+  Future<void> markItemRejected({
+    required String vendorPoId,
+    required String itemId,
+    required String stepId,
+  }) async {
+    final r = await _dio.post(
+      '/api/delivery/mobile/vendor-pos/$vendorPoId/items/$itemId/steps/$stepId/rejected',
+    );
+    _unwrap(r);
+  }
+
+  @override
   Future<VendorPo> finalizeVendorPo(String vendorPoId) async {
     final r = await _dio.post('/api/delivery/mobile/vendor-pos/$vendorPoId/finalize');
     final body = _unwrap(r);

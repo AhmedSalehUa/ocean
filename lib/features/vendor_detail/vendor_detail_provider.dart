@@ -338,6 +338,24 @@ class VendorDetailProvider extends ChangeNotifier {
         _vendor = await _fetchHydrated(_vendorPoId!);
       });
 
+  Future<bool> markItemRejected({
+    required String itemId,
+    required String stepId,
+  }) =>
+      _wrap(() async {
+        await _repo.markRejected(
+          vendorPoId: _vendorPoId!,
+          itemId: itemId,
+          stepId: stepId,
+        );
+        // Treat rejected like a per-step resolution so the guided loop
+        // moves on to the next item even before the backend echoes it back.
+        _stepItemUploads
+            .putIfAbsent(stepId, () => <String>{})
+            .add(itemId);
+        _vendor = await _fetchHydrated(_vendorPoId!);
+      });
+
   Future<bool> finalize() => _wrap(() async {
         final updated = await _repo.finalize(_vendorPoId!);
         _vendor = updated;

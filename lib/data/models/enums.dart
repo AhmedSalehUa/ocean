@@ -21,7 +21,7 @@ extension PoStatusX on PoStatus {
 }
 
 /// Individual item resolution state.
-enum ItemStatus { pending, inProgress, delivered, missing }
+enum ItemStatus { pending, inProgress, delivered, missing, rejected }
 
 extension ItemStatusX on ItemStatus {
   String get wire => switch (this) {
@@ -29,9 +29,13 @@ extension ItemStatusX on ItemStatus {
         ItemStatus.inProgress => 'IN_PROGRESS',
         ItemStatus.delivered => 'DELIVERED',
         ItemStatus.missing => 'MISSING',
+        ItemStatus.rejected => 'REJECTED',
       };
 
-  bool get isResolved => this == ItemStatus.delivered || this == ItemStatus.missing;
+  bool get isResolved =>
+      this == ItemStatus.delivered ||
+      this == ItemStatus.missing ||
+      this == ItemStatus.rejected;
 
   static ItemStatus parse(String? value) {
     return switch (value) {
@@ -39,6 +43,7 @@ extension ItemStatusX on ItemStatus {
       'IN_PROGRESS' => ItemStatus.inProgress,
       'DELIVERED' => ItemStatus.delivered,
       'MISSING' => ItemStatus.missing,
+      'REJECTED' => ItemStatus.rejected,
       _ => ItemStatus.pending,
     };
   }

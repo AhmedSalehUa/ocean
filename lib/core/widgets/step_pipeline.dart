@@ -14,6 +14,7 @@ class StepPipeline extends StatefulWidget {
     this.compact = false,
     this.showLabels = false,
     this.localeCode = 'en',
+    this.onStepTap,
   });
 
   final List<WorkflowStep> steps;
@@ -21,6 +22,7 @@ class StepPipeline extends StatefulWidget {
   final bool compact;
   final bool showLabels;
   final String localeCode;
+  final void Function(WorkflowStep step)? onStepTap;
 
   @override
   State<StepPipeline> createState() => _StepPipelineState();
@@ -63,6 +65,9 @@ class _StepPipelineState extends State<StepPipeline>
                   state: _stateFor(i, idx, widget.steps[i]),
                   index: i + 1,
                   pulse: _ctrl,
+                  onTap: widget.onStepTap == null
+                      ? null
+                      : () => widget.onStepTap!(widget.steps[i]),
                 ),
               ),
             ],
@@ -111,12 +116,14 @@ class _StepBlock extends StatelessWidget {
     required this.state,
     required this.index,
     required this.pulse,
+    this.onTap,
   });
 
   final double height;
   final _StepState state;
   final int index;
   final Animation<double> pulse;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +144,7 @@ class _StepBlock extends StatelessWidget {
             ),
           );
 
-    return ClipRRect(
+    final block = ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Stack(
         children: [
@@ -170,6 +177,16 @@ class _StepBlock extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+
+    if (onTap == null) return block;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: block,
       ),
     );
   }

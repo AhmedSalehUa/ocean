@@ -36,6 +36,11 @@ class VendorDetailProvider extends ChangeNotifier {
   // know which items still need a photo for the *current* step rather than
   // relying on the item's global delivered/missing status.
   final Map<String, Set<String>> _stepItemUploads = <String, Set<String>>{};
+  // When the user manually picks a step (e.g. taps the pipeline), pin it so
+  // the next refetch / re-derivation doesn't snap them back to whatever
+  // step the server says is "current". Cleared when the pinned step becomes
+  // complete or when a different vendor is loaded.
+  String? _pinnedStepId;
   // Background upload queue used by the guided capture flow so the camera can
   // immediately advance to the next item while the previous photo uploads.
   final List<_PendingItemUpload> _queue = [];
@@ -54,6 +59,28 @@ class VendorDetailProvider extends ChangeNotifier {
   Set<String> uploadedItemsForStep(String stepId) =>
       _stepItemUploads[stepId] ?? const <String>{};
 
+  /// Pins a workflow step so it becomes the active "current step" for the
+  /// capture screens until it is completed (or until the user pins a
+  /// different one). Used by the step pipeline so the user can jump back to
+  /// any step and start capturing without depending on server state.
+  void pinStep(String stepId) {
+    final v = _vendor;
+    if (v == null) return;
+    if (!v.steps.any((s) => s.id == stepId)) return;
+    _pinnedStepId = stepId;
+    _vendor = v.copyWith(currentStepId: stepId);
+    AppLog.info('VendorDetailProvider.pinStep', 'pinned $stepId');
+    notifyListeners();
+  }
+
+  /// Drops any manual step pin so the next refetch falls back to the
+  /// server-derived current step.
+  void clearPinnedStep() {
+    if (_pinnedStepId == null) return;
+    _pinnedStepId = null;
+    notifyListeners();
+  }
+
   String? get vendorPoId => _vendorPoId;
   VendorPo? get vendor => _vendor;
   ProofHistory? get proofs => _proofs;
@@ -66,6 +93,7 @@ class VendorDetailProvider extends ChangeNotifier {
       _locallyDelivered.clear();
       _locallyCompletedShipmentSteps.clear();
       _stepItemUploads.clear();
+      _pinnedStepId = null;
       _queue.clear();
       _failed.clear();
     }
@@ -94,11 +122,12 @@ class VendorDetailProvider extends ChangeNotifier {
     final v = results[0] as VendorPo;
     final rawSteps = (results[1] as List<WorkflowStep>)
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    final steps = _applyLocalStepProgress(rawSteps, v.items.length);
+    final steps = _applyLocalStepProgress(rawSteps, v.items);
     AppLog.info(
       'VendorDetailProvider._fetchHydrated',
       'vendor=$vendorPoId status=${v.status} items=${v.items.length} '
           'steps=${steps.length} currentStepId=${v.currentStepId} '
+          'pinned=$_pinnedStepId '
           'localShipmentDone=$_locallyCompletedShipmentSteps '
           'stepItemUploads=${_stepItemUploads.map((k, vv) => MapEntry(k, vv.length))}',
     );
@@ -123,6 +152,22 @@ class VendorDetailProvider extends ChangeNotifier {
         'derived currentStepId=$currentStepId from steps',
       );
     }
+    // A pinned step (user tapped it in the pipeline) wins over the derived
+    // currentStep — unless that step is now complete, in which case we drop
+    // the pin and fall back to the derived next step.
+    if (_pinnedStepId != null) {
+      final pinned = steps.firstWhere(
+        (s) => s.id == _pinnedStepId,
+        orElse: () => steps.first,
+      );
+      if (pinned.isComplete) {
+        AppLog.info('VendorDetailProvider._fetchHydrated',
+            'pinned step $_pinnedStepId is complete, clearing pin');
+        _pinnedStepId = null;
+      } else {
+        currentStepId = _pinnedStepId;
+      }
+    }
     final items = _applyLocalDelivered(v.items);
     return v.copyWith(
       steps: steps,
@@ -144,20 +189,34 @@ class VendorDetailProvider extends ChangeNotifier {
   /// Patches each step with our local view of progress so [WorkflowStep.isComplete]
   /// is true once the user has finished a step in-app — even if the backend
   /// hasn't bumped its shipment_completed flag or item_completed_count yet.
+  ///
+  /// Items marked MISSING or REJECTED count toward the per-step completion
+  /// alongside the photographed-this-step items, so a step doesn't get stuck
+  /// "incomplete" just because the user resolved some items without a photo.
   List<WorkflowStep> _applyLocalStepProgress(
     List<WorkflowStep> steps,
-    int vendorItemsCount,
+    List<VendorPoItem> vendorItems,
   ) {
-    if (_locallyCompletedShipmentSteps.isEmpty && _stepItemUploads.isEmpty) {
+    if (_locallyCompletedShipmentSteps.isEmpty &&
+        _stepItemUploads.isEmpty &&
+        vendorItems.isEmpty) {
       return steps;
     }
+    final resolvedAwayIds = vendorItems
+        .where((i) =>
+            i.status == ItemStatus.missing || i.status == ItemStatus.rejected)
+        .map((i) => i.id)
+        .toSet();
+    final vendorItemsCount = vendorItems.length;
     return steps.map((s) {
       final shipmentDone =
           s.shipmentCompleted || _locallyCompletedShipmentSteps.contains(s.id);
-      final localItemCount = _stepItemUploads[s.id]?.length ?? 0;
+      final localItems = _stepItemUploads[s.id] ?? const <String>{};
+      final resolvedForStep = <String>{...localItems, ...resolvedAwayIds};
+      final localResolvedCount = resolvedForStep.length;
       final effectiveTotal = s.totalItems > 0 ? s.totalItems : vendorItemsCount;
-      final mergedItemCount = localItemCount > s.itemCompletedCount
-          ? localItemCount
+      final mergedItemCount = localResolvedCount > s.itemCompletedCount
+          ? localResolvedCount
           : s.itemCompletedCount;
       final changed = shipmentDone != s.shipmentCompleted ||
           mergedItemCount != s.itemCompletedCount ||

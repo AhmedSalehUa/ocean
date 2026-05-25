@@ -3,12 +3,20 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'colors.dart';
 
-/// Inter + JetBrains Mono pairing (Geist is not published in google_fonts).
+/// Rubik for Latin text, Almarai as the fontFamilyFallback so Arabic
+/// strings (and mixed-language text) render correctly without any
+/// per-widget locale plumbing. Both ship as embedded asset fonts.
 class AppType {
   AppType._();
 
+  static const String latinFamily = 'Rubik';
+  static const String arabicFamily = 'Almarai';
+  static const List<String> familyFallback = ['Almarai'];
+
   static TextStyle _sans(double size, FontWeight w, {Color? color, double? letterSpacing, double? height}) {
-    return GoogleFonts.inter(
+    return TextStyle(
+      fontFamily: latinFamily,
+      fontFamilyFallback: familyFallback,
       fontSize: size,
       fontWeight: w,
       color: color ?? AppColors.ink,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'colors.dart';
 import 'typography.dart';
@@ -21,10 +20,13 @@ class AppTheme {
         error: AppColors.danger,
         onError: Colors.white,
       ),
-      textTheme: GoogleFonts.interTextTheme(base.textTheme).apply(
-        bodyColor: AppColors.ink,
-        displayColor: AppColors.ink,
-      ),
+      textTheme: base.textTheme
+          .apply(
+            fontFamily: AppType.latinFamily,
+            fontFamilyFallback: AppType.familyFallback,
+            bodyColor: AppColors.ink,
+            displayColor: AppColors.ink,
+          ),
       dividerColor: AppColors.line,
       iconTheme: const IconThemeData(color: AppColors.ink2, size: 20),
       appBarTheme: AppBarTheme(

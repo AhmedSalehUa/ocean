@@ -14,6 +14,7 @@ import '../../core/widgets/step_pipeline.dart';
 import '../../core/widgets/top_bar.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/vendor_po.dart';
+import '../../data/models/workflow_step.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
 import '../../services/locale_service.dart';
@@ -166,10 +167,28 @@ class _StepCard extends StatelessWidget {
             currentStepId: vendor.currentStepId,
             showLabels: true,
             localeCode: localeCode,
+            onStepTap: (s) => _jumpToStep(context, vendor.id, s),
           ),
         ],
       ),
     );
+  }
+
+  void _jumpToStep(BuildContext context, String vendorId, WorkflowStep step) {
+    final p = context.read<VendorDetailProvider>();
+    p.pinStep(step.id);
+    if (step.isFinalStep ||
+        (!step.requiresShipmentPhoto && !step.requiresItemPhoto)) {
+      context.push(Routes.finalizePath(vendorId));
+      return;
+    }
+    if (step.requiresShipmentPhoto && !step.shipmentCompleted) {
+      context.push(Routes.shipmentPath(vendorId));
+      return;
+    }
+    if (step.requiresItemPhoto) {
+      context.push(Routes.guidedItemsPath(vendorId));
+    }
   }
 }
 

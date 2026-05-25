@@ -82,10 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
               const Center(child: OceanShipLockup(markSize: 140)),
-              const Spacer(),
-              Eyebrow(t.loginEyebrow),
-              const SizedBox(height: 10),
-              Text(t.tagline, style: AppType.h1),
               const SizedBox(height: 24),
               _Field(
                 controller: _username,
@@ -112,20 +108,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: _submit,
               ),
               const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.shield_outlined, size: 14, color: AppColors.muted),
-                  const SizedBox(width: 6),
-                  Text(t.jwtFooter, style: AppType.caption),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                t.copyright,
-                textAlign: TextAlign.center,
-                style: AppType.mono10.copyWith(color: AppColors.muted2),
-              ),
             ],
           ),
         ),

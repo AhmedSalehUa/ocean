@@ -7,7 +7,7 @@ class LocaleService extends ChangeNotifier {
   static const _key = 'trail.locale';
   final SharedPreferences _prefs;
 
-  Locale _locale = const Locale('en');
+  Locale _locale = const Locale('ar');
   Locale get locale => _locale;
 
   bool get isRtl => _locale.languageCode == 'ar';

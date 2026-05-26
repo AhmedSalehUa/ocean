@@ -49,7 +49,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: TrailTopBar(
         leading: GestureDetector(
           onTap: () => _showAccountSheet(context),
-          child: const TrailLogo(size: 16),
+          child: const TrailLogo(size: 16, showText: false),
         ),
         title: _todayTitle(t),
         trailing: RoundIconBtn(

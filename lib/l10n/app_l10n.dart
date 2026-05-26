@@ -173,6 +173,12 @@ class AppL10n {
 
   // ─── Step done ───
   String get stepDoneTitle => _t('Step complete', 'اكتملت الخطوة');
+  String stepLockedHint(String requiredStepName) => _t(
+      'Complete "$requiredStepName" first to unlock this step.',
+      'أكمل "$requiredStepName" أولاً لفتح هذه الخطوة.');
+  String get finalizeBlockedSteps => _t(
+      'Finish every step before finalizing.',
+      'أكمل جميع الخطوات قبل الإنهاء.');
   String stepDoneSubtitle(String stepName) =>
       _t('$stepName captured and uploaded.', 'تم التقاط ورفع $stepName.');
   String get stepDoneContinue => _t('Continue to next step', 'الانتقال إلى الخطوة التالية');

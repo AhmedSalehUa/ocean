@@ -167,27 +167,52 @@ class _StepCard extends StatelessWidget {
             currentStepId: vendor.currentStepId,
             showLabels: true,
             localeCode: localeCode,
-            onStepTap: (s) => _jumpToStep(context, vendor.id, s),
+            onStepTap: (s) => _jumpToStep(context, vendor, s),
           ),
         ],
       ),
     );
   }
 
-  void _jumpToStep(BuildContext context, String vendorId, WorkflowStep step) {
+  void _jumpToStep(BuildContext context, VendorPo vendor, WorkflowStep step) {
+    final localeCode = Localizations.localeOf(context).languageCode;
+    // Block jumps until every earlier step is complete. The user always has
+    // to march through the workflow in order — the pipeline taps are just
+    // a faster way to re-enter the step the workflow is *already* on.
+    final idx = vendor.steps.indexWhere((s) => s.id == step.id);
+    for (var i = 0; i < idx; i++) {
+      final prior = vendor.steps[i];
+      if (!prior.isComplete) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(
+            AppL10n.of(context).stepLockedHint(prior.nameFor(localeCode)),
+          )),
+        );
+        return;
+      }
+    }
+    // Final step gates finalize: only allowed when every prior step is done
+    // AND every item is resolved.
+    if (step.isFinalStep && !vendor.readyToFinalize) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppL10n.of(context).finalizeBlockedSteps)),
+      );
+      return;
+    }
+
     final p = context.read<VendorDetailProvider>();
     p.pinStep(step.id);
     if (step.isFinalStep ||
         (!step.requiresShipmentPhoto && !step.requiresItemPhoto)) {
-      context.push(Routes.finalizePath(vendorId));
+      context.push(Routes.finalizePath(vendor.id));
       return;
     }
     if (step.requiresShipmentPhoto && !step.shipmentCompleted) {
-      context.push(Routes.shipmentPath(vendorId));
+      context.push(Routes.shipmentPath(vendor.id));
       return;
     }
     if (step.requiresItemPhoto) {
-      context.push(Routes.guidedItemsPath(vendorId));
+      context.push(Routes.guidedItemsPath(vendor.id));
     }
   }
 }

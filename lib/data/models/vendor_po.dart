@@ -51,6 +51,22 @@ class VendorPo {
 
   bool get allItemsResolved => items.isNotEmpty && items.every((i) => i.status.isResolved);
 
+  /// True only when every non-final workflow step is locally complete.
+  /// The final step itself is what triggers /finalize, so we don't require
+  /// it to be complete here.
+  bool get allPriorStepsComplete {
+    if (steps.isEmpty) return true;
+    for (final s in steps) {
+      if (s.isFinalStep) continue;
+      if (!s.isComplete) return false;
+    }
+    return true;
+  }
+
+  /// True when /finalize is safe to call: every item resolved and every
+  /// non-final step complete.
+  bool get readyToFinalize => allItemsResolved && allPriorStepsComplete;
+
   VendorPo copyWith({
     PoStatus? status,
     DateTime? finalizedAt,

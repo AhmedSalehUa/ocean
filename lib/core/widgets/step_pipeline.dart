@@ -99,11 +99,12 @@ class _StepPipelineState extends State<StepPipeline>
   }
 
   _StepState _stateFor(int i, int currentIdx, WorkflowStep s) {
-    if (currentIdx < 0) return _StepState.pending;
-    if (i < currentIdx) return _StepState.done;
-    if (i == currentIdx) {
-      return s.isComplete ? _StepState.done : _StepState.active;
-    }
+    // A step is "done" iff it actually reports itself complete. Position
+    // relative to currentIdx no longer implies completion — the user might
+    // be looking at a step they've jumped to without finishing the earlier
+    // ones.
+    if (s.isComplete) return _StepState.done;
+    if (i == currentIdx) return _StepState.active;
     return _StepState.pending;
   }
 }

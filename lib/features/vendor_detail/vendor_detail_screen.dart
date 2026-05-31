@@ -313,11 +313,23 @@ class _BottomCta extends StatelessWidget {
       }
     }
 
+    // The vendor PO is done once /finalize has been called (finalizedAt is
+    // set) or every workflow step is complete. In either case there is no
+    // more capture to do, so the primary CTA disappears entirely and only
+    // the "View proofs" button stays.
+    final lastStep = vendor.steps.isEmpty ? null : vendor.steps.last;
+    final workflowFinished = vendor.finalizedAt != null ||
+        (lastStep != null && lastStep.isFinalStep && lastStep.isComplete);
+
     String label;
     AppBtnVariant variant = AppBtnVariant.primary;
     bool enabled = true;
 
-    if (vendor.status == PoStatus.newPo) {
+    if (workflowFinished) {
+      label = t.done;
+      enabled = false;
+      variant = AppBtnVariant.soft;
+    } else if (vendor.status == PoStatus.newPo) {
       label = t.startVendor;
     } else if (step != null && step.requiresShipmentPhoto && !step.shipmentCompleted) {
       label = t.captureShipment;
@@ -325,11 +337,6 @@ class _BottomCta extends StatelessWidget {
       label = t.captureItems;
     } else if (vendor.allItemsResolved) {
       label = t.finalize;
-    } else if (vendor.status == PoStatus.fullyDelivered ||
-        vendor.status == PoStatus.partiallyDelivered) {
-      label = t.done;
-      enabled = false;
-      variant = AppBtnVariant.soft;
     } else {
       label = t.captureItems;
       enabled = false;
@@ -341,14 +348,16 @@ class _BottomCta extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AppButton(
-              label: p.busy ? t.verifyingToken : label,
-              loading: p.busy,
-              variant: variant,
-              trailing: enabled ? const Icon(Icons.arrow_forward_rounded) : null,
-              onPressed: enabled ? () => handle(label) : null,
-            ),
-            const SizedBox(height: 8),
+            if (!workflowFinished) ...[
+              AppButton(
+                label: p.busy ? t.verifyingToken : label,
+                loading: p.busy,
+                variant: variant,
+                trailing: enabled ? const Icon(Icons.arrow_forward_rounded) : null,
+                onPressed: enabled ? () => handle(label) : null,
+              ),
+              const SizedBox(height: 8),
+            ],
             AppButton(
               label: t.viewProofs,
               variant: AppBtnVariant.ghost,

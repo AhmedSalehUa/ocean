@@ -9,6 +9,7 @@ import '../features/handoff/handoff_screen.dart';
 import '../features/finalize/finalize_screen.dart';
 import '../features/guided_capture/guided_items_screen.dart';
 import '../features/item_loop/item_loop_screen.dart';
+import '../features/proofs/proof_viewer_screen.dart';
 import '../features/proofs/proofs_screen.dart';
 import '../features/shipment_capture/shipment_capture_screen.dart';
 import '../features/step_done/step_done_screen.dart';
@@ -54,6 +55,13 @@ GoRouter buildRouter(AuthProvider auth) {
       GoRoute(
         path: Routes.proofs,
         builder: (_, s) => ProofsScreen(vendorId: s.pathParameters['vendorId']!),
+      ),
+      GoRoute(
+        path: Routes.proofViewer,
+        builder: (_, s) => ProofViewerScreen(
+          vendorId: s.pathParameters['vendorId']!,
+          proofId: s.pathParameters['proofId']!,
+        ),
       ),
       GoRoute(
         path: Routes.finalize,

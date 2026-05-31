@@ -562,7 +562,7 @@ class _SearchBarState extends State<_SearchBar> {
           Container(
             width: 38,
             height: 38,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.accentSoft,
             ),
@@ -598,7 +598,7 @@ class _SearchBarState extends State<_SearchBar> {
               child: Container(
                 width: 26,
                 height: 26,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.bgDeep,
                   shape: BoxShape.circle,
                 ),

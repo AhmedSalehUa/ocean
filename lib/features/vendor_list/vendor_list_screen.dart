@@ -54,10 +54,10 @@ class _VendorListScreenState extends State<VendorListScreen> {
           icon: Icons.chevron_left_rounded,
           onPressed: () => context.pop(),
         ),
-        title: p.masterPoNumber.isEmpty
-            ? (master?.masterPoNumber ?? '')
-            : p.masterPoNumber,
-        trailing: RoundIconBtn(icon: Icons.more_horiz_rounded, onPressed: () {}),
+        title: p.masterPoNumber.isEmpty ? (master?.masterPoNumber ?? '') : p.masterPoNumber,
+        trailing: const SizedBox(
+          width: 30,
+        ),
       ),
       body: p.state == LoadState.loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.accentInk))
@@ -74,45 +74,15 @@ class _VendorListScreenState extends State<VendorListScreen> {
                     runSpacing: 6,
                     children: [
                       if (master.operationDate != null)
-                        AppChip(label: Fmt.relativeDay(master.operationDate!, locale: t.locale.languageCode)),
+                        AppChip(
+                            label: Fmt.relativeDay(master.operationDate!,
+                                locale: t.locale.languageCode)),
                       AppChip(label: t.vendors(master.vendorPoCount)),
                       AppChip(
                         label: t.clearedShort(master.deliveredVendorPoCount, master.vendorPoCount),
                         tone: master.isClosed ? ChipTone.green : ChipTone.warn,
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-                  AppCard(
-                    padding: const EdgeInsets.all(14),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.accentSoft,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.location_on_outlined,
-                              size: 16, color: AppColors.accentInk),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(master.site ?? '', style: AppType.body.copyWith(fontWeight: FontWeight.w500)),
-                              if (master.siteLat != null && master.siteLng != null)
-                                Text(
-                                  Fmt.gps(master.siteLat!, master.siteLng!),
-                                  style: AppType.mono10.copyWith(color: AppColors.muted),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                   const SizedBox(height: 18),
                 ],

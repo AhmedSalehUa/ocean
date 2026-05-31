@@ -75,8 +75,12 @@ class OceanShipLockup extends StatelessWidget {
       assetPath,
       height: markSize * 2.4,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) =>
-          _PaintedLockup(markSize: markSize, color: color, accentColor: accentColor, subtitle: subtitle, tagline: tagline),
+      errorBuilder: (_, __, ___) => _PaintedLockup(
+          markSize: markSize,
+          color: color,
+          accentColor: accentColor,
+          subtitle: subtitle,
+          tagline: tagline),
     );
   }
 }
@@ -222,6 +226,5 @@ class _OceanShipMark extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _OceanShipMark old) =>
-      old.color != color || old.accent != accent;
+  bool shouldRepaint(covariant _OceanShipMark old) => old.color != color || old.accent != accent;
 }

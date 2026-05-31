@@ -21,8 +21,8 @@ class VendorPoCard extends StatelessWidget {
     final resolved = vendor.items.isNotEmpty
         ? vendor.items.where((i) => i.status.isResolved).length
         : vendor.resolvedItemCount;
-    final isFinal = vendor.status == PoStatus.fullyDelivered ||
-        vendor.status == PoStatus.partiallyDelivered;
+    final isFinal =
+        vendor.status == PoStatus.fullyDelivered || vendor.status == PoStatus.partiallyDelivered;
 
     return AppCard(
       onTap: onTap,

@@ -54,8 +54,7 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
         trailing: RoundIconBtn(
           icon: Icons.history_outlined,
           tooltip: t.viewProofs,
-          onPressed: () =>
-              v != null ? context.push(Routes.proofsPath(v.id)) : null,
+          onPressed: () => v != null ? context.push(Routes.proofsPath(v.id)) : null,
         ),
       ),
       body: p.state == LoadState.error && v == null
@@ -70,17 +69,17 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
               ),
             )
           : p.state == LoadState.loading || v == null
-          ? const Center(child: CircularProgressIndicator(color: AppColors.accentInk))
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 120),
-              children: [
-                _Header(vendor: v),
-                const SizedBox(height: 16),
-                _StepCard(vendor: v, localeCode: locale),
-                const SizedBox(height: 16),
-                _ItemTable(vendor: v),
-              ],
-            ),
+              ? const Center(child: CircularProgressIndicator(color: AppColors.accentInk))
+              : ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 120),
+                  children: [
+                    _Header(vendor: v),
+                    const SizedBox(height: 16),
+                    _StepCard(vendor: v, localeCode: locale),
+                    const SizedBox(height: 16),
+                    _ItemTable(vendor: v),
+                  ],
+                ),
       bottomNavigationBar: v == null ? null : _BottomCta(vendor: v),
     );
   }
@@ -99,8 +98,7 @@ class _Header extends StatelessWidget {
           children: [
             PoStatusPill(vendor.status),
             const SizedBox(width: 8),
-            Text(vendor.vendorRef ?? '',
-                style: AppType.mono10.copyWith(color: AppColors.muted)),
+            Text(vendor.vendorRef ?? '', style: AppType.mono10.copyWith(color: AppColors.muted)),
           ],
         ),
         const SizedBox(height: 8),
@@ -155,8 +153,7 @@ class _StepCard extends StatelessWidget {
               children: [
                 if (step.requiresShipmentPhoto)
                   AppChip(label: t.shipmentPhoto, tone: ChipTone.soft),
-                if (step.requiresItemPhoto)
-                  AppChip(label: t.itemPhoto, tone: ChipTone.soft),
+                if (step.requiresItemPhoto) AppChip(label: t.itemPhoto, tone: ChipTone.soft),
                 if (step.isFinalStep) AppChip(label: t.finalStep, tone: ChipTone.dark),
               ],
             ),
@@ -184,7 +181,8 @@ class _StepCard extends StatelessWidget {
       final prior = vendor.steps[i];
       if (!prior.isComplete) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(
+          SnackBar(
+              content: Text(
             AppL10n.of(context).stepLockedHint(prior.nameFor(localeCode)),
           )),
         );
@@ -202,8 +200,7 @@ class _StepCard extends StatelessWidget {
 
     final p = context.read<VendorDetailProvider>();
     p.pinStep(step.id);
-    if (step.isFinalStep ||
-        (!step.requiresShipmentPhoto && !step.requiresItemPhoto)) {
+    if (step.isFinalStep || (!step.requiresShipmentPhoto && !step.requiresItemPhoto)) {
       context.push(Routes.finalizePath(vendor.id));
       return;
     }
@@ -258,10 +255,10 @@ class _ItemTable extends StatelessWidget {
                       children: [
                         Text(vendor.items[i].itemName, style: AppType.body),
                         const SizedBox(height: 4),
-                        Text(
-                          '${vendor.items[i].itemCode} · ${Fmt.quantity(vendor.items[i].quantity, vendor.items[i].unit)} · ${Fmt.money(vendor.items[i].totalPrice, decimals: true)}',
-                          style: AppType.mono10.copyWith(color: AppColors.muted),
-                        ),
+                        // Text(
+                        //   '${vendor.items[i].itemCode} · ${Fmt.quantity(vendor.items[i].quantity, vendor.items[i].unit)} · ${Fmt.money(vendor.items[i].totalPrice, decimals: true)}',
+                        //   style: AppType.mono10.copyWith(color: AppColors.muted),
+                        // ),
                       ],
                     ),
                   ),

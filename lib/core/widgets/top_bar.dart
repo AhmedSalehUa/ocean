@@ -42,8 +42,9 @@ class TrailTopBar extends StatelessWidget implements PreferredSizeWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  SizedBox(width: 40, child: leading ?? const SizedBox.shrink()),
+                  SizedBox(child: leading ?? const SizedBox.shrink()),
                   Expanded(
                     child: Center(
                       child: title != null
@@ -56,7 +57,7 @@ class TrailTopBar extends StatelessWidget implements PreferredSizeWidget {
                           : const SizedBox.shrink(),
                     ),
                   ),
-                  SizedBox(width: 40, child: Align(alignment: Alignment.centerRight, child: trailing)),
+                  SizedBox(child: Align(alignment: Alignment.centerRight, child: trailing)),
                 ],
               ),
               if (subtitle != null) ...[

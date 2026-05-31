@@ -70,10 +70,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 4),
               Text(t.mastersToClear(p.open.length), style: AppType.h2),
               const SizedBox(height: 4),
-              Text(
-                user.phone ?? 'Nairobi Yard · Region 02',
-                style: AppType.caption,
-              ),
             ],
             const SizedBox(height: 16),
             _SearchBar(
@@ -140,10 +136,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _todayTitle(AppL10n t) {
     final now = DateTime.now();
     final months = const [
-      'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     final monthsAr = const [
-      'يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'أغسطس',
+      'سبتمبر',
+      'أكتوبر',
+      'نوفمبر',
+      'ديسمبر'
     ];
     final m = t.isAr ? monthsAr[now.month - 1] : months[now.month - 1];
     return '${t.isAr ? 'اليوم' : 'Today'} · ${now.day} $m';
@@ -208,8 +226,7 @@ class _SearchBar extends StatefulWidget {
 }
 
 class _SearchBarState extends State<_SearchBar> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.value);
+  late final TextEditingController _controller = TextEditingController(text: widget.value);
 
   @override
   void dispose() {

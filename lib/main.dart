@@ -49,6 +49,10 @@ Future<void> main() async {
   final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:4000';
 
   final api = useMock ? MockDeliveryApi() : HttpDeliveryApi(baseUrl: baseUrl);
+  // Load the cached JWT into memory now so synchronous consumers (e.g.
+  // CachedNetworkImage's httpHeaders) see it on the very first proof image
+  // request, not just after the first authenticated Dio call.
+  await api.primeAuth();
 
   final prefs = await SharedPreferences.getInstance();
   final locale = LocaleService(prefs);

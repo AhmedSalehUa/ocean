@@ -215,4 +215,15 @@ class HttpDeliveryApi implements DeliveryApi {
     }
     return '$baseUrl${fileUrl.startsWith('/') ? fileUrl : '/$fileUrl'}';
   }
+
+  @override
+  Map<String, String> get authHeaders {
+    final t = _auth.currentToken;
+    return t == null ? const {} : {'Authorization': 'Bearer $t'};
+  }
+
+  @override
+  Future<void> primeAuth() async {
+    await _auth.ensureLoaded();
+  }
 }

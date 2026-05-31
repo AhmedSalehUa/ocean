@@ -360,6 +360,9 @@ class MockDeliveryApi implements DeliveryApi {
   @override
   String attachmentUrl(String attachmentId) => 'mock://attachments/$attachmentId';
 
+  @override
+  String resolveFileUrl(String fileUrl) => fileUrl;
+
   // ─────────────────────────── Helpers ───────────────────────────
 
   ProofLog _addLog({

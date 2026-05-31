@@ -158,6 +158,12 @@ class AppL10n {
   String get itemProofs => _t('Item proofs', 'إثباتات البنود');
   String get autoCompleted => _t('Auto-completed', 'إنهاء تلقائي');
   String get noProofs => _t('No proofs uploaded yet', 'لا توجد إثباتات بعد');
+  String get viewOnMap => _t('View location on map', 'عرض الموقع على الخريطة');
+  String get locationUnavailable =>
+      _t('Location not recorded for this proof.', 'لم يتم تسجيل موقع لهذا الإثبات.');
+  String get mapOpenFailed =>
+      _t('Couldn\'t open the map app.', 'تعذّر فتح تطبيق الخرائط.');
+  String get imageLoadFailed => _t('Image failed to load.', 'تعذّر تحميل الصورة.');
 
   // ─── Finalize / handoff ───
   String get finalizeTitle => _t('Finalize Vendor PO', 'إنهاء أمر المورّد');

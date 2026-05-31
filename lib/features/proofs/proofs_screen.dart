@@ -15,6 +15,7 @@ import '../../core/widgets/top_bar.dart';
 import '../../data/models/proof_log.dart';
 import '../../data/repositories/delivery_repository.dart';
 import '../../l10n/app_l10n.dart';
+import '../../routing/routes.dart';
 import '../../services/locale_service.dart';
 import '../vendor_detail/vendor_detail_provider.dart';
 
@@ -124,11 +125,13 @@ class _ProofTile extends StatelessWidget {
     final t = AppL10n.of(context);
     final repo = context.read<DeliveryRepository>();
     final attachment = log.attachment;
-    final url = attachment == null ? '' : repo.attachmentUrl(attachment.id);
+    final url = attachment == null ? '' : repo.fileUrl(attachment.fileUrl);
     final isHttp = url.startsWith('http');
 
     return AppCard(
       padding: const EdgeInsets.all(12),
+      onTap: () =>
+          context.push(Routes.proofViewerPath(log.vendorPoId, log.id)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -173,6 +176,8 @@ class _ProofTile extends StatelessWidget {
                     AppChip(label: Fmt.time(log.loggedAt)),
                     if (log.attachment != null)
                       AppChip(label: log.attachment!.prettySize),
+                    if (log.location != null)
+                      const AppChip(label: '📍', tone: ChipTone.soft),
                     if (log.isAutoCompleted)
                       AppChip(label: t.autoCompleted, tone: ChipTone.green),
                   ],
@@ -180,6 +185,8 @@ class _ProofTile extends StatelessWidget {
               ],
             ),
           ),
+          const Icon(Icons.chevron_right_rounded,
+              size: 20, color: AppColors.muted),
         ],
       ),
     );

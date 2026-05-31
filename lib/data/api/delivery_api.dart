@@ -53,4 +53,9 @@ abstract class DeliveryApi {
   /// For [HttpDeliveryApi] this returns the auth-aware URL the UI should
   /// hand to a Network image widget. For the mock it returns a local seed url.
   String attachmentUrl(String attachmentId);
+
+  /// Resolve a (possibly relative) file URL returned by the API into an
+  /// absolute URL the UI can hand to a Network image widget. Mock returns
+  /// the local seed scheme unchanged.
+  String resolveFileUrl(String fileUrl);
 }

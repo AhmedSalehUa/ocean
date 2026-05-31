@@ -1,5 +1,23 @@
 import 'attachment.dart';
 
+class ProofLocation {
+  final double latitude;
+  final double longitude;
+  final double? accuracyMeters;
+
+  const ProofLocation({
+    required this.latitude,
+    required this.longitude,
+    this.accuracyMeters,
+  });
+
+  factory ProofLocation.fromJson(Map<String, dynamic> json) => ProofLocation(
+        latitude: (json['latitude'] as num).toDouble(),
+        longitude: (json['longitude'] as num).toDouble(),
+        accuracyMeters: (json['accuracy_meters'] as num?)?.toDouble(),
+      );
+}
+
 class ProofLog {
   final String id;
   final String vendorPoId;
@@ -13,6 +31,7 @@ class ProofLog {
   final bool isAutoCompleted;
   final DateTime loggedAt;
   final Attachment? attachment;
+  final ProofLocation? location;
   final ProofKind kind;
 
   const ProofLog({
@@ -28,6 +47,7 @@ class ProofLog {
     this.isAutoCompleted = false,
     required this.loggedAt,
     this.attachment,
+    this.location,
     required this.kind,
   });
 
@@ -48,6 +68,9 @@ class ProofLog {
       loggedAt: DateTime.parse(json['logged_at'] as String),
       attachment: json['attachment'] is Map<String, dynamic>
           ? Attachment.fromJson(json['attachment'] as Map<String, dynamic>)
+          : null,
+      location: json['location'] is Map<String, dynamic>
+          ? ProofLocation.fromJson(json['location'] as Map<String, dynamic>)
           : null,
       kind: kind,
     );

@@ -75,4 +75,10 @@ class DeliveryRepository {
   Future<VendorPo> finalize(String id) => _api.finalizeVendorPo(id);
 
   String attachmentUrl(String id) => _api.attachmentUrl(id);
+
+  /// Returns an absolute URL the UI can hand to a Network image widget.
+  /// Prefers the per-attachment `file_url` returned by the server so future
+  /// changes to the file-serving route don't require code updates.
+  String fileUrl(String relativeOrAbsolute) =>
+      _api.resolveFileUrl(relativeOrAbsolute);
 }

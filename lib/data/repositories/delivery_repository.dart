@@ -81,4 +81,12 @@ class DeliveryRepository {
   /// changes to the file-serving route don't require code updates.
   String fileUrl(String relativeOrAbsolute) =>
       _api.resolveFileUrl(relativeOrAbsolute);
+
+  /// Headers to attach when fetching authenticated assets (e.g. proof
+  /// thumbnails / full-screen images via CachedNetworkImage).
+  Map<String, String> get authHeaders => _api.authHeaders;
+
+  /// Eagerly loads the persisted JWT into memory so [authHeaders] is
+  /// non-empty by the time the first image request fires.
+  Future<void> primeAuth() => _api.primeAuth();
 }

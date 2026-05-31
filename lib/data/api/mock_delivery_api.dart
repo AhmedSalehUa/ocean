@@ -363,6 +363,12 @@ class MockDeliveryApi implements DeliveryApi {
   @override
   String resolveFileUrl(String fileUrl) => fileUrl;
 
+  @override
+  Map<String, String> get authHeaders => const {};
+
+  @override
+  Future<void> primeAuth() async {}
+
   // ─────────────────────────── Helpers ───────────────────────────
 
   ProofLog _addLog({

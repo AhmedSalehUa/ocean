@@ -58,4 +58,15 @@ abstract class DeliveryApi {
   /// absolute URL the UI can hand to a Network image widget. Mock returns
   /// the local seed scheme unchanged.
   String resolveFileUrl(String fileUrl);
+
+  /// Headers to attach when fetching authenticated binary assets (e.g.
+  /// CachedNetworkImage). Returns an empty map when there is no token
+  /// cached. Call [primeAuth] once at app start to populate the cache so
+  /// the first image request after cold start carries the token.
+  Map<String, String> get authHeaders;
+
+  /// Loads the persisted auth token into memory so [authHeaders] returns
+  /// it without needing a prior Dio call. Safe to await before showing
+  /// any authenticated resource.
+  Future<void> primeAuth();
 }

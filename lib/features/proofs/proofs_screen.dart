@@ -143,6 +143,7 @@ class _ProofTile extends StatelessWidget {
               child: isHttp
                   ? CachedNetworkImage(
                       imageUrl: url,
+                      httpHeaders: repo.authHeaders,
                       fit: BoxFit.cover,
                       placeholder: (_, __) =>
                           const CapturedPhoto(tone: 2, height: 76, radius: 10),

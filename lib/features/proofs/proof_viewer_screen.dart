@@ -116,6 +116,7 @@ class _ProofViewerScreenState extends State<ProofViewerScreen> {
                         : InteractiveViewer(
                             child: CachedNetworkImage(
                               imageUrl: url,
+                              httpHeaders: repo.authHeaders,
                               fit: BoxFit.contain,
                               placeholder: (_, __) => const Center(
                                   child: CircularProgressIndicator(

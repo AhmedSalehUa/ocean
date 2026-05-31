@@ -35,6 +35,12 @@ class AppL10n {
   // ─── Dashboard ───
   String greeting(String name, String role) =>
       _t('Hi, $name · $role', 'مرحباً، $name · $role');
+  String get greetingMorning => _t('Good morning', 'صباح الخير');
+  String get greetingAfternoon => _t('Good afternoon', 'مساء الخير');
+  String get greetingEvening => _t('Good evening', 'مساء الخير');
+  String get statOpen => _t('Open', 'مفتوحة');
+  String get statClosed => _t('Closed', 'مغلقة');
+  String get statTotal => _t('Total', 'الإجمالي');
   String mastersToClear(int count) {
     if (isAr) {
       if (count == 0) return 'لا توجد طلبات رئيسية.';

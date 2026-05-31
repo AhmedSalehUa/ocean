@@ -8,6 +8,7 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/eyebrow.dart';
 import '../../core/widgets/top_bar.dart';
 import '../../core/widgets/trail_logo.dart';
+import '../../data/models/user.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
 import '../../services/locale_service.dart';
@@ -51,7 +52,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: () => _showAccountSheet(context),
           child: const TrailLogo(size: 16, showText: false),
         ),
-        title: _todayTitle(t),
+        title: 'Ocean Ship',
         trailing: RoundIconBtn(
           icon: Icons.translate,
           tooltip: t.toggleLanguage,
@@ -63,15 +64,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color: AppColors.accentInk,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 18, 16, 40),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 40),
           children: [
             if (user != null) ...[
-              Eyebrow(t.greeting(user.fullName.split(' ').first, user.role)),
-              const SizedBox(height: 4),
-              Text(t.mastersToClear(p.open.length), style: AppType.h2),
-              const SizedBox(height: 4),
+              _HeroHeader(user: user, todayLabel: _todayTitle(t), t: t),
+              const SizedBox(height: 14),
+              _StatRow(
+                open: p.open.length,
+                closed: p.closed.length,
+                total: p.open.length + p.closed.length,
+                t: t,
+              ),
+              const SizedBox(height: 16),
             ],
-            const SizedBox(height: 16),
             _SearchBar(
               hint: t.searchHint,
               value: _query,
@@ -211,6 +216,307 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
+class _HeroHeader extends StatelessWidget {
+  const _HeroHeader({
+    required this.user,
+    required this.todayLabel,
+    required this.t,
+  });
+  final User user;
+  final String todayLabel;
+  final AppL10n t;
+
+  String _timeGreeting() {
+    final h = DateTime.now().hour;
+    if (h < 12) return t.greetingMorning;
+    if (h < 17) return t.greetingAfternoon;
+    return t.greetingEvening;
+  }
+
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return '?';
+    final first = parts.first.characters.first.toUpperCase();
+    if (parts.length == 1) return first;
+    final last = parts.last.characters.first.toUpperCase();
+    return '$first$last';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final firstName = user.fullName.split(' ').first;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.navy, Color(0xFF02307D), AppColors.ink2],
+          stops: [0.0, 0.55, 1.0],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.navy.withAlpha(60),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          // Decorative gold ring in the corner — kept subtle so it reads as
+          // brand texture, not noise.
+          Positioned(
+            right: -28,
+            top: -28,
+            child: Container(
+              width: 130,
+              height: 130,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.gold.withAlpha(60), width: 1.4),
+              ),
+            ),
+          ),
+          Positioned(
+            right: -50,
+            top: 36,
+            child: Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.gold.withAlpha(28),
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [AppColors.gold, Color(0xFFE8C969)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(50),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      _initials(user.fullName),
+                      style: AppType.h3.copyWith(
+                        color: AppColors.navy,
+                        fontWeight: FontWeight.w700,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _timeGreeting(),
+                          style: AppType.caption.copyWith(
+                            color: AppColors.gold,
+                            letterSpacing: 1.0,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          firstName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppType.h2.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.6,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user.role,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppType.mono10.copyWith(
+                            color: Colors.white.withAlpha(180),
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(28),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white.withAlpha(40)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.event_outlined,
+                        size: 14, color: Colors.white.withAlpha(200)),
+                    const SizedBox(width: 8),
+                    Text(
+                      todayLabel,
+                      style: AppType.body.copyWith(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatRow extends StatelessWidget {
+  const _StatRow({
+    required this.open,
+    required this.closed,
+    required this.total,
+    required this.t,
+  });
+  final int open;
+  final int closed;
+  final int total;
+  final AppL10n t;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatTile(
+            label: t.statOpen,
+            value: open,
+            icon: Icons.radio_button_unchecked_rounded,
+            accent: AppColors.warn,
+            accentSoft: AppColors.warnSoft,
+            accentInk: AppColors.warnInk,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _StatTile(
+            label: t.statClosed,
+            value: closed,
+            icon: Icons.check_circle_rounded,
+            accent: AppColors.accent,
+            accentSoft: AppColors.accentSoft,
+            accentInk: AppColors.accentInk,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _StatTile(
+            label: t.statTotal,
+            value: total,
+            icon: Icons.layers_outlined,
+            accent: AppColors.navy,
+            accentSoft: const Color(0xFFE3E8F4),
+            accentInk: AppColors.navy,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.accent,
+    required this.accentSoft,
+    required this.accentInk,
+  });
+  final String label;
+  final int value;
+  final IconData icon;
+  final Color accent;
+  final Color accentSoft;
+  final Color accentInk;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.line),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(8),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: accentSoft,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: accentInk),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value.toString(),
+            style: AppType.h2.copyWith(
+              color: AppColors.ink,
+              fontWeight: FontWeight.w700,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppType.caption.copyWith(color: AppColors.muted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SearchBar extends StatefulWidget {
   const _SearchBar({
     required this.hint,
@@ -237,16 +543,31 @@ class _SearchBarState extends State<_SearchBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border.all(color: AppColors.line),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(10),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const Icon(Icons.search, size: 16, color: AppColors.muted),
-          const SizedBox(width: 10),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: AppColors.accentSoft,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.search_rounded, size: 16, color: AppColors.accentInk),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: _controller,
@@ -258,7 +579,7 @@ class _SearchBarState extends State<_SearchBar> {
                 border: InputBorder.none,
                 hintText: widget.hint,
                 hintStyle: AppType.body.copyWith(color: AppColors.muted2),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
           ),
@@ -268,12 +589,12 @@ class _SearchBarState extends State<_SearchBar> {
                 _controller.clear();
                 widget.onChanged('');
               },
-              child: const Icon(Icons.close_rounded, size: 16, color: AppColors.muted),
+              child: const Icon(Icons.close_rounded, size: 18, color: AppColors.muted),
             )
           else ...[
             Container(width: 1, height: 16, color: AppColors.line),
-            const SizedBox(width: 10),
-            const Icon(Icons.qr_code_2, size: 16, color: AppColors.ink2),
+            const SizedBox(width: 12),
+            const Icon(Icons.qr_code_scanner_rounded, size: 18, color: AppColors.ink2),
           ],
         ],
       ),

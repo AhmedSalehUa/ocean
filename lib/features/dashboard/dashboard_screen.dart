@@ -542,60 +542,112 @@ class _SearchBarState extends State<_SearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final hasQuery = _controller.text.isNotEmpty;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.line),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.navy, Color(0xFF02307D), AppColors.ink2],
+          stops: [0.0, 0.55, 1.0],
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(10),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: AppColors.navy.withAlpha(60),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Row(
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: AppColors.accentSoft,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.search_rounded, size: 16, color: AppColors.accentInk),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              onChanged: widget.onChanged,
-              textInputAction: TextInputAction.search,
-              style: AppType.body,
-              decoration: InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                hintText: widget.hint,
-                hintStyle: AppType.body.copyWith(color: AppColors.muted2),
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          // Same gold ring motif as the hero card so they read as a pair.
+          Positioned(
+            right: -22,
+            top: -22,
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border:
+                    Border.all(color: AppColors.gold.withAlpha(55), width: 1.2),
               ),
             ),
           ),
-          if (_controller.text.isNotEmpty)
-            GestureDetector(
-              onTap: () {
-                _controller.clear();
-                widget.onChanged('');
-              },
-              child: const Icon(Icons.close_rounded, size: 18, color: AppColors.muted),
-            )
-          else ...[
-            Container(width: 1, height: 16, color: AppColors.line),
-            const SizedBox(width: 12),
-            const Icon(Icons.qr_code_scanner_rounded, size: 18, color: AppColors.ink2),
-          ],
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.gold, Color(0xFFE8C969)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(50),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.search_rounded,
+                    size: 18, color: AppColors.navy),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  onChanged: widget.onChanged,
+                  textInputAction: TextInputAction.search,
+                  cursorColor: AppColors.gold,
+                  style: AppType.body.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    hintText: widget.hint,
+                    hintStyle: AppType.body.copyWith(
+                      color: Colors.white.withAlpha(160),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+              if (hasQuery)
+                GestureDetector(
+                  onTap: () {
+                    _controller.clear();
+                    widget.onChanged('');
+                  },
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(28),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.close_rounded,
+                        size: 16, color: Colors.white.withAlpha(230)),
+                  ),
+                )
+              else ...[
+                Container(width: 1, height: 18, color: Colors.white.withAlpha(50)),
+                const SizedBox(width: 12),
+                Icon(Icons.qr_code_scanner_rounded,
+                    size: 20, color: AppColors.gold.withAlpha(230)),
+              ],
+            ],
+          ),
         ],
       ),
     );

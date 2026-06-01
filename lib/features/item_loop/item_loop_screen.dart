@@ -215,8 +215,14 @@ class _ItemRow extends StatelessWidget {
     final step = detail.vendor?.currentStep;
     if (step == null) return;
 
+    final source = await _pickSource(context);
+    if (source == null || !context.mounted) return;
+
     final fixFuture = context.read<LocationService>().currentFix();
-    final file = await context.read<CameraService>().takePhoto();
+    final cam = context.read<CameraService>();
+    final file = source == _PhotoSource.camera
+        ? await cam.takePhoto()
+        : await cam.pickFromGallery();
     if (file == null || !context.mounted) return;
     final fix = await fixFuture;
 
@@ -341,7 +347,59 @@ class _ItemRow extends StatelessWidget {
         : t.markedMissingItem(item.itemCode, remaining);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
+
+  Future<_PhotoSource?> _pickSource(BuildContext context) async {
+    final t = AppL10n.of(context);
+    return showModalBottomSheet<_PhotoSource>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.line,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(t.choosePhotoSource, style: AppType.h3),
+              const SizedBox(height: 16),
+              AppButton(
+                label: t.takePhoto,
+                leading: const Icon(Icons.photo_camera_outlined, size: 18),
+                onPressed: () =>
+                    Navigator.pop(sheetContext, _PhotoSource.camera),
+              ),
+              const SizedBox(height: 10),
+              AppButton(
+                label: t.uploadFromGallery,
+                variant: AppBtnVariant.ghost,
+                leading: const Icon(Icons.photo_library_outlined, size: 18),
+                onPressed: () =>
+                    Navigator.pop(sheetContext, _PhotoSource.gallery),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
+
+enum _PhotoSource { camera, gallery }
 
 class _PhotoConfirmSheet extends StatelessWidget {
   const _PhotoConfirmSheet({required this.file, required this.label, this.gps});

@@ -99,6 +99,10 @@ class AppL10n {
   String get gpsLocked => _t('GPS locked', 'تم تثبيت GPS');
   String get shutterLocked => _t('Wait for GPS lock to enable shutter', 'بانتظار GPS لتمكين الالتقاط');
   String get captureNow => _t('Capture', 'التقاط');
+  String get takePhoto => _t('Take photo', 'التقاط صورة');
+  String get uploadFromGallery => _t('Upload from gallery', 'رفع من المعرض');
+  String get choosePhotoSource =>
+      _t('Add a photo', 'إضافة صورة');
   String get openSettings => _t('Open settings', 'فتح الإعدادات');
   String get gpsBlocked => _t('Location permission is required', 'إذن الموقع مطلوب');
   String get cameraBlocked => _t('Camera permission is required', 'إذن الكاميرا مطلوب');

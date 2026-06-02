@@ -14,6 +14,7 @@ import '../../core/widgets/step_pipeline.dart';
 import '../../core/widgets/top_bar.dart';
 import '../../data/models/enums.dart';
 import '../../data/models/vendor_po.dart';
+import '../../data/models/vendor_po_item.dart';
 import '../../data/models/workflow_step.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
@@ -245,30 +246,118 @@ class _ItemTable extends StatelessWidget {
           ),
           const Divider(height: 1, color: AppColors.lineSoft),
           for (var i = 0; i < vendor.items.length; i++) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(vendor.items[i].itemName, style: AppType.body),
-                        const SizedBox(height: 4),
-                        // Text(
-                        //   '${vendor.items[i].itemCode} · ${Fmt.quantity(vendor.items[i].quantity, vendor.items[i].unit)} · ${Fmt.money(vendor.items[i].totalPrice, decimals: true)}',
-                        //   style: AppType.mono10.copyWith(color: AppColors.muted),
-                        // ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ItemStatusPill(vendor.items[i].status),
-                ],
+            _ItemRow(item: vendor.items[i], index: i + 1),
+            if (i < vendor.items.length - 1)
+              const Divider(height: 1, color: AppColors.lineSoft),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ItemRow extends StatelessWidget {
+  const _ItemRow({required this.item, required this.index});
+  final VendorPoItem item;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.warnSoft,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              index.toString().padLeft(2, '0'),
+              style: AppType.mono11.copyWith(
+                color: AppColors.warnInk,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.4,
               ),
             ),
-            if (i < vendor.items.length - 1) const Divider(height: 1, color: AppColors.lineSoft),
-          ],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.itemCode,
+                  style: AppType.mono10.copyWith(
+                    color: AppColors.muted,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  item.itemName,
+                  style: AppType.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.ink,
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _MetaChip(
+                      icon: Icons.inventory_2_outlined,
+                      label: Fmt.quantity(item.quantity, item.unit),
+                    ),
+                    _MetaChip(
+                      icon: Icons.payments_outlined,
+                      label: Fmt.money(item.totalPrice, decimals: true),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          ItemStatusPill(item.status),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  const _MetaChip({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.bgDeep,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: AppColors.muted),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: AppType.mono11.copyWith(
+              color: AppColors.ink2,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );

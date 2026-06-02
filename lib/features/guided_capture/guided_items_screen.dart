@@ -42,6 +42,11 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
   File? _pendingPhoto;
   String? _pendingForItemId;
 
+  // When the user manually picks an item from the picker, it overrides the
+  // auto-loop target until that item is captured/resolved. Cleared afterward
+  // so the loop resumes from the next pending item.
+  String? _manualItemId;
+
   @override
   void initState() {
     super.initState();
@@ -177,6 +182,50 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
     return null;
   }
 
+  /// The item the camera is currently aimed at: a manually-picked item if the
+  /// user chose one, otherwise the next pending item from the auto-loop.
+  VendorPoItem? _targetItem(VendorDetailProvider p) {
+    final v = p.vendor;
+    if (v == null) return null;
+    if (_manualItemId != null) {
+      for (final i in v.items) {
+        if (i.id == _manualItemId && i.status != ItemStatus.missing) return i;
+      }
+    }
+    return _nextItem(p);
+  }
+
+  Future<void> _pickItem() async {
+    final p = context.read<VendorDetailProvider>();
+    final v = p.vendor;
+    final step = v?.currentStep;
+    if (v == null || step == null) return;
+    final done = p.uploadedItemsForStep(step.id);
+    final selectable =
+        v.items.where((i) => i.status != ItemStatus.missing).toList();
+
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.darkSurface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => _ItemPickerSheet(
+        items: selectable,
+        doneIds: done,
+        activeId: _targetItem(p)?.id,
+        t: AppL10n.of(context),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _manualItemId = picked;
+      _pendingPhoto = null;
+      _pendingForItemId = null;
+    });
+  }
+
   Future<void> _shutter(VendorPoItem target) async {
     final c = _camera;
     if (c == null || !c.value.isInitialized || c.value.isTakingPicture) return;
@@ -274,6 +323,10 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
     final p = context.read<VendorDetailProvider>();
     final v = p.vendor;
     final step = v?.currentStep;
+    // Resolving the manually-picked item hands control back to the loop.
+    if (_manualItemId == item.id) {
+      setState(() => _manualItemId = null);
+    }
     if (v == null || step == null) return;
     if (_nextItem(p) == null) {
       context.replace(Routes.stepDonePath(v.id, step.id));
@@ -297,6 +350,8 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
     setState(() {
       _pendingPhoto = null;
       _pendingForItemId = null;
+      // The manual pick has been captured — resume the auto-loop.
+      if (_manualItemId == itemId) _manualItemId = null;
     });
     // queueItemPhoto immediately marks the item DELIVERED locally, so if
     // there are no more pending items this was the last one — move on to
@@ -337,8 +392,10 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
         items.where((i) => i.status != ItemStatus.missing).toList();
     final total = stepEligible.length;
     final done = step == null ? 0 : p.uploadedItemsForStep(step.id).length;
-    final target = _nextItem(p);
+    final target = _targetItem(p);
     final hasPending = _pendingPhoto != null && _pendingForItemId != null;
+    final hasSelectableItems =
+        items.any((i) => i.status != ItemStatus.missing);
     // The "Reject" option is only available on the last workflow step that
     // requires item photos. All other item-photo steps offer capture + missing.
     final itemSteps = (v?.steps ?? const [])
@@ -359,6 +416,7 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
               index: done + 1,
               total: total,
               onClose: () => context.pop(),
+              onPickItem: hasSelectableItems ? _pickItem : null,
             ),
             const SizedBox(height: 8),
             _GpsPill(
@@ -424,12 +482,14 @@ class _Header extends StatelessWidget {
     required this.index,
     required this.total,
     required this.onClose,
+    this.onPickItem,
   });
   final AppL10n t;
   final VendorPoItem? target;
   final int index;
   final int total;
   final VoidCallback onClose;
+  final VoidCallback? onPickItem;
 
   @override
   Widget build(BuildContext context) {
@@ -469,7 +529,10 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 36),
+          if (onPickItem != null)
+            _RoundButton(icon: Icons.list_rounded, onTap: onPickItem!)
+          else
+            const SizedBox(width: 36),
         ],
       ),
     );
@@ -946,6 +1009,125 @@ class _IconLabel extends StatelessWidget {
           Text(label.toUpperCase(),
               style: AppType.mono10.copyWith(color: color, letterSpacing: 1)),
         ],
+      ),
+    );
+  }
+}
+
+class _ItemPickerSheet extends StatelessWidget {
+  const _ItemPickerSheet({
+    required this.items,
+    required this.doneIds,
+    required this.activeId,
+    required this.t,
+  });
+  final List<VendorPoItem> items;
+  final Set<String> doneIds;
+  final String? activeId;
+  final AppL10n t;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              t.pickItemTitle,
+              style: AppType.bodyLg.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: items.length,
+                separatorBuilder: (_, __) => const Divider(
+                  height: 1,
+                  color: Colors.white10,
+                ),
+                itemBuilder: (_, i) {
+                  final item = items[i];
+                  final isDone = doneIds.contains(item.id);
+                  final isActive = item.id == activeId;
+                  return InkWell(
+                    onTap: () => Navigator.pop(context, item.id),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isDone
+                                ? Icons.check_circle_rounded
+                                : Icons.radio_button_unchecked_rounded,
+                            size: 20,
+                            color: isDone ? AppColors.gold : Colors.white38,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.itemCode,
+                                  style: AppType.body.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  item.itemName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppType.caption.copyWith(
+                                    color: Colors.white60,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isDone) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              t.capturedBadge.toUpperCase(),
+                              style: AppType.mono10.copyWith(
+                                color: AppColors.gold,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                          if (isActive) ...[
+                            const SizedBox(width: 8),
+                            const Icon(Icons.my_location_rounded,
+                                size: 16, color: Colors.cyanAccent),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

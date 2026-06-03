@@ -11,6 +11,7 @@ import '../../core/utils/app_log.dart';
 import '../../core/widgets/app_button.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
+import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
 import '../vendor_detail/vendor_detail_provider.dart';
 
@@ -165,6 +166,28 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
     }
   }
 
+  /// Pick a shipment photo from the device gallery instead of the camera.
+  /// Feeds the same preview + submit flow as the live shutter.
+  Future<void> _pickFromGallery() async {
+    if (_fix == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppL10n.of(context).shutterLocked)),
+      );
+      return;
+    }
+    try {
+      final file = await context.read<CameraService>().pickFromGallery();
+      if (!mounted || file == null) return;
+      setState(() => _photo = file);
+    } catch (e, st) {
+      AppLog.error('ShipmentCaptureScreen._pickFromGallery', e, st);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
   Future<void> _shutter() async {
     final c = _camera;
     if (c == null || !c.value.isInitialized || c.value.isTakingPicture) return;
@@ -297,6 +320,7 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
               canFlip: _cameras.length > 1 && _photo == null,
               onFlip: _flip,
               onShutter: _shutter,
+              onPickGallery: _pickFromGallery,
               onRetake: _retake,
               onSubmit: _submit,
             ),
@@ -622,6 +646,7 @@ class _BottomBar extends StatelessWidget {
     required this.canFlip,
     required this.onFlip,
     required this.onShutter,
+    required this.onPickGallery,
     required this.onRetake,
     required this.onSubmit,
   });
@@ -631,6 +656,7 @@ class _BottomBar extends StatelessWidget {
   final bool canFlip;
   final VoidCallback onFlip;
   final VoidCallback onShutter;
+  final VoidCallback onPickGallery;
   final VoidCallback onRetake;
   final VoidCallback onSubmit;
 
@@ -694,9 +720,9 @@ class _BottomBar extends StatelessWidget {
             ),
           ),
           _IconLabel(
-            icon: Icons.auto_awesome_outlined,
-            label: t.hdr,
-            onTap: null, // HDR is cosmetic for now
+            icon: Icons.photo_library_outlined,
+            label: t.uploadFromGallery,
+            onTap: onPickGallery,
           ),
         ],
       ),

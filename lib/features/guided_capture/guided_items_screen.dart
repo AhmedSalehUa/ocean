@@ -14,6 +14,7 @@ import '../../data/models/enums.dart';
 import '../../data/models/vendor_po_item.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
+import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
 import '../vendor_detail/vendor_detail_provider.dart';
 
@@ -247,6 +248,31 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
     }
   }
 
+  /// Pick a photo from the device gallery instead of taking one. Feeds the
+  /// same confirm-then-upload flow as the live shutter.
+  Future<void> _pickFromGallery(VendorPoItem target) async {
+    if (_fix == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppL10n.of(context).shutterLocked)),
+      );
+      return;
+    }
+    try {
+      final file = await context.read<CameraService>().pickFromGallery();
+      if (!mounted || file == null) return;
+      setState(() {
+        _pendingPhoto = file;
+        _pendingForItemId = target.id;
+      });
+    } catch (e, st) {
+      AppLog.error('GuidedItemsScreen._pickFromGallery', e, st);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
   void _retake() => setState(() {
         _pendingPhoto = null;
         _pendingForItemId = null;
@@ -462,6 +488,8 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
                 canFlip: _cameras.length > 1,
                 onFlip: _flip,
                 onShutter: () => target == null ? null : _shutter(target),
+                onPickGallery:
+                    target == null ? null : () => _pickFromGallery(target),
                 onMissing: target == null ? null : () => _markMissing(target),
                 onReject: target == null || !canReject
                     ? null
@@ -846,6 +874,7 @@ class _CaptureBar extends StatelessWidget {
     required this.canFlip,
     required this.onFlip,
     required this.onShutter,
+    this.onPickGallery,
     this.onMissing,
     this.onReject,
   });
@@ -853,6 +882,7 @@ class _CaptureBar extends StatelessWidget {
   final bool canFlip;
   final VoidCallback onFlip;
   final VoidCallback? onShutter;
+  final VoidCallback? onPickGallery;
   final VoidCallback? onMissing;
   final VoidCallback? onReject;
   @override
@@ -894,9 +924,9 @@ class _CaptureBar extends StatelessWidget {
                 ),
               ),
               _IconLabel(
-                icon: Icons.auto_awesome_outlined,
-                label: t.hdr,
-                onTap: null,
+                icon: Icons.photo_library_outlined,
+                label: t.uploadFromGallery,
+                onTap: onPickGallery,
               ),
             ],
           ),

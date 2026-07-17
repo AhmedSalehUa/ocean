@@ -20,7 +20,7 @@ class AppL10n {
   String _t(String en, String ar) => isAr ? ar : en;
 
   // ─── Login & shell ───
-  String get appName => _t('Ocean Delivery', 'أوشن للتوصيل');
+  String get appName => _t('Ocean Ship', 'أوشن شيب');
   String get tagline => _t('Chain of custody,\nverified at the bay.',
       'سلسلة الحراسة،\nمُتحقَّقة عند الرصيف.');
   String get loginEyebrow => _t('Representative sign-in', 'تسجيل دخول الممثل');
@@ -173,8 +173,7 @@ class AppL10n {
 
   // ─── Finalize / handoff ───
   String get finalizeTitle => _t('Finalize Vendor PO', 'إنهاء أمر المورّد');
-  String get confirmFinalDelivery =>
-      _t('Confirm final delivery', 'تأكيد التسليم النهائي');
+  String get confirmFinalDelivery => _t('Finish', 'إنهاء');
   String finalizeBody({required int delivered, required int missing, required int total, required String outcome}) =>
       _t(
           '$delivered delivered · $missing missing · $total total. The system will assign $outcome on submit.',

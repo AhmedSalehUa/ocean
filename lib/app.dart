@@ -21,7 +21,7 @@ class _TrailAppState extends State<TrailApp> {
   Widget build(BuildContext context) {
     final locale = context.watch<LocaleService>();
     return MaterialApp.router(
-      title: 'Ocean Delivery',
+      title: 'Ocean Ship',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       routerConfig: _router,

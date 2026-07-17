@@ -173,6 +173,8 @@ class AppL10n {
 
   // ─── Finalize / handoff ───
   String get finalizeTitle => _t('Finalize Vendor PO', 'إنهاء أمر المورّد');
+  String get confirmFinalDelivery =>
+      _t('Confirm final delivery', 'تأكيد التسليم النهائي');
   String finalizeBody({required int delivered, required int missing, required int total, required String outcome}) =>
       _t(
           '$delivered delivered · $missing missing · $total total. The system will assign $outcome on submit.',

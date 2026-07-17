@@ -63,7 +63,7 @@ class _FinalizeScreenState extends State<FinalizeScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 child: AppButton(
                   label: v.readyToFinalize
-                      ? t.submit
+                      ? t.confirmFinalDelivery
                       : (v.allItemsResolved ? t.finalizeBlockedSteps : t.finalizeBlocked),
                   loading: p.busy,
                   variant: v.readyToFinalize ? AppBtnVariant.primary : AppBtnVariant.ghost,

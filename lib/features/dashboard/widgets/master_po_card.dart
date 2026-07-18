@@ -61,6 +61,32 @@ class MasterPoCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (master.vesselName != null &&
+                        master.vesselName!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(Icons.directions_boat_outlined,
+                              size: 13, color: AppColors.muted),
+                          const SizedBox(width: 5),
+                          Text(
+                            '${t.vesselName}: ',
+                            style: AppType.caption.copyWith(color: AppColors.muted),
+                          ),
+                          Expanded(
+                            child: Text(
+                              master.vesselName!,
+                              style: AppType.caption.copyWith(
+                                color: AppColors.ink2,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 2),
                     if (master.operationDate != null)
                       Text(

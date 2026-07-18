@@ -56,6 +56,7 @@ class AppL10n {
       'ابحث عن طلب رئيسي أو مورّد أو رمز…');
   String get openSection => _t('Open', 'مفتوحة');
   String get recentlyClosedSection => _t('Recently closed', 'مغلقة مؤخراً');
+  String get vesselName => _t('Vessel name', 'اسم المركب');
   String get yardFeed => _t('Yard feed', 'أخبار الساحة');
 
   // ─── Vendor list ───

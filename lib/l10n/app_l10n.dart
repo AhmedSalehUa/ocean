@@ -57,6 +57,8 @@ class AppL10n {
   String get openSection => _t('Open', 'مفتوحة');
   String get recentlyClosedSection => _t('Recently closed', 'مغلقة مؤخراً');
   String get vesselName => _t('Vessel name', 'اسم المركب');
+  String get etaDate => _t('ETA date', 'تاريخ الوصول');
+  String get portName => _t('Port', 'الميناء');
   String get yardFeed => _t('Yard feed', 'أخبار الساحة');
 
   // ─── Vendor list ───

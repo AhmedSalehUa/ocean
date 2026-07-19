@@ -9,6 +9,8 @@ import '../../../core/widgets/progress_bar.dart';
 import '../../../data/models/master_po.dart';
 import '../../../l10n/app_l10n.dart';
 
+bool _has(String? s) => s != null && s.trim().isNotEmpty;
+
 class MasterPoCard extends StatelessWidget {
   const MasterPoCard({
     super.key,
@@ -61,30 +63,28 @@ class MasterPoCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (master.vesselName != null &&
-                        master.vesselName!.trim().isNotEmpty) ...[
+                    if (_has(master.vesselName)) ...[
                       const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(Icons.directions_boat_outlined,
-                              size: 13, color: AppColors.muted),
-                          const SizedBox(width: 5),
-                          Text(
-                            '${t.vesselName}: ',
-                            style: AppType.caption.copyWith(color: AppColors.muted),
-                          ),
-                          Expanded(
-                            child: Text(
-                              master.vesselName!,
-                              style: AppType.caption.copyWith(
-                                color: AppColors.ink2,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                      _DetailRow(
+                        icon: Icons.directions_boat_outlined,
+                        title: t.vesselName,
+                        value: master.vesselName!,
+                      ),
+                    ],
+                    if (_has(master.portName)) ...[
+                      const SizedBox(height: 4),
+                      _DetailRow(
+                        icon: Icons.anchor_outlined,
+                        title: t.portName,
+                        value: master.portName!,
+                      ),
+                    ],
+                    if (master.etaDate != null) ...[
+                      const SizedBox(height: 4),
+                      _DetailRow(
+                        icon: Icons.event_available_outlined,
+                        title: t.etaDate,
+                        value: Fmt.date(master.etaDate!),
                       ),
                     ],
                     const SizedBox(height: 2),
@@ -130,6 +130,42 @@ class MasterPoCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
+    required this.icon,
+    required this.title,
+    required this.value,
+  });
+  final IconData icon;
+  final String title;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 13, color: AppColors.muted),
+        const SizedBox(width: 5),
+        Text(
+          '$title: ',
+          style: AppType.caption.copyWith(color: AppColors.muted),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: AppType.caption.copyWith(
+              color: AppColors.ink2,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }

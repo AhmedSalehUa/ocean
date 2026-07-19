@@ -9,6 +9,8 @@ class MasterPo {
   final int vendorPoCount;
   final int deliveredVendorPoCount;
   final String? vesselName;
+  final DateTime? etaDate;
+  final String? portName;
 
   // Mock-only convenience fields (carried alongside the wire data)
   final String? site;
@@ -26,6 +28,8 @@ class MasterPo {
     required this.vendorPoCount,
     required this.deliveredVendorPoCount,
     this.vesselName,
+    this.etaDate,
+    this.portName,
     this.site,
     this.siteLat,
     this.siteLng,
@@ -49,6 +53,8 @@ class MasterPo {
         vendorPoCount: vendorPoCount,
         deliveredVendorPoCount: deliveredVendorPoCount ?? this.deliveredVendorPoCount,
         vesselName: vesselName,
+        etaDate: etaDate,
+        portName: portName,
         site: site,
         siteLat: siteLat,
         siteLng: siteLng,
@@ -70,6 +76,8 @@ class MasterPo {
       vendorPoCount: _asInt(json['vendor_po_count']),
       deliveredVendorPoCount: _asInt(json['delivered_vendor_po_count']),
       vesselName: json['vessel_name'] as String?,
+      etaDate: _date(json['eta_date']),
+      portName: json['port_name'] as String?,
       site: json['site'] as String?,
       siteLat: (json['site_lat'] as num?)?.toDouble(),
       siteLng: (json['site_lng'] as num?)?.toDouble(),

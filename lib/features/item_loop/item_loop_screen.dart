@@ -55,8 +55,7 @@ class _ItemLoopScreenState extends State<ItemLoopScreen> {
         title: t.itemLoopTitle,
         trailing: RoundIconBtn(
           icon: Icons.history_outlined,
-          onPressed: () =>
-              v != null ? context.push(Routes.proofsPath(v.id)) : null,
+          onPressed: () => v != null ? context.push(Routes.proofsPath(v.id)) : null,
         ),
       ),
       body: v == null
@@ -133,7 +132,8 @@ class _LegendDot extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+            width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
         Text(label, style: AppType.mono10.copyWith(color: AppColors.muted)),
       ],
@@ -220,9 +220,8 @@ class _ItemRow extends StatelessWidget {
 
     final fixFuture = context.read<LocationService>().currentFix();
     final cam = context.read<CameraService>();
-    final file = source == _PhotoSource.camera
-        ? await cam.takePhoto()
-        : await cam.pickFromGallery();
+    final file =
+        source == _PhotoSource.camera ? await cam.takePhoto() : await cam.pickFromGallery();
     if (file == null || !context.mounted) return;
     final fix = await fixFuture;
 
@@ -230,7 +229,8 @@ class _ItemRow extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => _PhotoConfirmSheet(file: file, label: item.itemCode, gps: fix?.pretty),
+      builder: (sheetContext) =>
+          _PhotoConfirmSheet(file: file, label: item.itemCode, gps: fix?.pretty),
     );
     if (preview != true || !context.mounted) return;
 
@@ -262,11 +262,8 @@ class _ItemRow extends StatelessWidget {
     messenger.hideCurrentSnackBar();
     if (!ok || !context.mounted) return;
     final fresh = detail.vendor;
-    final remaining =
-        fresh?.items.where((i) => !i.status.isResolved).length ?? 0;
-    final message = remaining == 0
-        ? t.allItemsCaptured
-        : t.capturedItem(item.itemCode, remaining);
+    final remaining = fresh?.items.where((i) => !i.status.isResolved).length ?? 0;
+    final message = remaining == 0 ? t.allItemsCaptured : t.capturedItem(item.itemCode, remaining);
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
@@ -288,7 +285,8 @@ class _ItemRow extends StatelessWidget {
             children: [
               Center(
                 child: Container(
-                  width: 40, height: 4,
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
                     color: AppColors.line,
                     borderRadius: BorderRadius.circular(2),
@@ -340,11 +338,9 @@ class _ItemRow extends StatelessWidget {
     final detail = context.read<VendorDetailProvider>();
     final success = await detail.markItemMissing(item.id);
     if (!success || !context.mounted) return;
-    final remaining =
-        detail.vendor?.items.where((i) => !i.status.isResolved).length ?? 0;
-    final message = remaining == 0
-        ? t.allItemsCaptured
-        : t.markedMissingItem(item.itemCode, remaining);
+    final remaining = detail.vendor?.items.where((i) => !i.status.isResolved).length ?? 0;
+    final message =
+        remaining == 0 ? t.allItemsCaptured : t.markedMissingItem(item.itemCode, remaining);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
@@ -380,16 +376,14 @@ class _ItemRow extends StatelessWidget {
               AppButton(
                 label: t.takePhoto,
                 leading: const Icon(Icons.photo_camera_outlined, size: 18),
-                onPressed: () =>
-                    Navigator.pop(sheetContext, _PhotoSource.camera),
+                onPressed: () => Navigator.pop(sheetContext, _PhotoSource.camera),
               ),
               const SizedBox(height: 10),
               AppButton(
                 label: t.uploadFromGallery,
                 variant: AppBtnVariant.ghost,
                 leading: const Icon(Icons.photo_library_outlined, size: 18),
-                onPressed: () =>
-                    Navigator.pop(sheetContext, _PhotoSource.gallery),
+                onPressed: () => Navigator.pop(sheetContext, _PhotoSource.gallery),
               ),
             ],
           ),
@@ -421,8 +415,10 @@ class _PhotoConfirmSheet extends StatelessWidget {
         children: [
           Center(
             child: Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2)),
+              width: 40,
+              height: 4,
+              decoration:
+                  BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(2)),
             ),
           ),
           const SizedBox(height: 16),
@@ -473,16 +469,19 @@ class _LoopBottom extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppL10n.of(context);
     final allDone = vendor.allItemsResolved;
+    final onFinalStep = vendor.currentStep?.isFinalStep == true;
+    // The finish CTA only makes sense on the last workflow step. On any
+    // earlier step we surface no bottom button and the user goes back via
+    // the top bar to continue the workflow.
+    if (!onFinalStep) return const SizedBox.shrink();
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
         child: AppButton(
-          label: allDone ? t.finalize : t.finalizeBlocked,
+          label: allDone ? t.confirmFinalDelivery : t.finalizeBlocked,
           variant: allDone ? AppBtnVariant.primary : AppBtnVariant.ghost,
           trailing: allDone ? const Icon(Icons.arrow_forward_rounded) : null,
-          onPressed: allDone
-              ? () => context.push(Routes.finalizePath(vendor.id))
-              : null,
+          onPressed: allDone ? () => context.push(Routes.finalizePath(vendor.id)) : null,
         ),
       ),
     );

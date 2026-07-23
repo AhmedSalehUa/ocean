@@ -5,6 +5,7 @@ import '../models/master_po.dart';
 import '../models/proof_log.dart';
 import '../models/vendor_po.dart';
 import '../models/workflow_step.dart';
+import '../models/delivery_note.dart';
 
 class DeliveryRepository {
   DeliveryRepository(this._api);
@@ -74,13 +75,20 @@ class DeliveryRepository {
 
   Future<VendorPo> finalize(String id) => _api.finalizeVendorPo(id);
 
+  Future<File> downloadDeliveryNote(String masterPoId, {DeliveryNote? note}) =>
+      _api.downloadDeliveryNote(masterPoId, note: note);
+
+  Future<DeliveryNote> uploadDeliveryNote({
+    required String masterPoId,
+    required File file,
+  }) =>
+      _api.uploadDeliveryNote(masterPoId: masterPoId, file: file);
   String attachmentUrl(String id) => _api.attachmentUrl(id);
 
   /// Returns an absolute URL the UI can hand to a Network image widget.
   /// Prefers the per-attachment `file_url` returned by the server so future
   /// changes to the file-serving route don't require code updates.
-  String fileUrl(String relativeOrAbsolute) =>
-      _api.resolveFileUrl(relativeOrAbsolute);
+  String fileUrl(String relativeOrAbsolute) => _api.resolveFileUrl(relativeOrAbsolute);
 
   /// Headers to attach when fetching authenticated assets (e.g. proof
   /// thumbnails / full-screen images via CachedNetworkImage).

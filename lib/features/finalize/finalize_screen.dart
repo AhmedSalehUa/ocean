@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/colors.dart';
 import '../../core/theme/typography.dart';
+import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_chip.dart';
@@ -116,6 +117,33 @@ class _FinalizeBody extends StatelessWidget {
                 ),
                 style: AppType.bodyMuted,
               ),
+              if (vendor.etaDate != null || vendor.portName != null) ...[
+                const SizedBox(height: 12),
+                const Divider(height: 1, color: AppColors.lineSoft),
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (vendor.etaDate != null)
+                      Expanded(
+                        child: _MetaCell(
+                          label: t.etaDate,
+                          value: Fmt.relativeDay(
+                            vendor.etaDate!,
+                            locale: t.isAr ? 'ar' : 'en',
+                          ),
+                        ),
+                      ),
+                    if (vendor.portName != null)
+                      Expanded(
+                        child: _MetaCell(
+                          label: t.portName,
+                          value: vendor.portName!,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
@@ -154,6 +182,25 @@ class _FinalizeBody extends StatelessWidget {
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _MetaCell extends StatelessWidget {
+  const _MetaCell({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label.toUpperCase(),
+            style: AppType.mono10.copyWith(color: AppColors.muted, letterSpacing: 1.2)),
+        const SizedBox(height: 4),
+        Text(value, style: AppType.body.copyWith(fontWeight: FontWeight.w500)),
       ],
     );
   }

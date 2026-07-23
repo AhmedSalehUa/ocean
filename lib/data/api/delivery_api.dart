@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../models/delivery_note.dart';
 import '../models/master_po.dart';
 import '../models/proof_log.dart';
 import '../models/user.dart';
@@ -49,6 +50,20 @@ abstract class DeliveryApi {
     required String stepId,
   });
   Future<VendorPo> finalizeVendorPo(String vendorPoId);
+
+  /// Downloads the current delivery-note file for the given Master PO into
+  /// the app's temporary directory and returns the saved [File]. The rep
+  /// must be assigned to at least one Vendor PO under the master. Throws
+  /// [ApiException] with statusCode 404 if no file has been uploaded yet.
+  Future<File> downloadDeliveryNote(String masterPoId, {DeliveryNote? note});
+
+  /// Replaces the current delivery-note file with the completed version
+  /// picked by the representative. Allowed types on the wire: PDF, Excel
+  /// (xls, xlsx), Word (doc, docx), images (jpg, jpeg, png, webp).
+  Future<DeliveryNote> uploadDeliveryNote({
+    required String masterPoId,
+    required File file,
+  });
 
   /// For [HttpDeliveryApi] this returns the auth-aware URL the UI should
   /// hand to a Network image widget. For the mock it returns a local seed url.

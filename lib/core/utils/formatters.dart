@@ -35,7 +35,7 @@ class Fmt {
   static String time(DateTime date) => DateFormat('HH:mm').format(date);
 
   /// Compact calendar date, e.g. "17 May 2026".
-  static String date(DateTime date) => DateFormat('d MMM yyyy').format(date);
+  static String date(DateTime date) => DateFormat('d MMM yyyy', 'ar').format(date);
 
   /// 6-digit signed coordinate readout, e.g. "-1.292100, 36.821900"
   static String gps(double lat, double lng) =>

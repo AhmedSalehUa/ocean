@@ -247,8 +247,7 @@ class _ItemTable extends StatelessWidget {
           const Divider(height: 1, color: AppColors.lineSoft),
           for (var i = 0; i < vendor.items.length; i++) ...[
             _ItemRow(item: vendor.items[i], index: i + 1),
-            if (i < vendor.items.length - 1)
-              const Divider(height: 1, color: AppColors.lineSoft),
+            if (i < vendor.items.length - 1) const Divider(height: 1, color: AppColors.lineSoft),
           ],
         ],
       ),
@@ -424,8 +423,8 @@ class _BottomCta extends StatelessWidget {
       label = t.captureShipment;
     } else if (step != null && step.requiresItemPhoto) {
       label = t.captureItems;
-    } else if (vendor.allItemsResolved) {
-      label = t.finalize;
+    } else if (step != null && step.isFinalStep && vendor.allItemsResolved) {
+      label = t.confirmFinalDelivery;
     } else {
       label = t.captureItems;
       enabled = false;

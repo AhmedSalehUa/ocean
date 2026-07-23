@@ -1,0 +1,217 @@
+From 4346744814daf2d8efa722d0a3a8af26ee238560 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 23 Jul 2026 12:02:19 +0000
+Subject: [PATCH] feat: gate Finish button to final step + surface ETA & port
+ on finalize
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- vendor_detail bottom CTA reads t.confirmFinalDelivery ('Finish' / 'إنهاء')
+  and only appears when vendor.currentStep.isFinalStep == true
+- item_loop bottom bar hides entirely on non-final steps; on the final
+  step reads Finish when items resolved (blocked-label otherwise)
+- VendorPo model now parses optional eta / port_name (falls back to
+  expected_arrival / arrival_date / port) — nullable, hidden if absent
+- Finalize screen shows an ETA · Port row inside the outcome card when
+  either field is present
+---
+ lib/data/models/vendor_po.dart                |  8 +++
+ lib/features/finalize/finalize_screen.dart    | 49 +++++++++++++++++++
+ lib/features/item_loop/item_loop_screen.dart  |  7 ++-
+ .../vendor_detail/vendor_detail_screen.dart   |  4 +-
+ lib/l10n/app_ar.arb                           |  2 +
+ lib/l10n/app_en.arb                           |  2 +
+ lib/l10n/app_l10n.dart                        |  2 +
+ 7 files changed, 71 insertions(+), 3 deletions(-)
+
+diff --git a/lib/data/models/vendor_po.dart b/lib/data/models/vendor_po.dart
+index 6e6f1d4..a4bbdaa 100644
+--- a/lib/data/models/vendor_po.dart
++++ b/lib/data/models/vendor_po.dart
+@@ -14,6 +14,8 @@ class VendorPo {
+   final String currency;
+   final DateTime? assignedAt;
+   final DateTime? finalizedAt;
++  final DateTime? eta;
++  final String? portName;
+   final String? currentStepId;
+ 
+   // Detail extras (populated by GET /vendor-pos/:id)
+@@ -34,6 +36,8 @@ class VendorPo {
+     this.operationDate,
+     this.assignedAt,
+     this.finalizedAt,
++    this.eta,
++    this.portName,
+     this.currentStepId,
+     this.itemCount = 0,
+     this.resolvedItemCount = 0,
+@@ -87,6 +91,8 @@ class VendorPo {
+         operationDate: operationDate,
+         assignedAt: assignedAt,
+         finalizedAt: finalizedAt ?? this.finalizedAt,
++        eta: eta,
++        portName: portName,
+         currentStepId: currentStepId ?? this.currentStepId,
+         itemCount: itemCount,
+         resolvedItemCount: resolvedItemCount ?? this.resolvedItemCount,
+@@ -116,6 +122,8 @@ class VendorPo {
+       operationDate: _date(json['operation_date']),
+       assignedAt: _date(json['assigned_at']),
+       finalizedAt: _date(json['finalized_at']),
++      eta: _date(json['eta'] ?? json['expected_arrival'] ?? json['arrival_date']),
++      portName: (json['port_name'] ?? json['port']) as String?,
+       currentStepId: json['current_step_id'] as String?,
+       itemCount: _asInt(json['item_count']),
+       resolvedItemCount: _asInt(json['resolved_item_count']),
+diff --git a/lib/features/finalize/finalize_screen.dart b/lib/features/finalize/finalize_screen.dart
+index 08993bf..564d38f 100644
+--- a/lib/features/finalize/finalize_screen.dart
++++ b/lib/features/finalize/finalize_screen.dart
+@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
+ 
+ import '../../core/theme/colors.dart';
+ import '../../core/theme/typography.dart';
++import '../../core/utils/formatters.dart';
+ import '../../core/widgets/app_button.dart';
+ import '../../core/widgets/app_card.dart';
+ import '../../core/widgets/app_chip.dart';
+@@ -116,6 +117,33 @@ class _FinalizeBody extends StatelessWidget {
+                 ),
+                 style: AppType.bodyMuted,
+               ),
++              if (vendor.eta != null || vendor.portName != null) ...[
++                const SizedBox(height: 12),
++                const Divider(height: 1, color: AppColors.lineSoft),
++                const SizedBox(height: 12),
++                Row(
++                  crossAxisAlignment: CrossAxisAlignment.start,
++                  children: [
++                    if (vendor.eta != null)
++                      Expanded(
++                        child: _MetaCell(
++                          label: t.eta,
++                          value: Fmt.relativeDay(
++                            vendor.eta!,
++                            locale: t.isAr ? 'ar' : 'en',
++                          ),
++                        ),
++                      ),
++                    if (vendor.portName != null)
++                      Expanded(
++                        child: _MetaCell(
++                          label: t.port,
++                          value: vendor.portName!,
++                        ),
++                      ),
++                  ],
++                ),
++              ],
+             ],
+           ),
+         ),
+@@ -158,3 +186,24 @@ class _FinalizeBody extends StatelessWidget {
+     );
+   }
+ }
++
++class _MetaCell extends StatelessWidget {
++  const _MetaCell({required this.label, required this.value});
++  final String label;
++  final String value;
++
++  @override
++  Widget build(BuildContext context) {
++    return Column(
++      crossAxisAlignment: CrossAxisAlignment.start,
++      children: [
++        Text(label.toUpperCase(),
++            style: AppType.mono10.copyWith(
++                color: AppColors.muted, letterSpacing: 1.2)),
++        const SizedBox(height: 4),
++        Text(value,
++            style: AppType.body.copyWith(fontWeight: FontWeight.w500)),
++      ],
++    );
++  }
++}
+diff --git a/lib/features/item_loop/item_loop_screen.dart b/lib/features/item_loop/item_loop_screen.dart
+index ce1e1fa..3fbd059 100644
+--- a/lib/features/item_loop/item_loop_screen.dart
++++ b/lib/features/item_loop/item_loop_screen.dart
+@@ -473,11 +473,16 @@ class _LoopBottom extends StatelessWidget {
+   Widget build(BuildContext context) {
+     final t = AppL10n.of(context);
+     final allDone = vendor.allItemsResolved;
++    final onFinalStep = vendor.currentStep?.isFinalStep == true;
++    // The finish CTA only makes sense on the last workflow step. On any
++    // earlier step we surface no bottom button and the user goes back via
++    // the top bar to continue the workflow.
++    if (!onFinalStep) return const SizedBox.shrink();
+     return SafeArea(
+       child: Padding(
+         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+         child: AppButton(
+-          label: allDone ? t.finalize : t.finalizeBlocked,
++          label: allDone ? t.confirmFinalDelivery : t.finalizeBlocked,
+           variant: allDone ? AppBtnVariant.primary : AppBtnVariant.ghost,
+           trailing: allDone ? const Icon(Icons.arrow_forward_rounded) : null,
+           onPressed: allDone
+diff --git a/lib/features/vendor_detail/vendor_detail_screen.dart b/lib/features/vendor_detail/vendor_detail_screen.dart
+index ddfb4fb..2c36df5 100644
+--- a/lib/features/vendor_detail/vendor_detail_screen.dart
++++ b/lib/features/vendor_detail/vendor_detail_screen.dart
+@@ -424,8 +424,8 @@ class _BottomCta extends StatelessWidget {
+       label = t.captureShipment;
+     } else if (step != null && step.requiresItemPhoto) {
+       label = t.captureItems;
+-    } else if (vendor.allItemsResolved) {
+-      label = t.finalize;
++    } else if (step != null && step.isFinalStep && vendor.allItemsResolved) {
++      label = t.confirmFinalDelivery;
+     } else {
+       label = t.captureItems;
+       enabled = false;
+diff --git a/lib/l10n/app_ar.arb b/lib/l10n/app_ar.arb
+index a49cc4c..26767f4 100644
+--- a/lib/l10n/app_ar.arb
++++ b/lib/l10n/app_ar.arb
+@@ -78,6 +78,8 @@
+   "autoCompleted": "إنهاء تلقائي",
+   "noProofs": "لا توجد إثباتات بعد",
+ 
++  "eta": "الوصول المتوقع",
++  "port": "الميناء",
+   "finalizeTitle": "إنهاء أمر المورّد",
+   "finalizeBody": "{delivered} مُسلَّمة · {missing} مفقودة · {total} الإجمالي. النظام سيُسجِّل {outcome} عند الإرسال.",
+   "@finalizeBody": {"placeholders": {"delivered": {}, "missing": {}, "total": {}, "outcome": {}}},
+diff --git a/lib/l10n/app_en.arb b/lib/l10n/app_en.arb
+index ae8382a..c85996a 100644
+--- a/lib/l10n/app_en.arb
++++ b/lib/l10n/app_en.arb
+@@ -78,6 +78,8 @@
+   "autoCompleted": "Auto-completed",
+   "noProofs": "No proofs uploaded yet",
+ 
++  "eta": "ETA",
++  "port": "Port",
+   "finalizeTitle": "Finalize Vendor PO",
+   "finalizeBody": "{delivered} delivered · {missing} missing · {total} total. The system will assign {outcome} on submit.",
+   "@finalizeBody": {"placeholders": {"delivered": {}, "missing": {}, "total": {}, "outcome": {}}},
+diff --git a/lib/l10n/app_l10n.dart b/lib/l10n/app_l10n.dart
+index f68904a..007d23c 100644
+--- a/lib/l10n/app_l10n.dart
++++ b/lib/l10n/app_l10n.dart
+@@ -174,6 +174,8 @@ class AppL10n {
+   // ─── Finalize / handoff ───
+   String get finalizeTitle => _t('Finalize Vendor PO', 'إنهاء أمر المورّد');
+   String get confirmFinalDelivery => _t('Finish', 'إنهاء');
++  String get eta => _t('ETA', 'الوصول المتوقع');
++  String get port => _t('Port', 'الميناء');
+   String finalizeBody({required int delivered, required int missing, required int total, required String outcome}) =>
+       _t(
+           '$delivered delivered · $missing missing · $total total. The system will assign $outcome on submit.',
+-- 
+2.43.0
+

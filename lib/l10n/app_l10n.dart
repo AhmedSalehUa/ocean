@@ -21,20 +21,18 @@ class AppL10n {
 
   // ─── Login & shell ───
   String get appName => _t('Ocean Ship', 'أوشن شيب');
-  String get tagline => _t('Chain of custody,\nverified at the bay.',
-      'سلسلة الحراسة،\nمُتحقَّقة عند الرصيف.');
+  String get tagline =>
+      _t('Chain of custody,\nverified at the bay.', 'سلسلة الحراسة،\nمُتحقَّقة عند الرصيف.');
   String get loginEyebrow => _t('Representative sign-in', 'تسجيل دخول الممثل');
   String get username => _t('Username', 'اسم المستخدم');
   String get password => _t('Password', 'كلمة المرور');
   String get continueAction => _t('Continue', 'متابعة');
   String get verifyingToken => _t('Verifying token…', 'جارٍ التحقق من الرمز…');
   String get jwtFooter => _t('JWT · Role REPRESENTATIVE only', 'JWT · للممثلين فقط');
-  String get copyright => _t('© Ocean Delivery · Audit ledger',
-      '© أوشن للتوصيل · سجل التدقيق');
+  String get copyright => _t('© Ocean Delivery · Audit ledger', '© أوشن للتوصيل · سجل التدقيق');
 
   // ─── Dashboard ───
-  String greeting(String name, String role) =>
-      _t('Hi, $name · $role', 'مرحباً، $name · $role');
+  String greeting(String name, String role) => _t('Hi, $name · $role', 'مرحباً، $name · $role');
   String get greetingMorning => _t('Good morning', 'صباح الخير');
   String get greetingAfternoon => _t('Good afternoon', 'مساء الخير');
   String get greetingEvening => _t('Good evening', 'مساء الخير');
@@ -52,13 +50,35 @@ class AppL10n {
     return '$count master orders to clear.';
   }
 
-  String get searchHint => _t('Search master PO, vendor, SKU…',
-      'ابحث عن طلب رئيسي أو مورّد أو رمز…');
+  String get searchHint =>
+      _t('Search master PO, vendor, SKU…', 'ابحث عن طلب رئيسي أو مورّد أو رمز…');
   String get openSection => _t('Open', 'مفتوحة');
   String get recentlyClosedSection => _t('Recently closed', 'مغلقة مؤخراً');
   String get vesselName => _t('Vessel name', 'اسم المركب');
   String get etaDate => _t('ETA date', 'تاريخ الوصول');
   String get portName => _t('Port', 'الميناء');
+
+  // ─── Delivery note ───
+  String get deliveryNote => _t('Delivery note', 'مستند التسليم');
+  String get deliveryNoteTemplate => _t('Template', 'غير مكتمل');
+  String get deliveryNoteCompleted => _t('Completed', 'مكتمل');
+  String get downloadDeliveryNote => _t('Download', 'تنزيل');
+  String get uploadCompletedNote => _t('Upload filled version', 'رفع النسخة المكتملة');
+  String get downloadingDeliveryNote => _t('Downloading delivery note…', 'جارٍ تنزيل المستند');
+  String get uploadingDeliveryNote => _t('Uploading delivery note…', 'جارٍ رفع المستند');
+  String get deliveryNoteUploaded => _t('Delivery note uploaded', 'تم رفع المستند');
+  String get deliveryNoteDownloadFailed =>
+      _t('Couldn\'t download the delivery note.', 'تعذّر تنزيل المستند.');
+  String deliveryNoteNoOpener(String fileName) => _t(
+      'Downloaded, but no app on the device can open $fileName. Try installing a PDF viewer.',
+      'تم التنزيل، لكن لا يوجد تطبيق على الجهاز يفتح $fileName. جرّب تثبيت قارئ PDF.');
+  String get deliveryNoteUploadFailed =>
+      _t('Couldn\'t upload the delivery note.', 'تعذّر رفع المستند.');
+  String get deliveryNoteNotAvailable =>
+      _t('No delivery note has been uploaded yet.', 'لم يتم رفع مستند تسليم بعد.');
+  String get deliveryNoteUploadLocked => _t('Upload unlocks after the Master PO is completed.',
+      'يُتاح الرفع بعد اكتمال أمر الشراء الرئيسي.');
+  String get unsupportedFileType => _t('This file type isn\'t allowed.', 'نوع الملف غير مسموح.');
   String get yardFeed => _t('Yard feed', 'أخبار الساحة');
 
   // ─── Vendor list ───
@@ -71,8 +91,7 @@ class AppL10n {
 
   String clearedRatio(int done, int total) =>
       _t('$done/$total vendor POs cleared', '$done/$total مكتمل');
-  String clearedShort(int done, int total) =>
-      _t('$done/$total cleared', '$done/$total مكتمل');
+  String clearedShort(int done, int total) => _t('$done/$total cleared', '$done/$total مكتمل');
   String get mapAction => _t('Map', 'خريطة');
   String finalizedAt(String at) => _t('finalized $at', 'أُنهي في $at');
 
@@ -96,18 +115,18 @@ class AppL10n {
 
   // ─── Shipment capture ───
   String get shipmentCaptureTitle => _t('Shipment-level proof', 'إثبات على مستوى الشحنة');
-  String get shipmentCaptureSubtitle => _t('Group photo + GPS for the whole delivery',
-      'صورة جماعية + GPS للتسليم بأكمله');
+  String get shipmentCaptureSubtitle =>
+      _t('Group photo + GPS for the whole delivery', 'صورة جماعية + GPS للتسليم بأكمله');
   String get waitingGps => _t('Acquiring GPS lock…', 'جارٍ تثبيت موقع GPS…');
   String get gpsLocked => _t('GPS locked', 'تم تثبيت GPS');
-  String get shutterLocked => _t('Wait for GPS lock to enable shutter', 'بانتظار GPS لتمكين الالتقاط');
+  String get shutterLocked =>
+      _t('Wait for GPS lock to enable shutter', 'بانتظار GPS لتمكين الالتقاط');
   String get captureNow => _t('Capture', 'التقاط');
   String get pickItemTitle => _t('Pick an item', 'اختر بنداً');
   String get capturedBadge => _t('Captured', 'تم التقاطه');
   String get takePhoto => _t('Take photo', 'التقاط صورة');
   String get uploadFromGallery => _t('Upload from gallery', 'رفع من المعرض');
-  String get choosePhotoSource =>
-      _t('Add a photo', 'إضافة صورة');
+  String get choosePhotoSource => _t('Add a photo', 'إضافة صورة');
   String get openSettings => _t('Open settings', 'فتح الإعدادات');
   String get gpsBlocked => _t('Location permission is required', 'إذن الموقع مطلوب');
   String get cameraBlocked => _t('Camera permission is required', 'إذن الكاميرا مطلوب');
@@ -124,19 +143,13 @@ class AppL10n {
   String deliveredCount(int count) => _t('$count delivered', '$count مُسلَّمة');
   String missingCount(int count) => _t('$count missing', '$count مفقودة');
   String pendingCount(int count) => _t('$count pending', '$count قيد الانتظار');
-  String itemsRemaining(int count) =>
-      _t('$count items remaining', 'بقي $count عناصر');
-  String capturedItem(String code, int remaining) => _t(
-      '$code captured · $remaining items remaining',
-      'تم التقاط $code · بقي $remaining عناصر');
-  String uploadingItem(String code) => _t(
-      'Uploading photo for $code…', 'جارٍ رفع صورة $code…');
-  String get uploadingShipment =>
-      _t('Uploading shipment photo…', 'جارٍ رفع صورة الشحنة…');
-  String itemOfTotal(int index, int total) =>
-      _t('Item $index of $total', 'البند $index من $total');
-  String uploadingBadge(int count) =>
-      _t('Uploading $count…', 'جارٍ رفع $count…');
+  String itemsRemaining(int count) => _t('$count items remaining', 'بقي $count عناصر');
+  String capturedItem(String code, int remaining) =>
+      _t('$code captured · $remaining items remaining', 'تم التقاط $code · بقي $remaining عناصر');
+  String uploadingItem(String code) => _t('Uploading photo for $code…', 'جارٍ رفع صورة $code…');
+  String get uploadingShipment => _t('Uploading shipment photo…', 'جارٍ رفع صورة الشحنة…');
+  String itemOfTotal(int index, int total) => _t('Item $index of $total', 'البند $index من $total');
+  String uploadingBadge(int count) => _t('Uploading $count…', 'جارٍ رفع $count…');
   String failedBadge(int count) =>
       _t('$count failed · tap to retry', '$count فشل · اضغط لإعادة المحاولة');
   String get startItemCapture => _t('Start item capture', 'بدء التقاط البنود');
@@ -146,8 +159,7 @@ class AppL10n {
   String markedMissingItem(String code, int remaining) => _t(
       '$code marked missing · $remaining items remaining',
       'تم تحديد $code كمفقود · بقي $remaining عناصر');
-  String get allItemsCaptured =>
-      _t('All items captured', 'تم التقاط جميع البنود');
+  String get allItemsCaptured => _t('All items captured', 'تم التقاط جميع البنود');
   String get markMissingTitle => _t('Mark this item as missing?', 'تحديد هذا البند كمفقود؟');
   String get markMissingBody => _t(
       "This item won't be re-introduced into this Vendor PO. The Master PO will be recomputed.",
@@ -170,26 +182,26 @@ class AppL10n {
   String get viewOnMap => _t('View location on map', 'عرض الموقع على الخريطة');
   String get locationUnavailable =>
       _t('Location not recorded for this proof.', 'لم يتم تسجيل موقع لهذا الإثبات.');
-  String get mapOpenFailed =>
-      _t('Couldn\'t open the map app.', 'تعذّر فتح تطبيق الخرائط.');
+  String get mapOpenFailed => _t('Couldn\'t open the map app.', 'تعذّر فتح تطبيق الخرائط.');
   String get imageLoadFailed => _t('Image failed to load.', 'تعذّر تحميل الصورة.');
 
   // ─── Finalize / handoff ───
   String get finalizeTitle => _t('Finalize Vendor PO', 'إنهاء أمر المورّد');
   String get confirmFinalDelivery => _t('Finish', 'إنهاء');
-  String finalizeBody({required int delivered, required int missing, required int total, required String outcome}) =>
-      _t(
-          '$delivered delivered · $missing missing · $total total. The system will assign $outcome on submit.',
+  String finalizeBody(
+          {required int delivered,
+          required int missing,
+          required int total,
+          required String outcome}) =>
+      _t('$delivered delivered · $missing missing · $total total. The system will assign $outcome on submit.',
           '$delivered مُسلَّمة · $missing مفقودة · $total الإجمالي. النظام سيُسجِّل $outcome عند الإرسال.');
   String get fullyDelivered => _t('FULLY DELIVERED', 'تسليم كامل');
   String get partiallyDelivered => _t('PARTIALLY DELIVERED', 'تسليم جزئي');
-  String get finalizeBlocked => _t(
-      'Resolve every item (delivered or missing) before submitting.',
+  String get finalizeBlocked => _t('Resolve every item (delivered or missing) before submitting.',
       'حل كل البنود (تسليم أو مفقود) قبل الإرسال.');
 
   String get handoffTitle => _t('Audit row sealed', 'تم ختم سجل التدقيق');
-  String get handoffBody => _t(
-      'Master PO progress recomputed. Procurement has been notified.',
+  String get handoffBody => _t('Master PO progress recomputed. Procurement has been notified.',
       'أُعيد حساب تقدُّم الأمر الرئيسي. تم إشعار المشتريات.');
   String get backToDashboard => _t('Back to dashboard', 'العودة إلى لوحة التحكم');
 
@@ -198,18 +210,15 @@ class AppL10n {
   String stepLockedHint(String requiredStepName) => _t(
       'Complete "$requiredStepName" first to unlock this step.',
       'أكمل "$requiredStepName" أولاً لفتح هذه الخطوة.');
-  String get finalizeBlockedSteps => _t(
-      'Finish every step before finalizing.',
-      'أكمل جميع الخطوات قبل الإنهاء.');
+  String get finalizeBlockedSteps =>
+      _t('Finish every step before finalizing.', 'أكمل جميع الخطوات قبل الإنهاء.');
   String stepDoneSubtitle(String stepName) =>
       _t('$stepName captured and uploaded.', 'تم التقاط ورفع $stepName.');
   String get stepDoneContinue => _t('Continue to next step', 'الانتقال إلى الخطوة التالية');
   String get stepDoneFinalize => _t('Finalize delivery', 'إنهاء التسليم');
   String get stepDoneAwaitingUploads =>
-      _t('Waiting for background uploads to finish…',
-          'في انتظار اكتمال الرفع في الخلفية…');
-  String stepDoneFailedUploads(int n) => _t(
-      '$n upload(s) failed — retry before continuing.',
+      _t('Waiting for background uploads to finish…', 'في انتظار اكتمال الرفع في الخلفية…');
+  String stepDoneFailedUploads(int n) => _t('$n upload(s) failed — retry before continuing.',
       'فشل رفع $n عنصر — أعد المحاولة قبل المتابعة.');
 
   // ─── Settings ───

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import '../models/attachment.dart';
+import '../models/delivery_note.dart';
 import '../models/enums.dart';
 import '../models/master_po.dart';
 import '../models/proof_log.dart';
@@ -20,12 +21,12 @@ class MockDeliveryApi implements DeliveryApi {
     _vendors = {for (final e in Seed.vendorPos().entries) e.key: List.of(e.value)};
     _proofs = {
       'vpo_c': [
-        _seedProof('plog_c1', 'vpo_c', 'verify', 'Item · HOSE-3/4', 'it_c1', auto: true,
-            atHm: (8, 56), file: 'hose_0856.jpg'),
-        _seedProof('plog_c2', 'vpo_c', 'verify', 'Item · FIT-NPT', 'it_c2', auto: true,
-            atHm: (8, 58), file: 'fit_0858.jpg'),
-        _seedProof('plog_c3', 'vpo_c', 'verify', 'Item · SEAL-V', 'it_c3', auto: true,
-            atHm: (9, 1), file: 'seal_0901.jpg'),
+        _seedProof('plog_c1', 'vpo_c', 'verify', 'Item · HOSE-3/4', 'it_c1',
+            auto: true, atHm: (8, 56), file: 'hose_0856.jpg'),
+        _seedProof('plog_c2', 'vpo_c', 'verify', 'Item · FIT-NPT', 'it_c2',
+            auto: true, atHm: (8, 58), file: 'fit_0858.jpg'),
+        _seedProof('plog_c3', 'vpo_c', 'verify', 'Item · SEAL-V', 'it_c3',
+            auto: true, atHm: (9, 1), file: 'seal_0901.jpg'),
       ],
       'vpo_a': [
         _seedProof('plog_a1', 'vpo_a', 'load', 'Shipment loading', null,
@@ -79,16 +80,16 @@ class MockDeliveryApi implements DeliveryApi {
 
   ({String en, String ar}) _stepName(String stepId) {
     return switch (stepId) {
-      'load'    => (en: 'Shipment Loading', ar: 'تحميل الشحنة'),
-      'transit' => (en: 'In Transit',       ar: 'في الطريق'),
-      'unload'  => (en: 'Site Unloading',   ar: 'تفريغ الموقع'),
-      'verify'  => (en: 'Item Verification',ar: 'التحقق من الأصناف'),
+      'load' => (en: 'Shipment Loading', ar: 'تحميل الشحنة'),
+      'transit' => (en: 'In Transit', ar: 'في الطريق'),
+      'unload' => (en: 'Site Unloading', ar: 'تفريغ الموقع'),
+      'verify' => (en: 'Item Verification', ar: 'التحقق من الأصناف'),
       _ => (en: stepId, ar: stepId),
     };
   }
 
-  Future<void> _latency([int min = 180, int max = 380]) =>
-      Future<void>.delayed(Duration(milliseconds: min + (DateTime.now().microsecond % (max - min))));
+  Future<void> _latency([int min = 180, int max = 380]) => Future<void>.delayed(
+      Duration(milliseconds: min + (DateTime.now().microsecond % (max - min))));
 
   VendorPo _findVendor(String id) {
     for (final list in _vendors.values) {
@@ -149,8 +150,7 @@ class MockDeliveryApi implements DeliveryApi {
   }
 
   @override
-  Future<({List<VendorPo> vendors, String masterPoNumber})> listVendorPos(
-      String masterPoId) async {
+  Future<({List<VendorPo> vendors, String masterPoNumber})> listVendorPos(String masterPoId) async {
     await _latency();
     final m = _masters.firstWhere(
       (m) => m.id == masterPoId,
@@ -197,9 +197,8 @@ class MockDeliveryApi implements DeliveryApi {
     final updated = v.copyWith(
       status: PoStatus.inProgress,
       items: v.items
-          .map((i) => i.status == ItemStatus.pending
-              ? i.copyWith(status: ItemStatus.inProgress)
-              : i)
+          .map(
+              (i) => i.status == ItemStatus.pending ? i.copyWith(status: ItemStatus.inProgress) : i)
           .toList(),
     );
     _replaceVendor(updated);
@@ -222,8 +221,7 @@ class MockDeliveryApi implements DeliveryApi {
     if (stepIdx < 0) throw const ApiException('Step not found', statusCode: 404);
     final step = v.steps[stepIdx];
     if (!step.requiresShipmentPhoto) {
-      throw const ApiException('Step does not require shipment photo',
-          statusCode: 422);
+      throw const ApiException('Step does not require shipment photo', statusCode: 422);
     }
 
     final newSteps = List<WorkflowStep>.from(v.steps);
@@ -282,9 +280,8 @@ class MockDeliveryApi implements DeliveryApi {
     final updated = v.copyWith(
       items: items,
       steps: newSteps,
-      resolvedItemCount: wasUnresolved && step.isFinalStep
-          ? v.resolvedItemCount + 1
-          : v.resolvedItemCount,
+      resolvedItemCount:
+          wasUnresolved && step.isFinalStep ? v.resolvedItemCount + 1 : v.resolvedItemCount,
     );
     _replaceVendor(updated);
 
@@ -358,6 +355,30 @@ class MockDeliveryApi implements DeliveryApi {
   }
 
   @override
+  @override
+  Future<File> downloadDeliveryNote(String masterPoId, {DeliveryNote? note}) {
+    // Mock mode has no real files on disk; feature only makes sense against
+    // the live backend. Surface a friendly 404 so the UI shows the empty
+    // state instead of a runtime crash.
+    throw const ApiException('No delivery note uploaded yet', statusCode: 404);
+  }
+
+  @override
+  Future<DeliveryNote> uploadDeliveryNote({
+    required String masterPoId,
+    required File file,
+  }) async {
+    return DeliveryNote(
+      fileName: file.uri.pathSegments.last,
+      mimeType: 'application/octet-stream',
+      fileSize: await file.length(),
+      status: DeliveryNoteStatus.completed,
+      updatedAt: DateTime.now(),
+      downloadUrl: '/api/delivery/mobile/master-pos/$masterPoId/delivery-note',
+    );
+  }
+
+  @override
   String attachmentUrl(String attachmentId) => 'mock://attachments/$attachmentId';
 
   @override
@@ -414,8 +435,8 @@ class MockDeliveryApi implements DeliveryApi {
     if (mi < 0) return;
     final list = _vendors[masterId] ?? const <VendorPo>[];
     final delivered = list
-        .where((v) =>
-            v.status == PoStatus.fullyDelivered || v.status == PoStatus.partiallyDelivered)
+        .where(
+            (v) => v.status == PoStatus.fullyDelivered || v.status == PoStatus.partiallyDelivered)
         .length;
     _masters[mi] = _masters[mi].copyWith(
       deliveredVendorPoCount: delivered,

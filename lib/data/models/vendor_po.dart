@@ -14,6 +14,8 @@ class VendorPo {
   final String currency;
   final DateTime? assignedAt;
   final DateTime? finalizedAt;
+  final DateTime? etaDate;
+  final String? portName;
   final String? currentStepId;
 
   // Detail extras (populated by GET /vendor-pos/:id)
@@ -34,6 +36,8 @@ class VendorPo {
     this.operationDate,
     this.assignedAt,
     this.finalizedAt,
+    this.etaDate,
+    this.portName,
     this.currentStepId,
     this.itemCount = 0,
     this.resolvedItemCount = 0,
@@ -52,8 +56,6 @@ class VendorPo {
   bool get allItemsResolved => items.isNotEmpty && items.every((i) => i.status.isResolved);
 
   /// True only when every non-final workflow step is locally complete.
-  /// The final step itself is what triggers /finalize, so we don't require
-  /// it to be complete here.
   bool get allPriorStepsComplete {
     if (steps.isEmpty) return true;
     for (final s in steps) {
@@ -87,6 +89,8 @@ class VendorPo {
         operationDate: operationDate,
         assignedAt: assignedAt,
         finalizedAt: finalizedAt ?? this.finalizedAt,
+        etaDate: etaDate,
+        portName: portName,
         currentStepId: currentStepId ?? this.currentStepId,
         itemCount: itemCount,
         resolvedItemCount: resolvedItemCount ?? this.resolvedItemCount,
@@ -95,11 +99,10 @@ class VendorPo {
       );
 
   factory VendorPo.fromJson(Map<String, dynamic> json) {
-    int _asInt(dynamic v) =>
+    int asInt(dynamic v) =>
         v is int ? v : (v is String ? int.tryParse(v) ?? 0 : (v as num?)?.toInt() ?? 0);
-    num _asNum(dynamic v) =>
-        v is num ? v : (v is String ? num.tryParse(v) ?? 0 : 0);
-    DateTime? _date(dynamic v) => v == null ? null : DateTime.tryParse(v.toString());
+    num asNum(dynamic v) => v is num ? v : (v is String ? num.tryParse(v) ?? 0 : 0);
+    DateTime? date(dynamic v) => v == null ? null : DateTime.tryParse(v.toString());
 
     final itemsRaw = (json['items'] as List?) ?? const [];
     final stepsRaw = (json['steps'] as List?) ?? const [];
@@ -110,15 +113,18 @@ class VendorPo {
       masterPoNumber: (json['master_po_number'] as String?) ?? '',
       supplierName: json['supplier_name'] as String,
       status: PoStatusX.parse(json['status'] as String?),
-      totalAmount: _asNum(json['total_amount']),
+      totalAmount: asNum(json['total_amount']),
       currency: json['currency'] as String? ?? 'USD',
       vendorRef: json['vendor_ref'] as String?,
-      operationDate: _date(json['operation_date']),
-      assignedAt: _date(json['assigned_at']),
-      finalizedAt: _date(json['finalized_at']),
+      operationDate: date(json['operation_date']),
+      assignedAt: date(json['assigned_at']),
+      finalizedAt: date(json['finalized_at']),
+      etaDate:
+          date(json['eta_date'] ?? json['eta'] ?? json['expected_arrival'] ?? json['arrival_date']),
+      portName: (json['port_name'] ?? json['port']) as String?,
       currentStepId: json['current_step_id'] as String?,
-      itemCount: _asInt(json['item_count']),
-      resolvedItemCount: _asInt(json['resolved_item_count']),
+      itemCount: asInt(json['item_count']),
+      resolvedItemCount: asInt(json['resolved_item_count']),
       items: itemsRaw.map((e) => VendorPoItem.fromJson(e as Map<String, dynamic>)).toList(),
       steps: stepsRaw.map((e) => WorkflowStep.fromJson(e as Map<String, dynamic>)).toList(),
     );

@@ -1,3 +1,4 @@
+import 'delivery_note.dart';
 import 'enums.dart';
 
 class MasterPo {
@@ -11,6 +12,7 @@ class MasterPo {
   final String? vesselName;
   final DateTime? etaDate;
   final String? portName;
+  final DeliveryNote? deliveryNote;
 
   // Mock-only convenience fields (carried alongside the wire data)
   final String? site;
@@ -30,6 +32,7 @@ class MasterPo {
     this.vesselName,
     this.etaDate,
     this.portName,
+    this.deliveryNote,
     this.site,
     this.siteLat,
     this.siteLng,
@@ -40,9 +43,17 @@ class MasterPo {
   double get progress => vendorPoCount == 0 ? 0 : deliveredVendorPoCount / vendorPoCount;
   bool get isClosed => deliveredVendorPoCount >= vendorPoCount && vendorPoCount > 0;
 
+  /// The rep can upload their filled delivery note only when the master PO
+  /// has moved past IN_PROGRESS — i.e. when the whole delivery has been
+  /// resolved on the ground (fully or partially delivered, or closed).
+  bool get canUploadDeliveryNote {
+    return status == MasterStatus.fullyDelivered;
+  }
+
   MasterPo copyWith({
     int? deliveredVendorPoCount,
     MasterStatus? status,
+    DeliveryNote? deliveryNote,
   }) =>
       MasterPo(
         id: id,
@@ -55,6 +66,7 @@ class MasterPo {
         vesselName: vesselName,
         etaDate: etaDate,
         portName: portName,
+        deliveryNote: deliveryNote ?? this.deliveryNote,
         site: site,
         siteLat: siteLat,
         siteLng: siteLng,
@@ -63,21 +75,23 @@ class MasterPo {
       );
 
   factory MasterPo.fromJson(Map<String, dynamic> json) {
-    int _asInt(dynamic v) =>
+    int asInt(dynamic v) =>
         v is int ? v : (v is String ? int.tryParse(v) ?? 0 : (v as num?)?.toInt() ?? 0);
-    DateTime? _date(dynamic v) => v == null ? null : DateTime.tryParse(v.toString());
+    DateTime? date(dynamic v) => v == null ? null : DateTime.tryParse(v.toString());
 
+    final noteJson = json['delivery_note'];
     return MasterPo(
       id: json['id'] as String,
       masterPoNumber: json['master_po_number'] as String,
-      operationDate: _date(json['operation_date']),
+      operationDate: date(json['operation_date']),
       status: MasterStatusX.parse(json['status'] as String?),
-      createdAt: _date(json['created_at']) ?? DateTime.now(),
-      vendorPoCount: _asInt(json['vendor_po_count']),
-      deliveredVendorPoCount: _asInt(json['delivered_vendor_po_count']),
+      createdAt: date(json['created_at']) ?? DateTime.now(),
+      vendorPoCount: asInt(json['vendor_po_count']),
+      deliveredVendorPoCount: asInt(json['delivered_vendor_po_count']),
       vesselName: json['vessel_name'] as String?,
-      etaDate: _date(json['eta_date']),
+      etaDate: date(json['eta_date']),
       portName: json['port_name'] as String?,
+      deliveryNote: noteJson is Map<String, dynamic> ? DeliveryNote.fromJson(noteJson) : null,
       site: json['site'] as String?,
       siteLat: (json['site_lat'] as num?)?.toDouble(),
       siteLng: (json['site_lng'] as num?)?.toDouble(),

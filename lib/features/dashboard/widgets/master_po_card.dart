@@ -284,15 +284,22 @@ class _DeliveryNoteStripState extends State<_DeliveryNoteStrip> {
       AppLog.info('deliveryNote.download', 'saved ${file.path} (${size}B)');
       final result = await OpenFilex.open(file.path);
       AppLog.info('deliveryNote.open', 'result=${result.type} message=${result.message}');
-      if (result.type != ResultType.done && mounted) {
+      if (result.type == ResultType.done && mounted) {
+        // Silent success — the OS handler is now on screen. Still surface
+        // where the file was persisted so the user can find it later.
+        messenger.showSnackBar(SnackBar(
+          content: Text(t.savedToDownloads),
+          duration: const Duration(seconds: 3),
+        ));
+      } else if (result.type != ResultType.done && mounted) {
         // Distinguish "no OS handler" from a real download failure so the
         // user isn't told the download broke when it actually succeeded.
         final label = result.type == ResultType.noAppToOpen
-            ? t.deliveryNoteNoOpener(file.uri.pathSegments.last)
+            ? '${t.deliveryNoteNoOpener(file.uri.pathSegments.last)}\n${t.savedToDownloads}'
             : '${t.deliveryNoteDownloadFailed} (${result.message})';
         messenger.showSnackBar(SnackBar(
           content: Text(label),
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 6),
         ));
       }
     } on ApiException catch (e, st) {

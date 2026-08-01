@@ -72,6 +72,8 @@ class AppL10n {
   String deliveryNoteNoOpener(String fileName) => _t(
       'Downloaded, but no app on the device can open $fileName. Try installing a PDF viewer.',
       'تم التنزيل، لكن لا يوجد تطبيق على الجهاز يفتح $fileName. جرّب تثبيت قارئ PDF.');
+  String get savedToDownloads =>
+      _t('Saved to Downloads › Ocean Delivery', 'تم الحفظ في التنزيلات › Ocean Delivery');
   String get deliveryNoteUploadFailed =>
       _t('Couldn\'t upload the delivery note.', 'تعذّر رفع المستند.');
   String get deliveryNoteNotAvailable =>

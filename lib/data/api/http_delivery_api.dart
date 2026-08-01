@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'package:media_store_plus/media_store_plus.dart';
 import '../../core/errors/api_exception.dart';
 import '../models/delivery_note.dart';
 import '../models/master_po.dart';
@@ -298,7 +299,33 @@ class HttpDeliveryApi implements DeliveryApi {
         } catch (_) {}
       }
     }
-    return File(finalPath);
+    final saved = File(finalPath);
+    // On Android also copy into the phone's public Downloads folder via
+    // MediaStore so any file manager (Files by Google, etc.) can see it.
+    // The app-external copy stays as the openable File we hand back to
+    // the caller (open_filex needs a real path, not a content:// URI).
+    if (Platform.isAndroid) {
+      try {
+        await _publishToDownloads(saved, finalName);
+      } catch (_) {
+        // Public-folder copy is best-effort — the file is already
+        // persisted in app-external storage. Don't fail the download.
+      }
+    }
+    return saved;
+  }
+
+  /// Publishes [source] into the phone's public Downloads folder under
+  /// `Download/Ocean Delivery/<fileName>` via MediaStore. No-op unless the
+  /// media_store_plus init succeeds.
+  Future<void> _publishToDownloads(File source, String fileName) async {
+    MediaStore.appFolder = 'Ocean Delivery';
+    final store = MediaStore();
+    await store.saveFile(
+      tempFilePath: source.path,
+      dirType: DirType.download,
+      dirName: DirName.download,
+    );
   }
 
   String _extensionFromContentType(String contentType) {

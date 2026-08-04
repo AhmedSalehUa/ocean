@@ -180,6 +180,8 @@ class _StepCard extends StatelessWidget {
     final idx = vendor.steps.indexWhere((s) => s.id == step.id);
     for (var i = 0; i < idx; i++) {
       final prior = vendor.steps[i];
+      // Optional steps never block progressing to a later step.
+      if (!prior.isRequired) continue;
       if (!prior.isComplete) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

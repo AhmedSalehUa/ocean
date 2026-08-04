@@ -55,11 +55,13 @@ class VendorPo {
 
   bool get allItemsResolved => items.isNotEmpty && items.every((i) => i.status.isResolved);
 
-  /// True only when every non-final workflow step is locally complete.
+  /// True only when every *required* non-final workflow step is complete.
+  /// Optional steps (`is_required:false`) never block finalize.
   bool get allPriorStepsComplete {
     if (steps.isEmpty) return true;
     for (final s in steps) {
       if (s.isFinalStep) continue;
+      if (!s.isRequired) continue;
       if (!s.isComplete) return false;
     }
     return true;

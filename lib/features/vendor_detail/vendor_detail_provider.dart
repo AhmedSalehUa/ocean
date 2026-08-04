@@ -142,9 +142,17 @@ class VendorDetailProvider extends ChangeNotifier {
       if (cur.isComplete) currentStepId = null;
     }
     if (currentStepId == null && steps.isNotEmpty) {
+      // The linear flow only forces *required* steps. Optional steps stay
+      // reachable via the pipeline but are never auto-selected, so the user
+      // isn't pushed to re-photograph items for a step they can skip. Once
+      // every required step is done, land on the final step so the CTA
+      // leads to finalize rather than a leftover optional step.
       final next = steps.firstWhere(
-        (s) => !s.isComplete,
-        orElse: () => steps.last,
+        (s) => s.isRequired && !s.isComplete,
+        orElse: () => steps.firstWhere(
+          (s) => s.isFinalStep,
+          orElse: () => steps.last,
+        ),
       );
       currentStepId = next.id;
       AppLog.info(

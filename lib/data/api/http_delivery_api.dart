@@ -110,8 +110,40 @@ class HttpDeliveryApi implements DeliveryApi {
   Future<List<WorkflowStep>> getSteps(String vendorPoId) async {
     final r = await _dio.get('/api/delivery/mobile/vendor-pos/$vendorPoId/steps');
     final body = _unwrap(r);
-    final list = (body['data'] as List).cast<Map<String, dynamic>>();
-    return list.map(WorkflowStep.fromJson).toList();
+    final data = body['data'];
+
+    // Legacy shape: `data` is a flat list of step objects.
+    if (data is List) {
+      return data.cast<Map<String, dynamic>>().map(WorkflowStep.fromJson).toList();
+    }
+
+    // Current shape: `data` is an object carrying separate step arrays
+    // (vendor_steps / shipment_steps / item_steps) plus a root total_items.
+    // Merge them into one ordered pipeline, deduped by id — a step that
+    // appears in more than one array is combined so no facet is lost.
+    if (data is Map<String, dynamic>) {
+      int asInt(dynamic v) =>
+          v is int ? v : (v is String ? int.tryParse(v) ?? 0 : (v as num?)?.toInt() ?? 0);
+      final totalItems = asInt(data['total_items']);
+      final byId = <String, WorkflowStep>{};
+      const stepKeys = ['item_steps', 'vendor_steps', 'shipment_steps', 'steps'];
+      for (final key in stepKeys) {
+        final arr = data[key];
+        if (arr is! List) continue;
+        for (final e in arr) {
+          if (e is! Map<String, dynamic>) continue;
+          if (e['id'] is! String) continue;
+          if (e['is_active'] == false) continue;
+          final step = WorkflowStep.fromJson(e, fallbackTotalItems: totalItems);
+          final existing = byId[step.id];
+          byId[step.id] = existing == null ? step : existing.mergedWith(step);
+        }
+      }
+      final steps = byId.values.toList()..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      return steps;
+    }
+
+    throw ApiException('Unexpected /steps payload shape', statusCode: r.statusCode);
   }
 
   @override

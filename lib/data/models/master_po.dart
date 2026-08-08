@@ -1,5 +1,32 @@
 import 'delivery_note.dart';
 import 'enums.dart';
+import 'workflow_step.dart';
+
+/// The master PO's active step, as returned inline by the master-pos list.
+/// Used to surface an LPO capture action directly on the card.
+class MasterCurrentStep {
+  final String id;
+  final String nameEn;
+  final String nameAr;
+  final StepLevel stepLevel;
+
+  const MasterCurrentStep({
+    required this.id,
+    required this.nameEn,
+    required this.nameAr,
+    required this.stepLevel,
+  });
+
+  String nameFor(String localeCode) => localeCode.startsWith('ar') ? nameAr : nameEn;
+  bool get isLpo => stepLevel == StepLevel.lpo;
+
+  factory MasterCurrentStep.fromJson(Map<String, dynamic> json) => MasterCurrentStep(
+        id: (json['id'] ?? json['workflow_step_id'] ?? '') as String,
+        nameEn: (json['name_en'] as String?) ?? '',
+        nameAr: (json['name_ar'] as String?) ?? '',
+        stepLevel: StepLevelX.parse(json['step_level'] as String?),
+      );
+}
 
 class MasterPo {
   final String id;
@@ -13,6 +40,7 @@ class MasterPo {
   final DateTime? etaDate;
   final String? portName;
   final DeliveryNote? deliveryNote;
+  final MasterCurrentStep? currentStep;
 
   // Mock-only convenience fields (carried alongside the wire data)
   final String? site;
@@ -33,6 +61,7 @@ class MasterPo {
     this.etaDate,
     this.portName,
     this.deliveryNote,
+    this.currentStep,
     this.site,
     this.siteLat,
     this.siteLng,
@@ -67,6 +96,7 @@ class MasterPo {
         etaDate: etaDate,
         portName: portName,
         deliveryNote: deliveryNote ?? this.deliveryNote,
+        currentStep: currentStep,
         site: site,
         siteLat: siteLat,
         siteLng: siteLng,
@@ -80,6 +110,7 @@ class MasterPo {
     DateTime? date(dynamic v) => v == null ? null : DateTime.tryParse(v.toString());
 
     final noteJson = json['delivery_note'];
+    final stepJson = json['current_step'];
     return MasterPo(
       id: json['id'] as String,
       masterPoNumber: json['master_po_number'] as String,
@@ -92,6 +123,8 @@ class MasterPo {
       etaDate: date(json['eta_date']),
       portName: json['port_name'] as String?,
       deliveryNote: noteJson is Map<String, dynamic> ? DeliveryNote.fromJson(noteJson) : null,
+      currentStep:
+          stepJson is Map<String, dynamic> ? MasterCurrentStep.fromJson(stepJson) : null,
       site: json['site'] as String?,
       siteLat: (json['site_lat'] as num?)?.toDouble(),
       siteLng: (json['site_lng'] as num?)?.toDouble(),

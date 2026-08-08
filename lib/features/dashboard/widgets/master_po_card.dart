@@ -12,11 +12,14 @@ import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/progress_bar.dart';
+import '../../../core/widgets/capture_source_sheet.dart';
 import '../../../data/models/delivery_note.dart';
 import '../../../data/models/master_po.dart';
 import '../../../data/repositories/delivery_repository.dart';
 import '../../../l10n/app_l10n.dart';
+import '../../../services/camera_service.dart';
 import '../../../services/file_pick_service.dart';
+import '../../../services/location_service.dart';
 import '../master_pos_provider.dart';
 
 bool _has(String? s) => s != null && s.trim().isNotEmpty;
@@ -138,6 +141,12 @@ class MasterPoCard extends StatelessWidget {
             value: master.progress,
             color: allDone ? AppColors.accent : AppColors.accentInk,
           ),
+          if (master.currentStep?.isLpo ?? false) ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1, color: AppColors.lineSoft),
+            const SizedBox(height: 10),
+            _LpoStrip(master: master, step: master.currentStep!),
+          ],
           if (master.deliveryNote != null) ...[
             const SizedBox(height: 12),
             const Divider(height: 1, color: AppColors.lineSoft),
@@ -322,8 +331,15 @@ class _DeliveryNoteStripState extends State<_DeliveryNoteStrip> {
     final t = AppL10n.of(context);
     final repo = context.read<DeliveryRepository>();
     final masters = context.read<MasterPosProvider>();
+    final camera = context.read<CameraService>();
     final messenger = ScaffoldMessenger.of(context);
-    final picked = await const FilePickService().pickDeliveryNote();
+
+    // Let the rep either snap a photo of the filled note or pick a document.
+    final source = await showCaptureSourceSheet(context);
+    if (source == null || !mounted) return;
+    final picked = source == CaptureSource.camera
+        ? await camera.takePhoto()
+        : await const FilePickService().pickDeliveryNote();
     if (picked == null || !mounted) return;
     if (!FilePickService.isAllowedForDeliveryNote(picked.uri.pathSegments.last)) {
       messenger.showSnackBar(SnackBar(content: Text(t.unsupportedFileType)));
@@ -369,6 +385,104 @@ class _DeliveryNoteStripState extends State<_DeliveryNoteStrip> {
       default:
         return Icons.insert_drive_file_outlined;
     }
+  }
+}
+
+/// Capture/upload strip for a Master-PO-level (LPO) step, shown on the card
+/// when the master's current step is LPO. Upload-only: the rep captures a
+/// photo or picks a document, GPS is attached, and it's posted to the
+/// master-scoped lpo-steps endpoint.
+class _LpoStrip extends StatefulWidget {
+  const _LpoStrip({required this.master, required this.step});
+  final MasterPo master;
+  final MasterCurrentStep step;
+
+  @override
+  State<_LpoStrip> createState() => _LpoStripState();
+}
+
+class _LpoStripState extends State<_LpoStrip> {
+  bool _busy = false;
+
+  Future<void> _upload() async {
+    final t = AppL10n.of(context);
+    final repo = context.read<DeliveryRepository>();
+    final masters = context.read<MasterPosProvider>();
+    final camera = context.read<CameraService>();
+    final location = context.read<LocationService>();
+    final messenger = ScaffoldMessenger.of(context);
+
+    final source = await showCaptureSourceSheet(context);
+    if (source == null || !mounted) return;
+    final file = source == CaptureSource.camera
+        ? await camera.takePhoto()
+        : await const FilePickService().pickDeliveryNote();
+    if (file == null || !mounted) return;
+
+    setState(() => _busy = true);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(
+      duration: const Duration(minutes: 1),
+      content: _InlineSpinner(label: t.uploadingLpoProof),
+    ));
+    try {
+      final fix = await location.currentFix();
+      await repo.lpoPhoto(
+        masterPoId: widget.master.id,
+        stepId: widget.step.id,
+        file: file,
+        lat: fix?.lat,
+        lng: fix?.lng,
+        accuracyMeters: fix?.accuracyMeters,
+      );
+      messenger.hideCurrentSnackBar();
+      await masters.refresh();
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(t.lpoProofUploaded)));
+    } catch (e, st) {
+      messenger.hideCurrentSnackBar();
+      AppLog.error('lpo.upload', e, st);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('${t.lpoProofUploadFailed} ($e)')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppL10n.of(context);
+    final locale = Localizations.localeOf(context).languageCode;
+    final name = widget.step.nameFor(locale);
+    return Row(
+      children: [
+        const Icon(Icons.assignment_turned_in_outlined, size: 18, color: AppColors.ink2),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                name.isEmpty ? t.lpoStepTitle : name,
+                style: AppType.caption.copyWith(color: AppColors.ink2, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(t.lpoStepTitle, style: AppType.mono10.copyWith(color: AppColors.muted)),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        _StripButton(
+          icon: Icons.upload_rounded,
+          tooltip: t.uploadLpoProof,
+          busy: _busy,
+          onPressed: _busy ? null : _upload,
+        ),
+      ],
+    );
   }
 }
 

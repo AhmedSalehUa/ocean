@@ -64,6 +64,14 @@ class AppL10n {
   String get deliveryNoteCompleted => _t('Completed', 'مكتمل');
   String get downloadDeliveryNote => _t('Download', 'تنزيل');
   String get uploadCompletedNote => _t('Upload filled version', 'رفع النسخة المكتملة');
+  String get addFileTitle => _t('Add a file', 'إضافة ملف');
+  String get chooseDocument => _t('Choose a document', 'اختيار مستند');
+  String get lpoStepTitle => _t('LPO step', 'خطوة أمر الشراء');
+  String get uploadLpoProof => _t('Upload LPO proof', 'رفع إثبات أمر الشراء');
+  String get uploadingLpoProof => _t('Uploading LPO proof…', 'جارٍ رفع إثبات أمر الشراء…');
+  String get lpoProofUploaded => _t('LPO proof uploaded', 'تم رفع إثبات أمر الشراء');
+  String get lpoProofUploadFailed =>
+      _t('Couldn\'t upload the LPO proof.', 'تعذّر رفع إثبات أمر الشراء.');
   String get downloadingDeliveryNote => _t('Downloading delivery note…', 'جارٍ تنزيل المستند');
   String get uploadingDeliveryNote => _t('Uploading delivery note…', 'جارٍ رفع المستند');
   String get deliveryNoteUploaded => _t('Delivery note uploaded', 'تم رفع المستند');

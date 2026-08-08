@@ -97,6 +97,25 @@ class AppL10n {
   String get lpoNotSupportedYet =>
       _t('LPO step capture is coming soon.', 'تصوير خطوة أمر الشراء قريباً.');
 
+  // ─── Assign assistant (representative) ───
+  String get assignAssistant => _t('Assign assistant', 'إسناد مندوب مساعد');
+  String get assignAssistantTitle => _t('Assign assistant', 'إسناد مندوب مساعد');
+  String get selectAssistant => _t('Assistant', 'المندوب المساعد');
+  String get selectSteps => _t('Steps to assign', 'الخطوات المُسندة');
+  String get noAssistantsAvailable =>
+      _t('No assistant accounts available.', 'لا توجد حسابات مساعدين متاحة.');
+  String get noAssignment => _t('No assistant assigned', 'لا يوجد مندوب مساعد مُسند');
+  String get saveAssignment => _t('Save assignment', 'حفظ الإسناد');
+  String get clearAssignment => _t('Clear assignment', 'إلغاء الإسناد');
+  String get assignmentSaved => _t('Assignment saved', 'تم حفظ الإسناد');
+  String get assignmentCleared => _t('Assignment cleared', 'تم إلغاء الإسناد');
+  String get assignmentSaveFailed =>
+      _t('Couldn\'t save the assignment.', 'تعذّر حفظ الإسناد.');
+  String get chooseAssistantAndSteps =>
+      _t('Choose an assistant and at least one step.', 'اختر مندوباً مساعداً وخطوة واحدة على الأقل.');
+  String get unassignedOption => _t('None (unassign)', 'بدون (إلغاء الإسناد)');
+  String get currentlyAssignedTo => _t('Currently assigned to', 'مُسند حالياً إلى');
+
   // ─── Vendor list ───
   String get masterPurchaseOrder => _t('Master Purchase Order', 'أمر الشراء الرئيسي');
   String get vendorPos => _t('Vendor POs', 'أوامر المورّدين');

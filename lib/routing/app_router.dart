@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../features/assign/assign_assistant_screen.dart';
 import '../features/assistant/assistant_home_screen.dart';
 import '../features/auth/auth_provider.dart';
 import '../features/auth/login_screen.dart';
@@ -91,6 +92,10 @@ GoRouter buildRouter(AuthProvider auth) {
           vendorId: s.pathParameters['vendorId']!,
           completedStepId: s.pathParameters['stepId']!,
         ),
+      ),
+      GoRoute(
+        path: Routes.assignAssistant,
+        builder: (_, s) => AssignAssistantScreen(vendorId: s.pathParameters['vendorId']!),
       ),
     ],
   );

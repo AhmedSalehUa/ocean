@@ -4,6 +4,7 @@ import '../models/assistant_task.dart';
 import '../models/delivery_note.dart';
 import '../models/master_po.dart';
 import '../models/proof_log.dart';
+import '../models/sub_logistics.dart';
 import '../models/user.dart';
 import '../models/vendor_po.dart';
 import '../models/workflow_step.dart';
@@ -23,6 +24,21 @@ abstract class DeliveryApi {
   /// Assistant home feed — one row per assigned workflow step.
   /// SUB_LOGISTICS_OFFICER only; the backend scopes rows to the caller.
   Future<List<AssistantTask>> listAssistantTasks();
+
+  // ── Sub-logistics assignment (representative only) ──
+  /// Active assistant accounts the representative can assign steps to.
+  Future<List<SubLogisticsOfficer>> listSubLogisticsOfficers();
+
+  /// Current assistant + assigned step ids on a Vendor PO.
+  Future<SubLogisticsAssignment> getSubLogisticsAssignment(String vendorPoId);
+
+  /// Replaces the whole assignment for a Vendor PO. Pass a null officer and
+  /// empty steps to clear it.
+  Future<void> putSubLogisticsAssignment({
+    required String vendorPoId,
+    required String? subLogisticsUserId,
+    required List<String> workflowStepIds,
+  });
 
   // Vendor PO detail
   Future<VendorPo> getVendorPo(String vendorPoId);

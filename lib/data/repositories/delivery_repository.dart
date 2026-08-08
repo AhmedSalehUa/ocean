@@ -4,6 +4,7 @@ import '../api/delivery_api.dart';
 import '../models/assistant_task.dart';
 import '../models/master_po.dart';
 import '../models/proof_log.dart';
+import '../models/sub_logistics.dart';
 import '../models/vendor_po.dart';
 import '../models/workflow_step.dart';
 import '../models/delivery_note.dart';
@@ -19,6 +20,20 @@ class DeliveryRepository {
       _api.listVendorPos(masterId);
 
   Future<List<AssistantTask>> assistantTasks() => _api.listAssistantTasks();
+
+  Future<List<SubLogisticsOfficer>> subLogisticsOfficers() => _api.listSubLogisticsOfficers();
+  Future<SubLogisticsAssignment> subLogisticsAssignment(String vendorPoId) =>
+      _api.getSubLogisticsAssignment(vendorPoId);
+  Future<void> saveSubLogisticsAssignment({
+    required String vendorPoId,
+    required String? subLogisticsUserId,
+    required List<String> workflowStepIds,
+  }) =>
+      _api.putSubLogisticsAssignment(
+        vendorPoId: vendorPoId,
+        subLogisticsUserId: subLogisticsUserId,
+        workflowStepIds: workflowStepIds,
+      );
 
   Future<VendorPo> vendor(String id) => _api.getVendorPo(id);
   Future<List<WorkflowStep>> steps(String id) => _api.getSteps(id);

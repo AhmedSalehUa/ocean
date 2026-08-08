@@ -10,6 +10,7 @@ import '../models/assistant_task.dart';
 import '../models/delivery_note.dart';
 import '../models/master_po.dart';
 import '../models/proof_log.dart';
+import '../models/sub_logistics.dart';
 import '../models/user.dart';
 import '../models/vendor_po.dart';
 import '../models/workflow_step.dart';
@@ -97,6 +98,39 @@ class HttpDeliveryApi implements DeliveryApi {
     final body = _unwrap(r);
     final list = (body['data'] as List? ?? const []).cast<Map<String, dynamic>>();
     return list.map(AssistantTask.fromJson).toList();
+  }
+
+  @override
+  Future<List<SubLogisticsOfficer>> listSubLogisticsOfficers() async {
+    final r = await _dio.get('/api/delivery/mobile/sub-logistics-officers');
+    final body = _unwrap(r);
+    final list = (body['data'] as List? ?? const []).cast<Map<String, dynamic>>();
+    return list.map(SubLogisticsOfficer.fromJson).toList();
+  }
+
+  @override
+  Future<SubLogisticsAssignment> getSubLogisticsAssignment(String vendorPoId) async {
+    final r = await _dio.get(
+      '/api/delivery/mobile/vendor-pos/$vendorPoId/sub-logistics-assignments',
+    );
+    final body = _unwrap(r);
+    return SubLogisticsAssignment.fromData(body['data']);
+  }
+
+  @override
+  Future<void> putSubLogisticsAssignment({
+    required String vendorPoId,
+    required String? subLogisticsUserId,
+    required List<String> workflowStepIds,
+  }) async {
+    final r = await _dio.put(
+      '/api/delivery/mobile/vendor-pos/$vendorPoId/sub-logistics-assignments',
+      data: {
+        'sub_logistics_user_id': subLogisticsUserId,
+        'workflow_step_ids': workflowStepIds,
+      },
+    );
+    _unwrap(r);
   }
 
   @override

@@ -3,6 +3,7 @@ import 'dart:io';
 import '../models/assistant_task.dart';
 import '../models/attachment.dart';
 import '../models/delivery_note.dart';
+import '../models/sub_logistics.dart';
 import '../models/enums.dart';
 import '../models/master_po.dart';
 import '../models/proof_log.dart';
@@ -155,6 +156,42 @@ class MockDeliveryApi implements DeliveryApi {
     await _latency();
     // The seeded mock user is a representative; assistants have no tasks here.
     return const <AssistantTask>[];
+  }
+
+  final Map<String, SubLogisticsAssignment> _assignments = {};
+
+  @override
+  Future<List<SubLogisticsOfficer>> listSubLogisticsOfficers() async {
+    await _latency();
+    return const [
+      SubLogisticsOfficer(
+          id: 'slo_1', fullName: 'Ahmed Hassan', username: 'ahmed.helper', phone: '+201000000000'),
+      SubLogisticsOfficer(
+          id: 'slo_2', fullName: 'Mona Adel', username: 'mona.helper', phone: '+201111111111'),
+    ];
+  }
+
+  @override
+  Future<SubLogisticsAssignment> getSubLogisticsAssignment(String vendorPoId) async {
+    await _latency();
+    return _assignments[vendorPoId] ?? const SubLogisticsAssignment();
+  }
+
+  @override
+  Future<void> putSubLogisticsAssignment({
+    required String vendorPoId,
+    required String? subLogisticsUserId,
+    required List<String> workflowStepIds,
+  }) async {
+    await _latency();
+    if (subLogisticsUserId == null || workflowStepIds.isEmpty) {
+      _assignments.remove(vendorPoId);
+      return;
+    }
+    _assignments[vendorPoId] = SubLogisticsAssignment(
+      officerId: subLogisticsUserId,
+      stepIds: workflowStepIds,
+    );
   }
 
   @override

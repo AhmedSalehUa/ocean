@@ -13,6 +13,7 @@ class Routes {
   static const finalize = '/vendor/:vendorId/finalize';
   static const handoff = '/vendor/:vendorId/handoff';
   static const stepDone = '/vendor/:vendorId/step-done/:stepId';
+  static const assignAssistant = '/vendor/:vendorId/assign';
 
   static String vendorListPath(String masterId) => '/master/$masterId';
   static String vendorDetailPath(String vendorId) => '/vendor/$vendorId';
@@ -27,4 +28,5 @@ class Routes {
   static String handoffPath(String vendorId) => '/vendor/$vendorId/handoff';
   static String stepDonePath(String vendorId, String stepId) =>
       '/vendor/$vendorId/step-done/$stepId';
+  static String assignAssistantPath(String vendorId) => '/vendor/$vendorId/assign';
 }

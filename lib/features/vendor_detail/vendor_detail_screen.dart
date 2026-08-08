@@ -19,6 +19,7 @@ import '../../data/models/workflow_step.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
 import '../../services/locale_service.dart';
+import '../auth/auth_provider.dart';
 import '../dashboard/master_pos_provider.dart';
 import 'vendor_detail_provider.dart';
 
@@ -77,6 +78,15 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
                     _Header(vendor: v),
                     const SizedBox(height: 16),
                     _StepCard(vendor: v, localeCode: locale),
+                    if (context.read<AuthProvider>().user?.isRepresentative ?? false) ...[
+                      const SizedBox(height: 12),
+                      AppButton(
+                        label: t.assignAssistant,
+                        variant: AppBtnVariant.ghost,
+                        leading: const Icon(Icons.person_add_alt_1_outlined),
+                        onPressed: () => context.push(Routes.assignAssistantPath(v.id)),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     _ItemTable(vendor: v),
                   ],

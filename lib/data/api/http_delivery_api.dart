@@ -255,7 +255,21 @@ class HttpDeliveryApi implements DeliveryApi {
       options: Options(contentType: 'multipart/form-data'),
     );
     final body = _unwrap(r);
-    return ProofLog.fromJson(body['data'] as Map<String, dynamic>, ProofKind.shipment);
+    // The LPO response is master-scoped and has no vendor_po_id / step names,
+    // so ProofLog.fromJson (which requires vendor_po_id) can't parse it.
+    // Build a minimal proof from the fields it does return.
+    final data = (body['data'] as Map<String, dynamic>? ?? const {});
+    return ProofLog(
+      id: (data['id'] as String?) ?? '',
+      vendorPoId: '',
+      vendorPoItemId: null,
+      workflowStepId: (data['workflow_step_id'] as String?) ?? stepId,
+      stepNameEn: '',
+      stepNameAr: '',
+      actionType: (data['action_type'] as String?) ?? 'PHOTO',
+      loggedAt: DateTime.tryParse(data['logged_at']?.toString() ?? '') ?? DateTime.now(),
+      kind: ProofKind.shipment,
+    );
   }
 
   @override

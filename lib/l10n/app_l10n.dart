@@ -83,6 +83,20 @@ class AppL10n {
   String get unsupportedFileType => _t('This file type isn\'t allowed.', 'نوع الملف غير مسموح.');
   String get yardFeed => _t('Yard feed', 'أخبار الساحة');
 
+  // ─── Assistant (SUB_LOGISTICS_OFFICER) ───
+  String get assistantHomeTitle => _t('My tasks', 'مهامي');
+  String get assistantTasksEyebrow => _t('Assigned steps', 'الخطوات المخصصة');
+  String get assistantNoTasks =>
+      _t('No steps assigned to you yet.', 'لا توجد خطوات مخصصة لك بعد.');
+  String get assistantRepLabel => _t('Representative', 'المندوب الأساسي');
+  String get stepLevelLpo => _t('LPO step', 'خطوة أمر الشراء');
+  String get stepLevelVendor => _t('Vendor step', 'خطوة المورد');
+  String get stepLevelItem => _t('Item step', 'خطوة البنود');
+  String itemsToCapture(int count) =>
+      _t('$count item(s) to capture', '$count بند للتصوير');
+  String get lpoNotSupportedYet =>
+      _t('LPO step capture is coming soon.', 'تصوير خطوة أمر الشراء قريباً.');
+
   // ─── Vendor list ───
   String get masterPurchaseOrder => _t('Master Purchase Order', 'أمر الشراء الرئيسي');
   String get vendorPos => _t('Vendor POs', 'أوامر المورّدين');

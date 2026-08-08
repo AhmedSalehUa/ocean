@@ -2,6 +2,7 @@ class Routes {
   Routes._();
   static const login = '/login';
   static const dashboard = '/';
+  static const assistantHome = '/assistant';
   static const vendorList = '/master/:masterId';
   static const vendorDetail = '/vendor/:vendorId';
   static const shipmentCapture = '/vendor/:vendorId/shipment';

@@ -11,6 +11,7 @@ import 'data/api/http_delivery_api.dart';
 import 'data/api/mock_delivery_api.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/delivery_repository.dart';
+import 'features/assistant/assistant_tasks_provider.dart';
 import 'features/auth/auth_provider.dart';
 import 'features/dashboard/master_pos_provider.dart';
 import 'features/vendor_detail/vendor_detail_provider.dart';
@@ -87,6 +88,7 @@ class TrailRoot extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MasterPosProvider(deliveryRepo)),
         ChangeNotifierProvider(create: (_) => VendorListProvider(deliveryRepo)),
         ChangeNotifierProvider(create: (_) => VendorDetailProvider(deliveryRepo)),
+        ChangeNotifierProvider(create: (_) => AssistantTasksProvider(deliveryRepo)),
       ],
       child: const TrailApp(),
     );

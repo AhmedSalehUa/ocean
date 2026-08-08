@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import '../api/delivery_api.dart';
+import '../models/assistant_task.dart';
 import '../models/master_po.dart';
 import '../models/proof_log.dart';
 import '../models/vendor_po.dart';
@@ -16,6 +17,8 @@ class DeliveryRepository {
   Future<List<MasterPo>> listMasters() => _api.listMasterPos();
   Future<({List<VendorPo> vendors, String masterPoNumber})> listVendors(String masterId) =>
       _api.listVendorPos(masterId);
+
+  Future<List<AssistantTask>> assistantTasks() => _api.listAssistantTasks();
 
   Future<VendorPo> vendor(String id) => _api.getVendorPo(id);
   Future<List<WorkflowStep>> steps(String id) => _api.getSteps(id);

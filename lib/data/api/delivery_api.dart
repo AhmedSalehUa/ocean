@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../models/assistant_task.dart';
 import '../models/delivery_note.dart';
 import '../models/master_po.dart';
 import '../models/proof_log.dart';
@@ -18,6 +19,10 @@ abstract class DeliveryApi {
   // Master / vendor lists
   Future<List<MasterPo>> listMasterPos();
   Future<({List<VendorPo> vendors, String masterPoNumber})> listVendorPos(String masterPoId);
+
+  /// Assistant home feed — one row per assigned workflow step.
+  /// SUB_LOGISTICS_OFFICER only; the backend scopes rows to the caller.
+  Future<List<AssistantTask>> listAssistantTasks();
 
   // Vendor PO detail
   Future<VendorPo> getVendorPo(String vendorPoId);

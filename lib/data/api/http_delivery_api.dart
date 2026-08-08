@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:media_store_plus/media_store_plus.dart';
 import '../../core/errors/api_exception.dart';
+import '../models/assistant_task.dart';
 import '../models/delivery_note.dart';
 import '../models/master_po.dart';
 import '../models/proof_log.dart';
@@ -88,6 +89,14 @@ class HttpDeliveryApi implements DeliveryApi {
     final body = _unwrap(r);
     final list = (body['data'] as List).cast<Map<String, dynamic>>();
     return list.map(MasterPo.fromJson).toList();
+  }
+
+  @override
+  Future<List<AssistantTask>> listAssistantTasks() async {
+    final r = await _dio.get('/api/delivery/mobile/assistant/tasks');
+    final body = _unwrap(r);
+    final list = (body['data'] as List? ?? const []).cast<Map<String, dynamic>>();
+    return list.map(AssistantTask.fromJson).toList();
   }
 
   @override

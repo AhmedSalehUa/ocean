@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../models/assistant_task.dart';
 import '../models/attachment.dart';
 import '../models/delivery_note.dart';
 import '../models/enums.dart';
@@ -147,6 +148,13 @@ class MockDeliveryApi implements DeliveryApi {
   Future<List<MasterPo>> listMasterPos() async {
     await _latency();
     return List.of(_masters);
+  }
+
+  @override
+  Future<List<AssistantTask>> listAssistantTasks() async {
+    await _latency();
+    // The seeded mock user is a representative; assistants have no tasks here.
+    return const <AssistantTask>[];
   }
 
   @override

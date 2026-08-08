@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../features/assistant/assistant_home_screen.dart';
 import '../features/auth/auth_provider.dart';
 import '../features/auth/login_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
@@ -22,15 +23,28 @@ GoRouter buildRouter(AuthProvider auth) {
     initialLocation: Routes.login,
     refreshListenable: auth,
     redirect: (context, state) {
-      final signedIn = context.read<AuthProvider>().isSignedIn;
-      final isLogin = state.matchedLocation == Routes.login;
+      final authProvider = context.read<AuthProvider>();
+      final signedIn = authProvider.isSignedIn;
+      final isAssistant = authProvider.user?.isSubLogisticsOfficer ?? false;
+      final loc = state.matchedLocation;
+      final isLogin = loc == Routes.login;
+      // The role's home: assistants get the tasks screen, reps the dashboard.
+      final home = isAssistant ? Routes.assistantHome : Routes.dashboard;
+
       if (!signedIn && !isLogin) return Routes.login;
-      if (signedIn && isLogin) return Routes.dashboard;
+      if (signedIn && isLogin) return home;
+      // Keep each role out of the other's home screen.
+      if (signedIn && isAssistant && loc == Routes.dashboard) return Routes.assistantHome;
+      if (signedIn && !isAssistant && loc == Routes.assistantHome) return Routes.dashboard;
       return null;
     },
     routes: [
       GoRoute(path: Routes.login, builder: (_, __) => const LoginScreen()),
       GoRoute(path: Routes.dashboard, builder: (_, __) => const DashboardScreen()),
+      GoRoute(
+        path: Routes.assistantHome,
+        builder: (_, __) => const AssistantHomeScreen(),
+      ),
       GoRoute(
         path: Routes.vendorList,
         builder: (_, s) => VendorListScreen(masterId: s.pathParameters['masterId']!),

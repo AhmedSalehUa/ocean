@@ -189,8 +189,34 @@ class HttpDeliveryApi implements DeliveryApi {
       if (lng != null) 'location_longitude': lng,
       if (accuracyMeters != null) 'location_accuracy_meters': accuracyMeters,
     });
+    // Canonical path is vendor-steps; the backend keeps shipment-steps as an
+    // alias, but we use the current name.
     final r = await _dio.post(
-      '/api/delivery/mobile/vendor-pos/$vendorPoId/shipment-steps/$stepId/photo',
+      '/api/delivery/mobile/vendor-pos/$vendorPoId/vendor-steps/$stepId/photo',
+      data: form,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+    final body = _unwrap(r);
+    return ProofLog.fromJson(body['data'] as Map<String, dynamic>, ProofKind.shipment);
+  }
+
+  @override
+  Future<ProofLog> uploadLpoPhoto({
+    required String masterPoId,
+    required String stepId,
+    required File file,
+    double? lat,
+    double? lng,
+    double? accuracyMeters,
+  }) async {
+    final form = FormData.fromMap({
+      'file': await MultipartFile.fromFile(file.path),
+      if (lat != null) 'location_latitude': lat,
+      if (lng != null) 'location_longitude': lng,
+      if (accuracyMeters != null) 'location_accuracy_meters': accuracyMeters,
+    });
+    final r = await _dio.post(
+      '/api/delivery/mobile/master-pos/$masterPoId/lpo-steps/$stepId/photo',
       data: form,
       options: Options(contentType: 'multipart/form-data'),
     );

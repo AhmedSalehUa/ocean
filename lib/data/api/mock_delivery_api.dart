@@ -253,6 +253,34 @@ class MockDeliveryApi implements DeliveryApi {
   }
 
   @override
+  Future<ProofLog> uploadLpoPhoto({
+    required String masterPoId,
+    required String stepId,
+    required File file,
+    double? lat,
+    double? lng,
+    double? accuracyMeters,
+  }) async {
+    await _latency(550, 900);
+    // The seed data has no LPO steps; return a lightweight proof so the mock
+    // flow doesn't crash if exercised.
+    return ProofLog(
+      id: 'plog_lpo_${DateTime.now().microsecondsSinceEpoch}',
+      vendorPoId: '',
+      vendorPoItemId: null,
+      workflowStepId: stepId,
+      stepNameEn: 'LPO step',
+      stepNameAr: 'خطوة أمر الشراء',
+      itemName: null,
+      itemCode: null,
+      actionType: 'PHOTO',
+      isAutoCompleted: false,
+      loggedAt: DateTime.now(),
+      kind: ProofKind.shipment,
+    );
+  }
+
+  @override
   Future<ProofLog> uploadItemPhoto({
     required String vendorPoId,
     required String itemId,

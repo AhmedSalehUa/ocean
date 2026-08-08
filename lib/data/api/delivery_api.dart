@@ -39,6 +39,17 @@ abstract class DeliveryApi {
     double? lng,
     double? accuracyMeters,
   });
+
+  /// Uploads the single photo for an LPO-level step. LPO steps are captured
+  /// at the Master-PO level, so this posts to master-pos, not vendor-pos.
+  Future<ProofLog> uploadLpoPhoto({
+    required String masterPoId,
+    required String stepId,
+    required File file,
+    double? lat,
+    double? lng,
+    double? accuracyMeters,
+  });
   Future<ProofLog> uploadItemPhoto({
     required String vendorPoId,
     required String itemId,

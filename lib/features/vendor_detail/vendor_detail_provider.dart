@@ -282,19 +282,39 @@ class VendorDetailProvider extends ChangeNotifier {
     double? accuracyMeters,
   }) =>
       _wrap(() async {
-        await _repo.shipmentPhoto(
-          vendorPoId: _vendorPoId!,
-          stepId: stepId,
-          file: file,
-          lat: lat,
-          lng: lng,
-          accuracyMeters: accuracyMeters,
-        );
+        // LPO steps are captured at the Master-PO level via a different
+        // endpoint; VENDOR steps post to the vendor PO.
+        WorkflowStep? step;
+        for (final s in _vendor?.steps ?? const <WorkflowStep>[]) {
+          if (s.id == stepId) {
+            step = s;
+            break;
+          }
+        }
+        if (step != null && step.isLpoStep) {
+          await _repo.lpoPhoto(
+            masterPoId: _vendor!.masterPoId,
+            stepId: stepId,
+            file: file,
+            lat: lat,
+            lng: lng,
+            accuracyMeters: accuracyMeters,
+          );
+        } else {
+          await _repo.shipmentPhoto(
+            vendorPoId: _vendorPoId!,
+            stepId: stepId,
+            file: file,
+            lat: lat,
+            lng: lng,
+            accuracyMeters: accuracyMeters,
+          );
+        }
         // Backend doesn't reliably flip shipment_completed on the step, so
         // remember the upload locally and patch on every hydrate.
         _locallyCompletedShipmentSteps.add(stepId);
         AppLog.info('VendorDetailProvider.uploadShipmentPhoto',
-            'optimistically marking step $stepId as shipmentCompleted');
+            'optimistically marking step $stepId as shipmentCompleted (lpo=${step?.isLpoStep ?? false})');
         _vendor = await _fetchHydrated(_vendorPoId!);
       });
 

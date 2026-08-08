@@ -43,6 +43,23 @@ class DeliveryRepository {
         accuracyMeters: accuracyMeters,
       );
 
+  Future<ProofLog> lpoPhoto({
+    required String masterPoId,
+    required String stepId,
+    required File file,
+    double? lat,
+    double? lng,
+    double? accuracyMeters,
+  }) =>
+      _api.uploadLpoPhoto(
+        masterPoId: masterPoId,
+        stepId: stepId,
+        file: file,
+        lat: lat,
+        lng: lng,
+        accuracyMeters: accuracyMeters,
+      );
+
   Future<ProofLog> itemPhoto({
     required String vendorPoId,
     required String itemId,

@@ -38,13 +38,6 @@ class _AssistantHomeScreenState extends State<AssistantHomeScreen> {
   }
 
   Future<void> _openTask(BuildContext context, AssistantTask task) async {
-    final t = AppL10n.of(context);
-    if (task.stepLevel == StepLevel.lpo) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.lpoNotSupportedYet)),
-      );
-      return;
-    }
     final detail = context.read<VendorDetailProvider>();
     // Load the vendor so the capture screen has items + steps, then pin the
     // assigned step so it becomes the active target regardless of server
@@ -55,6 +48,8 @@ class _AssistantHomeScreenState extends State<AssistantHomeScreen> {
     if (task.stepLevel == StepLevel.item) {
       context.push(Routes.guidedItemsPath(task.vendorPoId));
     } else {
+      // VENDOR and LPO are both single-photo; the shipment screen submits
+      // through the provider, which routes LPO to the master-scoped endpoint.
       context.push(Routes.shipmentPath(task.vendorPoId));
     }
   }

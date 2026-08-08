@@ -26,8 +26,8 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final user = await _repo.login(username: username, password: password);
-      if (!user.isRepresentative) {
-        _error = 'Only REPRESENTATIVE users can use this app';
+      if (!user.canUseMobileApp) {
+        _error = 'This account role cannot use the app';
         _status = AuthStatus.error;
         notifyListeners();
         return false;

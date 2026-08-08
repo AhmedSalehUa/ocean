@@ -53,8 +53,11 @@ class HttpDeliveryApi implements DeliveryApi {
         .post('/api/delivery/auth/login', data: {'username': username, 'password': password});
     final body = _unwrap(r);
     final result = AuthResult.fromJson(body['data'] as Map<String, dynamic>);
-    if (!result.user.isRepresentative) {
-      throw const ApiException('Only REPRESENTATIVE users can use this app', statusCode: 403);
+    if (!result.user.canUseMobileApp) {
+      throw const ApiException(
+        'Only REPRESENTATIVE or SUB_LOGISTICS_OFFICER users can use this app',
+        statusCode: 403,
+      );
     }
     await _auth.setToken(result.token);
     return result;
@@ -126,7 +129,7 @@ class HttpDeliveryApi implements DeliveryApi {
           v is int ? v : (v is String ? int.tryParse(v) ?? 0 : (v as num?)?.toInt() ?? 0);
       final totalItems = asInt(data['total_items']);
       final byId = <String, WorkflowStep>{};
-      const stepKeys = ['item_steps', 'vendor_steps', 'shipment_steps', 'steps'];
+      const stepKeys = ['lpo_steps', 'item_steps', 'vendor_steps', 'shipment_steps', 'steps'];
       for (final key in stepKeys) {
         final arr = data[key];
         if (arr is! List) continue;

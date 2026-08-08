@@ -1,11 +1,14 @@
-/// Whether a workflow step is captured once for the whole PO (`vendor`) or
-/// once per line item (`item`). Drives which capture screen the workflow
-/// routes to.
-enum StepLevel { vendor, item, unknown }
+/// The scope a workflow step is captured at:
+/// - [lpo]    — one photo at the Master-PO level (uploaded via master-pos).
+/// - [vendor] — one shipment photo for the whole Vendor PO.
+/// - [item]   — a photo per line item.
+/// Drives which capture screen / endpoint the workflow uses.
+enum StepLevel { lpo, vendor, item, unknown }
 
 extension StepLevelX on StepLevel {
   static StepLevel parse(String? value) {
     return switch (value?.toUpperCase()) {
+      'LPO' => StepLevel.lpo,
       'VENDOR' => StepLevel.vendor,
       'ITEM' => StepLevel.item,
       _ => StepLevel.unknown,
@@ -60,6 +63,12 @@ class WorkflowStep {
   /// Vendor-level capture step: one shipment photo covers the whole PO.
   bool get isVendorStep =>
       stepLevel == StepLevel.vendor || (requiresShipmentPhoto && !requiresItemPhoto);
+
+  /// LPO-level step: one photo captured at the Master-PO level.
+  bool get isLpoStep => stepLevel == StepLevel.lpo;
+
+  /// Any single-photo step (LPO or Vendor) — as opposed to per-item.
+  bool get isSinglePhotoStep => requiresShipmentPhoto && !requiresItemPhoto;
 
   bool get isComplete {
     final shipmentOk = !requiresShipmentPhoto || shipmentCompleted;
@@ -133,13 +142,16 @@ class WorkflowStep {
     final rawShipment = json['requires_shipment_photo'] as bool? ?? false;
     final rawItem = json['requires_item_photo'] as bool? ?? false;
     // Derive the capture mode from step_level when the backend supplies it.
+    // LPO and VENDOR are single-photo steps; ITEM is per-item.
     final requiresShipment = switch (level) {
+      StepLevel.lpo => true,
       StepLevel.vendor => true,
       StepLevel.item => false,
       StepLevel.unknown => rawShipment,
     };
     final requiresItem = switch (level) {
       StepLevel.item => true,
+      StepLevel.lpo => false,
       StepLevel.vendor => false,
       StepLevel.unknown => rawItem,
     };

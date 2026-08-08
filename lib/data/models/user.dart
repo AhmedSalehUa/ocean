@@ -1,3 +1,17 @@
+/// Mobile-app user roles. Only these two may use the app; any other role
+/// (e.g. ADMIN) is rejected at sign-in.
+enum UserRole { representative, subLogisticsOfficer, other }
+
+extension UserRoleX on UserRole {
+  static UserRole parse(String? value) {
+    return switch (value?.toUpperCase()) {
+      'REPRESENTATIVE' => UserRole.representative,
+      'SUB_LOGISTICS_OFFICER' => UserRole.subLogisticsOfficer,
+      _ => UserRole.other,
+    };
+  }
+}
+
 class User {
   final String id;
   final String fullName;
@@ -22,7 +36,12 @@ class User {
     return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
   }
 
-  bool get isRepresentative => role == 'REPRESENTATIVE';
+  UserRole get roleKind => UserRoleX.parse(role);
+  bool get isRepresentative => roleKind == UserRole.representative;
+  bool get isSubLogisticsOfficer => roleKind == UserRole.subLogisticsOfficer;
+
+  /// True for any role the mobile app supports (primary rep or assistant).
+  bool get canUseMobileApp => isRepresentative || isSubLogisticsOfficer;
 
   factory User.fromJson(Map<String, dynamic> json) => User(
         id: json['id'] as String,

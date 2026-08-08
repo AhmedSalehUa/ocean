@@ -10,9 +10,11 @@ import '../../core/theme/typography.dart';
 import '../../core/utils/app_log.dart';
 import '../../core/widgets/app_button.dart';
 import '../../l10n/app_l10n.dart';
-import '../../routing/routes.dart';
 import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
+import '../../routing/routes.dart';
+import '../auth/auth_provider.dart';
+import '../vendor_detail/step_flow.dart';
 import '../vendor_detail/vendor_detail_provider.dart';
 
 class ShipmentCaptureScreen extends StatefulWidget {
@@ -245,23 +247,22 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
     final v = p.vendor;
     if (v == null) return;
     final next = v.currentStep;
-    // Same step still has work pending.
-    if (next != null && next.id == step.id && !next.isComplete) {
-      // Multi-shipment-photo step (rare): backend still wants another shot.
-      if (next.requiresShipmentPhoto && !next.shipmentCompleted) {
-        setState(() => _photo = null);
-        _acquireGps();
-        return;
-      }
-      // Shipment done, items still pending on this step → go capture items.
-      if (next.requiresItemPhoto) {
-        context.replace(Routes.guidedItemsPath(v.id));
-        return;
-      }
+    // Same step still needs another shipment shot (rare multi-photo step).
+    if (next != null &&
+        next.id == step.id &&
+        next.requiresShipmentPhoto &&
+        !next.shipmentCompleted) {
+      setState(() => _photo = null);
+      _acquireGps();
+      return;
     }
-    // Step is fully done (or we advanced to a different step) → show the
-    // step-done page so the user confirms before moving on.
-    context.replace(Routes.stepDonePath(v.id, step.id));
+    // Assistants return to their task list; they don't own other steps.
+    if (context.read<AuthProvider>().user?.isSubLogisticsOfficer ?? false) {
+      context.go(Routes.assistantHome);
+      return;
+    }
+    // Step done → jump straight to the next step's capture (or finalize).
+    context.replace(nextStepRoute(v));
   }
 
   @override

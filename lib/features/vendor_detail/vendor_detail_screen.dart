@@ -400,6 +400,12 @@ class _BottomCta extends StatelessWidget {
         return;
       }
 
+      // All required steps + items done → finalize takes priority over any
+      // leftover optional step the current-step pointer may rest on.
+      if (vendor.readyToFinalize) {
+        context.push(Routes.finalizePath(vendor.id));
+        return;
+      }
       if (step != null && step.requiresShipmentPhoto && !step.shipmentCompleted) {
         context.push(Routes.shipmentPath(vendor.id));
         return;
@@ -408,18 +414,10 @@ class _BottomCta extends StatelessWidget {
         context.push(Routes.guidedItemsPath(vendor.id));
         return;
       }
-      if (vendor.allItemsResolved) {
-        context.push(Routes.finalizePath(vendor.id));
-      }
     }
 
-    // The vendor PO is done once /finalize has been called (finalizedAt is
-    // set) or every workflow step is complete. In either case there is no
-    // more capture to do, so the primary CTA disappears entirely and only
-    // the "View proofs" button stays.
-    final lastStep = vendor.steps.isEmpty ? null : vendor.steps.last;
-    final workflowFinished = vendor.finalizedAt != null ||
-        (lastStep != null && lastStep.isFinalStep && lastStep.isComplete);
+    // The vendor PO is done once /finalize has been called (finalizedAt set).
+    final workflowFinished = vendor.finalizedAt != null;
 
     String label;
     AppBtnVariant variant = AppBtnVariant.primary;
@@ -431,12 +429,14 @@ class _BottomCta extends StatelessWidget {
       variant = AppBtnVariant.soft;
     } else if (vendor.status == PoStatus.newPo) {
       label = t.startVendor;
+    } else if (vendor.readyToFinalize) {
+      // Every required step + item is resolved → offer finalize regardless of
+      // where the current-step pointer landed (e.g. an incomplete optional step).
+      label = t.confirmFinalDelivery;
     } else if (step != null && step.requiresShipmentPhoto && !step.shipmentCompleted) {
       label = t.captureShipment;
     } else if (step != null && step.requiresItemPhoto) {
       label = t.captureItems;
-    } else if (step != null && step.isFinalStep && vendor.allItemsResolved) {
-      label = t.confirmFinalDelivery;
     } else {
       label = t.captureItems;
       enabled = false;

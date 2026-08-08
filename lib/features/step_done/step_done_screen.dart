@@ -54,8 +54,13 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
   void _continue(VendorDetailProvider p) {
     final v = p.vendor;
     if (v == null) return;
+    // Required steps + items all done → finalize, even if the current-step
+    // pointer still rests on an incomplete optional step.
+    if (v.readyToFinalize) {
+      context.replace(Routes.finalizePath(v.id));
+      return;
+    }
     final next = v.currentStep;
-    // If we're already on the final step (or no further requirements) → finalize.
     if (next == null || next.isFinalStep ||
         (!next.requiresShipmentPhoto && !next.requiresItemPhoto)) {
       context.replace(Routes.finalizePath(v.id));
@@ -83,7 +88,8 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
     final stepName = completed?.nameFor(locale) ?? '';
 
     final next = v?.currentStep;
-    final goingToFinalize = next == null ||
+    final goingToFinalize = (v?.readyToFinalize ?? false) ||
+        next == null ||
         next.isFinalStep ||
         (!next.requiresShipmentPhoto && !next.requiresItemPhoto);
     final ctaLabel =

@@ -11,6 +11,7 @@ import '../../core/widgets/top_bar.dart';
 import '../../data/models/workflow_step.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
+import '../auth/auth_provider.dart';
 import '../vendor_detail/vendor_detail_provider.dart';
 
 /// Shown after a workflow step's uploads complete. Refetches the vendor PO
@@ -76,6 +77,17 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
     }
     // Defensive fallback.
     context.replace(Routes.finalizePath(v.id));
+  }
+
+  void _return(VendorDetailProvider p) {
+    final isAssistant =
+        context.read<AuthProvider>().user?.isSubLogisticsOfficer ?? false;
+    if (isAssistant) {
+      context.go(Routes.assistantHome);
+      return;
+    }
+    final v = p.vendor;
+    context.go(v != null ? Routes.vendorDetailPath(v.id) : Routes.dashboard);
   }
 
   @override
@@ -180,12 +192,28 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
                       ),
                     ],
                     const Spacer(),
-                    AppButton(
-                      label: ctaLabel,
-                      loading: p.busy,
-                      trailing: const Icon(Icons.arrow_forward_rounded),
-                      onPressed: blocked ? null : () => _continue(p),
-                    ),
+                    if (context.read<AuthProvider>().user?.isSubLogisticsOfficer ??
+                        false)
+                      // Assistants own only their step — one way out.
+                      AppButton(
+                        label: t.backToMyTasks,
+                        onPressed: () => context.go(Routes.assistantHome),
+                      )
+                    else ...[
+                      AppButton(
+                        label: ctaLabel,
+                        loading: p.busy,
+                        trailing: const Icon(Icons.arrow_forward_rounded),
+                        onPressed: blocked ? null : () => _continue(p),
+                      ),
+                      const SizedBox(height: 8),
+                      AppButton(
+                        label: t.stepDoneReturn,
+                        variant: AppBtnVariant.ghost,
+                        leading: const Icon(Icons.chevron_left_rounded),
+                        onPressed: () => _return(p),
+                      ),
+                    ],
                   ],
                 ),
               ),

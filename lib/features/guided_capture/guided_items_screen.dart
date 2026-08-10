@@ -16,8 +16,6 @@ import '../../l10n/app_l10n.dart';
 import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
 import '../../routing/routes.dart';
-import '../auth/auth_provider.dart';
-import '../vendor_detail/step_flow.dart';
 import '../vendor_detail/vendor_detail_provider.dart';
 
 /// Guided per-item capture: live camera + banner with the next pending item.
@@ -349,22 +347,16 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
   /// Re-fetch so the just-finished item step is reflected in currentStep
   /// (queueItemPhoto only updates items optimistically), then jump straight
   /// to the next step's capture — or finalize when everything's done.
-  Future<void> _advanceToNextStep() async {
+  /// The whole step is done → show the completion screen (Return / Next).
+  void _goToStepDone() {
     final p = context.read<VendorDetailProvider>();
-    // Assistants own only their assigned step(s) and can't finalize — send
-    // them back to their task list instead of into the rep pipeline.
-    if (context.read<AuthProvider>().user?.isSubLogisticsOfficer ?? false) {
-      context.go(Routes.assistantHome);
-      return;
-    }
-    await p.refreshVendor();
-    if (!mounted) return;
     final v = p.vendor;
-    if (v == null) return;
-    context.replace(nextStepRoute(v));
+    final step = v?.currentStep;
+    if (v == null || step == null) return;
+    context.replace(Routes.stepDonePath(v.id, step.id));
   }
 
-  /// After missing/rejected, advance to the next item or the next step.
+  /// After missing/rejected, advance to the next item or the completion screen.
   void _afterResolution(VendorPoItem item) {
     final p = context.read<VendorDetailProvider>();
     // Resolving the manually-picked item hands control back to the loop.
@@ -372,7 +364,7 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
       setState(() => _manualItemId = null);
     }
     if (p.vendor == null) return;
-    if (_nextItem(p) == null) _advanceToNextStep();
+    if (_nextItem(p) == null) _goToStepDone();
   }
 
   void _confirm() {
@@ -396,8 +388,8 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
       if (_manualItemId == itemId) _manualItemId = null;
     });
     // queueItemPhoto marks the item delivered locally, so if nothing is left
-    // this was the last item → move on to the next step automatically.
-    if (_nextItem(p) == null) _advanceToNextStep();
+    // this was the last item → show the completion screen.
+    if (_nextItem(p) == null) _goToStepDone();
   }
 
   void _finishOut() {
@@ -407,7 +399,7 @@ class _GuidedItemsScreenState extends State<GuidedItemsScreen>
       return;
     }
     if (_nextItem(p) == null) {
-      _advanceToNextStep();
+      _goToStepDone();
     } else {
       context.pop();
     }

@@ -13,8 +13,6 @@ import '../../l10n/app_l10n.dart';
 import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
 import '../../routing/routes.dart';
-import '../auth/auth_provider.dart';
-import '../vendor_detail/step_flow.dart';
 import '../vendor_detail/vendor_detail_provider.dart';
 
 class ShipmentCaptureScreen extends StatefulWidget {
@@ -256,13 +254,8 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
       _acquireGps();
       return;
     }
-    // Assistants return to their task list; they don't own other steps.
-    if (context.read<AuthProvider>().user?.isSubLogisticsOfficer ?? false) {
-      context.go(Routes.assistantHome);
-      return;
-    }
-    // Step done → jump straight to the next step's capture (or finalize).
-    context.replace(nextStepRoute(v));
+    // Step done → the completion screen offers Return / Go to next step.
+    context.replace(Routes.stepDonePath(v.id, step.id));
   }
 
   @override

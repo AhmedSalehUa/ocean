@@ -257,8 +257,10 @@ class AppL10n {
       _t('Finish every step before finalizing.', 'أكمل جميع الخطوات قبل الإنهاء.');
   String stepDoneSubtitle(String stepName) =>
       _t('$stepName captured and uploaded.', 'تم التقاط ورفع $stepName.');
-  String get stepDoneContinue => _t('Continue to next step', 'الانتقال إلى الخطوة التالية');
+  String get stepDoneContinue => _t('Go to next step', 'الانتقال إلى الخطوة التالية');
   String get stepDoneFinalize => _t('Finalize delivery', 'إنهاء التسليم');
+  String get stepDoneReturn => _t('Return', 'رجوع');
+  String get backToMyTasks => _t('Back to my tasks', 'العودة إلى مهامي');
   String get stepDoneAwaitingUploads =>
       _t('Waiting for background uploads to finish…', 'في انتظار اكتمال الرفع في الخلفية…');
   String stepDoneFailedUploads(int n) => _t('$n upload(s) failed — retry before continuing.',

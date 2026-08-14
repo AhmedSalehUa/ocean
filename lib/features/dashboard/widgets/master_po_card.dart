@@ -14,6 +14,7 @@ import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/progress_bar.dart';
 import '../../../core/widgets/capture_source_sheet.dart';
 import '../../../data/models/delivery_note.dart';
+import '../../../data/models/enums.dart';
 import '../../../data/models/master_po.dart';
 import '../../../data/repositories/delivery_repository.dart';
 import '../../../l10n/app_l10n.dart';
@@ -40,6 +41,12 @@ class MasterPoCard extends StatelessWidget {
     final t = AppL10n.of(context);
     final pct = (master.progress * 100).round();
     final allDone = master.isClosed;
+    final locale = t.locale.languageCode;
+    final status = _statusStyle(t);
+
+    final hero = _has(master.vesselName)
+        ? master.vesselName!
+        : (_has(master.site) ? master.site! : '${t.masterFallbackTitle} ${master.masterPoNumber}');
 
     return AppCard(
       onTap: onTap,
@@ -49,148 +56,204 @@ class MasterPoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Header: ship tile + hero + status ──
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: allDone
+                      ? null
+                      : const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [AppColors.navy, AppColors.ink2],
+                        ),
+                  color: allDone ? AppColors.accentSoft : null,
+                ),
+                child: Icon(
+                  allDone ? Icons.check_rounded : Icons.directions_boat_rounded,
+                  size: 22,
+                  color: allDone ? AppColors.accentInk : Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          master.masterPoNumber,
-                          style: AppType.mono10.copyWith(color: AppColors.muted),
+                        Expanded(
+                          child: Text(
+                            hero,
+                            style: AppType.h3,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        if (master.urgent)
-                          AppChip(label: master.priorityLabel ?? '⏱', tone: ChipTone.warn),
+                        const SizedBox(width: 8),
+                        _StatusChip(label: status.label, tone: status.tone),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${t.vendors(master.vendorPoCount)} · ${master.site ?? ''}',
-                      style: AppType.bodyLg,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Text(
+                          '#${master.masterPoNumber}',
+                          style: AppType.mono10.copyWith(color: AppColors.muted),
+                        ),
+                        if (master.urgent) ...[
+                          const SizedBox(width: 8),
+                          AppChip(label: master.priorityLabel ?? '⏱', tone: ChipTone.warn),
+                        ],
+                      ],
                     ),
-                    if (_has(master.vesselName)) ...[
-                      const SizedBox(height: 6),
-                      _DetailRow(
-                        icon: Icons.directions_boat_outlined,
-                        title: t.vesselName,
-                        value: master.vesselName!,
-                      ),
-                    ],
-                    if (_has(master.portName)) ...[
-                      const SizedBox(height: 4),
-                      _DetailRow(
-                        icon: Icons.anchor_outlined,
-                        title: t.portName,
-                        value: master.portName!,
-                      ),
-                    ],
-                    if (master.etaDate != null) ...[
-                      const SizedBox(height: 4),
-                      _DetailRow(
-                        icon: Icons.event_available_outlined,
-                        title: t.etaDate,
-                        value: Fmt.date(master.etaDate!),
-                      ),
-                    ],
-                    const SizedBox(height: 2),
-                    if (master.operationDate != null)
-                      Text(
-                        Fmt.relativeDay(master.operationDate!, locale: t.locale.languageCode),
-                        style: AppType.caption,
-                      ),
                   ],
-                ),
-              ),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: allDone ? AppColors.accentSoft : AppColors.accentInk,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  allDone ? Icons.check_rounded : Icons.arrow_forward_rounded,
-                  size: 18,
-                  color: allDone ? AppColors.accentInk : Colors.white,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+          // ── Info pills ──
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _InfoChip(
+                icon: Icons.local_shipping_outlined,
+                label: t.vendors(master.vendorPoCount),
+              ),
+              if (_has(master.portName))
+                _InfoChip(icon: Icons.anchor_outlined, label: master.portName!),
+              if (master.etaDate != null)
+                _InfoChip(
+                  icon: Icons.event_available_outlined,
+                  label: Fmt.date(master.etaDate!),
+                ),
+              if (master.operationDate != null)
+                _InfoChip(
+                  icon: Icons.schedule_outlined,
+                  label: Fmt.relativeDay(master.operationDate!, locale: locale),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // ── Progress ──
           Row(
             children: [
               Expanded(
                 child: Text(
                   t.clearedRatio(master.deliveredVendorPoCount, master.vendorPoCount),
-                  style: AppType.mono10.copyWith(color: AppColors.muted),
+                  style: AppType.caption.copyWith(color: AppColors.muted),
                 ),
               ),
-              Text('$pct%', style: AppType.mono10.copyWith(color: AppColors.muted)),
+              Text(
+                '$pct%',
+                style: AppType.mono11.copyWith(
+                  color: allDone ? AppColors.accentInk : AppColors.ink2,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           SimpleProgressBar(
             value: master.progress,
             color: allDone ? AppColors.accent : AppColors.accentInk,
           ),
           if (master.currentStep?.isLpo ?? false) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             const Divider(height: 1, color: AppColors.lineSoft),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             _LpoStrip(master: master, step: master.currentStep!),
           ],
           if (master.deliveryNote != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             const Divider(height: 1, color: AppColors.lineSoft),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             _DeliveryNoteStrip(master: master),
           ],
         ],
       ),
     );
   }
+
+  ({String label, ChipTone tone}) _statusStyle(AppL10n t) {
+    return switch (master.status) {
+      MasterStatus.open => (label: t.masterStatusNew, tone: ChipTone.neutral),
+      MasterStatus.inProgress =>
+        (label: t.masterStatusInProgress, tone: ChipTone.warn),
+      MasterStatus.fullyDelivered =>
+        (label: t.masterStatusDelivered, tone: ChipTone.green),
+      MasterStatus.partiallyDelivered =>
+        (label: t.masterStatusPartial, tone: ChipTone.warn),
+      MasterStatus.closed => (label: t.masterStatusClosed, tone: ChipTone.green),
+    };
+  }
 }
 
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.icon,
-    required this.title,
-    required this.value,
-  });
-  final IconData icon;
-  final String title;
-  final String value;
+/// Compact status pill for the master card header.
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.label, required this.tone});
+  final String label;
+  final ChipTone tone;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 13, color: AppColors.muted),
-        const SizedBox(width: 5),
-        Text(
-          '$title: ',
-          style: AppType.caption.copyWith(color: AppColors.muted),
+    final (bg, fg) = switch (tone) {
+      ChipTone.green => (AppColors.accentSoft, AppColors.accentInk),
+      ChipTone.warn => (AppColors.warnSoft, AppColors.warnInk),
+      ChipTone.danger => (AppColors.dangerSoft, AppColors.danger),
+      _ => (AppColors.bgDeep, AppColors.muted),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+      child: Text(
+        label.toUpperCase(),
+        style: AppType.mono10.copyWith(
+          color: fg,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
         ),
-        Expanded(
-          child: Text(
-            value,
+      ),
+    );
+  }
+}
+
+/// Icon + label pill used for the master card's meta row.
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.bgDeep,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: AppColors.ink2),
+          const SizedBox(width: 6),
+          Text(
+            label,
             style: AppType.caption.copyWith(
               color: AppColors.ink2,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

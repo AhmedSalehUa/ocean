@@ -57,6 +57,12 @@ class AppL10n {
   String get vesselName => _t('Vessel name', 'اسم المركب');
   String get etaDate => _t('ETA date', 'تاريخ الوصول');
   String get portName => _t('Port', 'الميناء');
+  String get masterStatusNew => _t('New', 'جديد');
+  String get masterStatusInProgress => _t('In progress', 'قيد التنفيذ');
+  String get masterStatusDelivered => _t('Delivered', 'مكتمل');
+  String get masterStatusPartial => _t('Partial', 'جزئي');
+  String get masterStatusClosed => _t('Closed', 'مغلق');
+  String get masterFallbackTitle => _t('Master PO', 'أمر رئيسي');
 
   // ─── Delivery note ───
   String get deliveryNote => _t('Delivery note', 'مستند التسليم');

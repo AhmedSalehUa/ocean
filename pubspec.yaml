@@ -64,8 +64,9 @@ flutter_launcher_icons:
   android: true
   ios: true
   remove_alpha_ios: true
-  # Android adaptive icon (API 26+): navy background + logo foreground.
-  adaptive_icon_background: "#012169"
+  # Android adaptive icon (API 26+): light background so the navy logo
+  # stays visible; the ship + waves sit in the safe zone as the foreground.
+  adaptive_icon_background: "#F5F7FA"
   adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
 
 flutter:

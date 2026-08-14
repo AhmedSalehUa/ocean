@@ -55,6 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final locale = context.watch<LocaleService>();
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Container(
           decoration: const BoxDecoration(color: AppColors.bg),

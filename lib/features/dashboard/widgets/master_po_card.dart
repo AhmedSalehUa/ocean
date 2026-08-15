@@ -142,6 +142,21 @@ class MasterPoCard extends StatelessWidget {
                 ),
             ],
           ),
+          if (_has(master.representativeName) || _has(master.assistantName)) ...[
+            const SizedBox(height: 12),
+            if (_has(master.representativeName))
+              _PersonLine(
+                label: t.primaryRepresentative,
+                name: master.representativeName!,
+              ),
+            if (_has(master.assistantName)) ...[
+              if (_has(master.representativeName)) const SizedBox(height: 6),
+              _PersonLine(
+                label: t.subRepresentative,
+                name: master.assistantName!,
+              ),
+            ],
+          ],
           const SizedBox(height: 16),
           // ── Progress ──
           Row(
@@ -254,6 +269,39 @@ class _InfoChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A labelled person row (المندوب الرئيسي / المندوب الفرعي) shown on the
+/// master card when the API surfaces the assigned rep and/or assistant.
+class _PersonLine extends StatelessWidget {
+  const _PersonLine({required this.label, required this.name});
+  final String label;
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.person_outline_rounded, size: 14, color: AppColors.muted),
+        const SizedBox(width: 6),
+        Text(
+          '$label: ',
+          style: AppType.caption.copyWith(color: AppColors.muted),
+        ),
+        Expanded(
+          child: Text(
+            name,
+            style: AppType.caption.copyWith(
+              color: AppColors.ink2,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }

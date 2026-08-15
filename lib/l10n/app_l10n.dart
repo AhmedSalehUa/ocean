@@ -277,6 +277,10 @@ class AppL10n {
   String get languageArabic => 'العربية';
   String get toggleLanguage => _t('Language', 'اللغة');
   String get logout => _t('Sign out', 'تسجيل الخروج');
+
+  // ─── Representatives ───
+  String get primaryRepresentative => _t('Primary rep', 'المندوب الرئيسي');
+  String get subRepresentative => _t('Assistant', 'المندوب الفرعي');
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

@@ -42,6 +42,11 @@ class MasterPo {
   final DeliveryNote? deliveryNote;
   final MasterCurrentStep? currentStep;
 
+  /// Primary representative + assigned assistant (sub-logistics officer)
+  /// names, when the API surfaces them. Rendered on the card only if present.
+  final String? representativeName;
+  final String? assistantName;
+
   // Mock-only convenience fields (carried alongside the wire data)
   final String? site;
   final double? siteLat;
@@ -62,6 +67,8 @@ class MasterPo {
     this.portName,
     this.deliveryNote,
     this.currentStep,
+    this.representativeName,
+    this.assistantName,
     this.site,
     this.siteLat,
     this.siteLng,
@@ -97,6 +104,8 @@ class MasterPo {
         portName: portName,
         deliveryNote: deliveryNote ?? this.deliveryNote,
         currentStep: currentStep,
+        representativeName: representativeName,
+        assistantName: assistantName,
         site: site,
         siteLat: siteLat,
         siteLng: siteLng,
@@ -111,6 +120,25 @@ class MasterPo {
 
     final noteJson = json['delivery_note'];
     final stepJson = json['current_step'];
+
+    // People names arrive under several possible keys depending on the
+    // endpoint (flat name, or a nested {name} object). Read the first match
+    // tolerantly so the card can surface them whenever they are present.
+    String? nameFrom(List<String> flatKeys, List<String> objectKeys) {
+      for (final k in flatKeys) {
+        final v = json[k];
+        if (v is String && v.trim().isNotEmpty) return v.trim();
+      }
+      for (final k in objectKeys) {
+        final v = json[k];
+        if (v is Map<String, dynamic>) {
+          final n = v['name'] ?? v['full_name'] ?? v['display_name'];
+          if (n is String && n.trim().isNotEmpty) return n.trim();
+        }
+      }
+      return null;
+    }
+
     return MasterPo(
       id: json['id'] as String,
       masterPoNumber: json['master_po_number'] as String,
@@ -125,6 +153,24 @@ class MasterPo {
       deliveryNote: noteJson is Map<String, dynamic> ? DeliveryNote.fromJson(noteJson) : null,
       currentStep:
           stepJson is Map<String, dynamic> ? MasterCurrentStep.fromJson(stepJson) : null,
+      representativeName: nameFrom(
+        const [
+          'representative_name',
+          'primary_representative_name',
+          'primary_representative',
+          'rep_name',
+        ],
+        const ['representative', 'primary_representative'],
+      ),
+      assistantName: nameFrom(
+        const [
+          'assistant_name',
+          'sub_logistics_officer_name',
+          'sub_officer_name',
+          'assistant_representative_name',
+        ],
+        const ['assistant', 'sub_logistics_officer', 'assistant_representative'],
+      ),
       site: json['site'] as String?,
       siteLat: (json['site_lat'] as num?)?.toDouble(),
       siteLng: (json['site_lng'] as num?)?.toDouble(),

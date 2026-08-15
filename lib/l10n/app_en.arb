@@ -92,5 +92,8 @@
   "languageEnglish": "English",
   "languageArabic": "العربية",
   "toggleLanguage": "Language",
-  "logout": "Sign out"
+  "logout": "Sign out",
+
+  "primaryRepresentative": "Primary rep",
+  "subRepresentative": "Assistant"
 }

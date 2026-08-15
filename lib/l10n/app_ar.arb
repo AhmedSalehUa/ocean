@@ -92,5 +92,8 @@
   "languageEnglish": "English",
   "languageArabic": "العربية",
   "toggleLanguage": "اللغة",
-  "logout": "تسجيل الخروج"
+  "logout": "تسجيل الخروج",
+
+  "primaryRepresentative": "المندوب الرئيسي",
+  "subRepresentative": "المندوب الفرعي"
 }

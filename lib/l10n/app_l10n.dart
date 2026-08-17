@@ -281,6 +281,22 @@ class AppL10n {
   // ─── Representatives ───
   String get primaryRepresentative => _t('Primary rep', 'المندوب الرئيسي');
   String get subRepresentative => _t('Assistant', 'المندوب الفرعي');
+
+  // ─── Master steps (step → vendors flow) ───
+  String get masterStepsTitle => _t('Workflow steps', 'خطوات سير العمل');
+  String get masterStepsEyebrow => _t('Steps', 'الخطوات');
+  String get chooseStepSubtitle =>
+      _t('Choose a step to see its vendors', 'اختر خطوة لعرض موردّيها');
+  String get noStepsYet => _t('No steps on this order yet.', 'لا توجد خطوات على هذا الأمر بعد.');
+  String get stepStatusCompleted => _t('Completed', 'مكتملة');
+  String get stepStatusInProgress => _t('In progress', 'قيد التنفيذ');
+  String get stepStatusPending => _t('Pending', 'قيد الانتظار');
+  String get stepStatusNotApplicable => _t('N/A', 'لا تنطبق');
+  String get stepRequired => _t('Required', 'إلزامية');
+  String get stepOptional => _t('Optional', 'اختيارية');
+  String get stepFinal => _t('Final', 'نهائية');
+  String stepTargetsProgress(int done, int total) =>
+      _t('$done/$total done', '$done/$total منجزة');
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

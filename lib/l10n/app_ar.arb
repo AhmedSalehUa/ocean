@@ -95,5 +95,19 @@
   "logout": "تسجيل الخروج",
 
   "primaryRepresentative": "المندوب الرئيسي",
-  "subRepresentative": "المندوب الفرعي"
+  "subRepresentative": "المندوب الفرعي",
+
+  "masterStepsTitle": "خطوات سير العمل",
+  "masterStepsEyebrow": "الخطوات",
+  "chooseStepSubtitle": "اختر خطوة لعرض موردّيها",
+  "noStepsYet": "لا توجد خطوات على هذا الأمر بعد.",
+  "stepStatusCompleted": "مكتملة",
+  "stepStatusInProgress": "قيد التنفيذ",
+  "stepStatusPending": "قيد الانتظار",
+  "stepStatusNotApplicable": "لا تنطبق",
+  "stepRequired": "إلزامية",
+  "stepOptional": "اختيارية",
+  "stepFinal": "نهائية",
+  "stepTargetsProgress": "{done}/{total} منجزة",
+  "@stepTargetsProgress": {"placeholders": {"done": {}, "total": {}}}
 }

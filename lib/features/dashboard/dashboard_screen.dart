@@ -102,7 +102,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     for (final m in open) ...[
                       MasterPoCard(
                         master: m,
-                        onTap: () => context.push(Routes.vendorListPath(m.id)),
+                        onTap: () => context.push(Routes.masterStepsPath(m.id)),
                       ),
                       const SizedBox(height: 12),
                     ],
@@ -114,7 +114,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         MasterPoCard(
                           master: m,
                           muted: true,
-                          onTap: () => context.push(Routes.vendorListPath(m.id)),
+                          onTap: () => context.push(Routes.masterStepsPath(m.id)),
                         ),
                         const SizedBox(height: 12),
                       ],

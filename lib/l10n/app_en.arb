@@ -95,5 +95,19 @@
   "logout": "Sign out",
 
   "primaryRepresentative": "Primary rep",
-  "subRepresentative": "Assistant"
+  "subRepresentative": "Assistant",
+
+  "masterStepsTitle": "Workflow steps",
+  "masterStepsEyebrow": "Steps",
+  "chooseStepSubtitle": "Choose a step to see its vendors",
+  "noStepsYet": "No steps on this order yet.",
+  "stepStatusCompleted": "Completed",
+  "stepStatusInProgress": "In progress",
+  "stepStatusPending": "Pending",
+  "stepStatusNotApplicable": "N/A",
+  "stepRequired": "Required",
+  "stepOptional": "Optional",
+  "stepFinal": "Final",
+  "stepTargetsProgress": "{done}/{total} done",
+  "@stepTargetsProgress": {"placeholders": {"done": {}, "total": {}}}
 }

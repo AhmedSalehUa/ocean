@@ -1,5 +1,6 @@
 import 'delivery_note.dart';
 import 'enums.dart';
+import 'master_step.dart';
 import 'workflow_step.dart';
 
 /// The master PO's active step, as returned inline by the master-pos list.
@@ -42,6 +43,11 @@ class MasterPo {
   final DeliveryNote? deliveryNote;
   final MasterCurrentStep? currentStep;
 
+  /// Every visible workflow step on this master PO with its rolled-up status,
+  /// from the master-pos response `steps` array (spec §5). Drives the
+  /// per-master steps screen shown before the vendor list.
+  final List<MasterStep> steps;
+
   /// Primary representative + assigned assistant (sub-logistics officer)
   /// names, when the API surfaces them. Rendered on the card only if present.
   final String? representativeName;
@@ -67,6 +73,7 @@ class MasterPo {
     this.portName,
     this.deliveryNote,
     this.currentStep,
+    this.steps = const [],
     this.representativeName,
     this.assistantName,
     this.site,
@@ -104,6 +111,7 @@ class MasterPo {
         portName: portName,
         deliveryNote: deliveryNote ?? this.deliveryNote,
         currentStep: currentStep,
+        steps: steps,
         representativeName: representativeName,
         assistantName: assistantName,
         site: site,
@@ -120,6 +128,7 @@ class MasterPo {
 
     final noteJson = json['delivery_note'];
     final stepJson = json['current_step'];
+    final stepsJson = json['steps'];
 
     // People names arrive under several possible keys depending on the
     // endpoint (flat name, or a nested {name} object). Read the first match
@@ -153,6 +162,13 @@ class MasterPo {
       deliveryNote: noteJson is Map<String, dynamic> ? DeliveryNote.fromJson(noteJson) : null,
       currentStep:
           stepJson is Map<String, dynamic> ? MasterCurrentStep.fromJson(stepJson) : null,
+      steps: stepsJson is List
+          ? (stepsJson
+              .whereType<Map<String, dynamic>>()
+              .map(MasterStep.fromJson)
+              .toList()
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)))
+          : const [],
       representativeName: nameFrom(
         const [
           'representative_name',

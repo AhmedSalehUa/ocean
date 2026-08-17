@@ -1,5 +1,6 @@
 import '../../models/enums.dart';
 import '../../models/master_po.dart';
+import '../../models/master_step.dart';
 import '../../models/vendor_po.dart';
 import '../../models/vendor_po_item.dart';
 import '../../models/workflow_step.dart';
@@ -45,6 +46,41 @@ class Seed {
     return out;
   }
 
+  /// Rolled-up master-level workflow steps (spec §5) for the mock, so the
+  /// per-master steps screen has something to render. One step per level.
+  static List<MasterStep> masterSteps(List<MasterStepStatus> statuses) {
+    final defs = [
+      (id: 'lpo', en: 'LPO Capture', ar: 'التقاط أمر الشراء', lvl: StepLevel.lpo, fin: false, req: true),
+      (id: 'vendor', en: 'Vendor Verification', ar: 'التحقق من المورد', lvl: StepLevel.vendor, fin: false, req: true),
+      (id: 'item', en: 'Item Inspection', ar: 'فحص البنود', lvl: StepLevel.item, fin: true, req: true),
+    ];
+    final out = <MasterStep>[];
+    for (var i = 0; i < defs.length; i++) {
+      final d = defs[i];
+      final s = i < statuses.length ? statuses[i] : MasterStepStatus.pending;
+      final total = d.lvl == StepLevel.item ? 10 : 1;
+      final done = switch (s) {
+        MasterStepStatus.completed => total,
+        MasterStepStatus.inProgress => (total / 2).floor(),
+        _ => 0,
+      };
+      out.add(MasterStep(
+        id: d.id,
+        nameEn: d.en,
+        nameAr: d.ar,
+        stepLevel: d.lvl,
+        sortOrder: i,
+        isRequired: d.req,
+        isFinalStep: d.fin,
+        status: s,
+        isCompleted: s == MasterStepStatus.completed,
+        targetCount: s == MasterStepStatus.notApplicable ? 0 : total,
+        completedCount: done,
+      ));
+    }
+    return out;
+  }
+
   static List<MasterPo> masters() {
     final today = DateTime.now();
     final yesterday = today.subtract(const Duration(days: 1));
@@ -62,6 +98,11 @@ class Seed {
         siteLng: 36.8219,
         priorityLabel: 'Due 14:00',
         urgent: true,
+        steps: masterSteps(const [
+          MasterStepStatus.completed,
+          MasterStepStatus.inProgress,
+          MasterStepStatus.pending,
+        ]),
       ),
       MasterPo(
         id: 'mpo_241192',
@@ -76,6 +117,11 @@ class Seed {
         siteLng: 36.8201,
         priorityLabel: 'Standard',
         urgent: false,
+        steps: masterSteps(const [
+          MasterStepStatus.inProgress,
+          MasterStepStatus.pending,
+          MasterStepStatus.notApplicable,
+        ]),
       ),
       MasterPo(
         id: 'mpo_241175',
@@ -90,6 +136,11 @@ class Seed {
         siteLng: 36.8219,
         priorityLabel: 'Batch sign-off',
         urgent: false,
+        steps: masterSteps(const [
+          MasterStepStatus.completed,
+          MasterStepStatus.completed,
+          MasterStepStatus.inProgress,
+        ]),
       ),
     ];
   }

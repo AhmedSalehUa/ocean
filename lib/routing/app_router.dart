@@ -11,6 +11,7 @@ import '../features/handoff/handoff_screen.dart';
 import '../features/finalize/finalize_screen.dart';
 import '../features/guided_capture/guided_items_screen.dart';
 import '../features/item_loop/item_loop_screen.dart';
+import '../features/master_steps/master_steps_screen.dart';
 import '../features/proofs/proof_viewer_screen.dart';
 import '../features/proofs/proofs_screen.dart';
 import '../features/shipment_capture/shipment_capture_screen.dart';
@@ -45,6 +46,10 @@ GoRouter buildRouter(AuthProvider auth) {
       GoRoute(
         path: Routes.assistantHome,
         builder: (_, __) => const AssistantHomeScreen(),
+      ),
+      GoRoute(
+        path: Routes.masterSteps,
+        builder: (_, s) => MasterStepsScreen(masterId: s.pathParameters['masterId']!),
       ),
       GoRoute(
         path: Routes.vendorList,

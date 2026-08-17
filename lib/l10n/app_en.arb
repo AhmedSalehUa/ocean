@@ -101,6 +101,8 @@
   "masterStepsEyebrow": "Steps",
   "chooseStepSubtitle": "Choose a step to see its vendors",
   "chooseVendorSubtitle": "Choose a vendor to capture this step",
+  "captureScopeVendor": "One photo per vendor · across all products",
+  "captureScopeItem": "Captured for each item",
   "noStepsYet": "No steps on this order yet.",
   "stepStatusCompleted": "Completed",
   "stepStatusInProgress": "In progress",

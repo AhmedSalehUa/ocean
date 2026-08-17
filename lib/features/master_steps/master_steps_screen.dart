@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/errors/api_exception.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/typography.dart';
+import '../../core/utils/app_log.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_chip.dart';
@@ -13,8 +15,11 @@ import '../../core/widgets/top_bar.dart';
 import '../../data/models/master_po.dart';
 import '../../data/models/master_step.dart';
 import '../../data/models/workflow_step.dart';
+import '../../data/repositories/delivery_repository.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
+import '../../services/camera_service.dart';
+import '../../services/location_service.dart';
 import '../dashboard/master_pos_provider.dart';
 
 /// First page after tapping a master PO: the master's workflow steps
@@ -35,6 +40,9 @@ class MasterStepsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppL10n.of(context);
     final locale = t.locale.languageCode;
+    // Subscribe so the list reflects status changes (e.g. after an LPO
+    // capture refreshes the masters).
+    context.watch<MasterPosProvider>();
     final master = _master(context);
     final steps = master?.steps ?? const <MasterStep>[];
 
@@ -73,10 +81,69 @@ class MasterStepsScreen extends StatelessWidget {
   }
 
   void _openStep(BuildContext context, MasterStep step) {
-    // A not-applicable step has no targets under this master → no vendors to
-    // show. Keep it inert.
+    // A not-applicable step has no targets under this master → nothing to do.
     if (!step.status.isApplicable) return;
+    // LPO is captured once at the Master-PO level — there's no per-vendor
+    // breakdown, so open the camera straight away and skip the vendor list.
+    if (step.stepLevel == StepLevel.lpo) {
+      _captureLpo(context, step);
+      return;
+    }
     context.push(Routes.stepVendorsPath(masterId, step.id));
+  }
+
+  /// Direct-to-camera LPO capture: snap a photo, attach GPS, and post it to
+  /// the master-scoped lpo-steps endpoint. Mirrors the master card's LPO
+  /// strip, minus the source picker.
+  Future<void> _captureLpo(BuildContext context, MasterStep step) async {
+    final t = AppL10n.of(context);
+    final repo = context.read<DeliveryRepository>();
+    final location = context.read<LocationService>();
+    final camera = context.read<CameraService>();
+    final masters = context.read<MasterPosProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+
+    final file = await camera.takePhoto();
+    if (file == null || !context.mounted) return;
+
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(
+      duration: const Duration(minutes: 1),
+      content: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(t.uploadingLpoProof)),
+        ],
+      ),
+    ));
+    try {
+      final fix = await location.currentFix();
+      await repo.lpoPhoto(
+        masterPoId: masterId,
+        stepId: step.id,
+        file: file,
+        lat: fix?.lat,
+        lng: fix?.lng,
+        accuracyMeters: fix?.accuracyMeters,
+      );
+      messenger.hideCurrentSnackBar();
+      await masters.refresh();
+      if (!context.mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(t.lpoProofUploaded)));
+    } on ApiException catch (e, st) {
+      messenger.hideCurrentSnackBar();
+      AppLog.error('MasterStepsScreen._captureLpo', e, st);
+      messenger.showSnackBar(SnackBar(content: Text('${t.lpoProofUploadFailed} (${e.message})')));
+    } catch (e, st) {
+      messenger.hideCurrentSnackBar();
+      AppLog.error('MasterStepsScreen._captureLpo', e, st);
+      messenger.showSnackBar(SnackBar(content: Text('${t.lpoProofUploadFailed} ($e)')));
+    }
   }
 }
 

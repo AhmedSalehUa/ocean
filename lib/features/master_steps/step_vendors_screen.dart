@@ -153,6 +153,13 @@ class _StepHeader extends StatelessWidget {
       StepLevel.item => t.stepLevelItem,
       _ => t.stepLevelVendor,
     };
+    // Tell the user how this step is captured per vendor: an ITEM step is
+    // photographed for every item; a VENDOR step is a single photo across the
+    // whole vendor's products.
+    final isItem = s?.stepLevel == StepLevel.item;
+    final scopeLabel = isItem ? t.captureScopeItem : t.captureScopeVendor;
+    final scopeIcon = isItem ? Icons.inventory_2_outlined : Icons.collections_outlined;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -161,6 +168,31 @@ class _StepHeader extends StatelessWidget {
         Text(s?.nameFor(localeCode) ?? t.masterStepsTitle, style: AppType.h2),
         const SizedBox(height: 10),
         AppChip(label: level, tone: ChipTone.dark),
+        const SizedBox(height: 12),
+        // Capture-scope banner.
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.bgDeep,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.lineSoft),
+          ),
+          child: Row(
+            children: [
+              Icon(scopeIcon, size: 16, color: AppColors.ink2),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  scopeLabel,
+                  style: AppType.caption.copyWith(
+                    color: AppColors.ink2,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 10),
         Text(t.chooseVendorSubtitle, style: AppType.bodyMuted),
       ],

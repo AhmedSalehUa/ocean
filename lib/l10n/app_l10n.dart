@@ -289,6 +289,10 @@ class AppL10n {
       _t('Choose a step to see its vendors', 'اختر خطوة لعرض موردّيها');
   String get chooseVendorSubtitle =>
       _t('Choose a vendor to capture this step', 'اختر مورّداً لالتقاط هذه الخطوة');
+  String get captureScopeVendor => _t(
+      'One photo per vendor · across all products', 'صورة واحدة لكل مورّد · لكل المنتجات');
+  String get captureScopeItem =>
+      _t('Captured for each item', 'تُلتقط لكل بند على حدة');
   String get noStepsYet => _t('No steps on this order yet.', 'لا توجد خطوات على هذا الأمر بعد.');
   String get stepStatusCompleted => _t('Completed', 'مكتملة');
   String get stepStatusInProgress => _t('In progress', 'قيد التنفيذ');

@@ -101,6 +101,8 @@
   "masterStepsEyebrow": "الخطوات",
   "chooseStepSubtitle": "اختر خطوة لعرض موردّيها",
   "chooseVendorSubtitle": "اختر مورّداً لالتقاط هذه الخطوة",
+  "captureScopeVendor": "صورة واحدة لكل مورّد · لكل المنتجات",
+  "captureScopeItem": "تُلتقط لكل بند على حدة",
   "noStepsYet": "لا توجد خطوات على هذا الأمر بعد.",
   "stepStatusCompleted": "مكتملة",
   "stepStatusInProgress": "قيد التنفيذ",

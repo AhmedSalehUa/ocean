@@ -100,6 +100,7 @@
   "masterStepsTitle": "خطوات سير العمل",
   "masterStepsEyebrow": "الخطوات",
   "chooseStepSubtitle": "اختر خطوة لعرض موردّيها",
+  "chooseVendorSubtitle": "اختر مورّداً لالتقاط هذه الخطوة",
   "noStepsYet": "لا توجد خطوات على هذا الأمر بعد.",
   "stepStatusCompleted": "مكتملة",
   "stepStatusInProgress": "قيد التنفيذ",

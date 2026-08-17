@@ -74,9 +74,9 @@ class MasterStepsScreen extends StatelessWidget {
 
   void _openStep(BuildContext context, MasterStep step) {
     // A not-applicable step has no targets under this master → no vendors to
-    // show. Keep it inert. The per-step vendor list is wired in the next slice.
+    // show. Keep it inert.
     if (!step.status.isApplicable) return;
-    context.push(Routes.vendorListPath(masterId));
+    context.push(Routes.stepVendorsPath(masterId, step.id));
   }
 }
 

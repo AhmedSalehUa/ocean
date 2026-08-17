@@ -100,6 +100,7 @@
   "masterStepsTitle": "Workflow steps",
   "masterStepsEyebrow": "Steps",
   "chooseStepSubtitle": "Choose a step to see its vendors",
+  "chooseVendorSubtitle": "Choose a vendor to capture this step",
   "noStepsYet": "No steps on this order yet.",
   "stepStatusCompleted": "Completed",
   "stepStatusInProgress": "In progress",

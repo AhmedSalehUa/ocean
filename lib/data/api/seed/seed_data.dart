@@ -49,10 +49,14 @@ class Seed {
   /// Rolled-up master-level workflow steps (spec §5) for the mock, so the
   /// per-master steps screen has something to render. One step per level.
   static List<MasterStep> masterSteps(List<MasterStepStatus> statuses) {
+    // Step ids match the mock Vendor PO step ids (see [steps]) so tapping a
+    // vendor pins the same step for capture: 'unload' is a vendor/shipment
+    // step, 'verify' is the item step. 'lpo' has no per-vendor equivalent
+    // (LPO is master-level), so its pin is a harmless no-op in the mock.
     final defs = [
       (id: 'lpo', en: 'LPO Capture', ar: 'التقاط أمر الشراء', lvl: StepLevel.lpo, fin: false, req: true),
-      (id: 'vendor', en: 'Vendor Verification', ar: 'التحقق من المورد', lvl: StepLevel.vendor, fin: false, req: true),
-      (id: 'item', en: 'Item Inspection', ar: 'فحص البنود', lvl: StepLevel.item, fin: true, req: true),
+      (id: 'unload', en: 'Site Unloading', ar: 'تفريغ الموقع', lvl: StepLevel.vendor, fin: false, req: true),
+      (id: 'verify', en: 'Item Verification', ar: 'التحقق من الأصناف', lvl: StepLevel.item, fin: true, req: true),
     ];
     final out = <MasterStep>[];
     for (var i = 0; i < defs.length; i++) {

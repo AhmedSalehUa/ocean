@@ -4,6 +4,7 @@ class Routes {
   static const dashboard = '/';
   static const assistantHome = '/assistant';
   static const masterSteps = '/master/:masterId/steps';
+  static const stepVendors = '/master/:masterId/step/:stepId/vendors';
   static const vendorList = '/master/:masterId';
   static const vendorDetail = '/vendor/:vendorId';
   static const shipmentCapture = '/vendor/:vendorId/shipment';
@@ -17,6 +18,8 @@ class Routes {
   static const assignAssistant = '/vendor/:vendorId/assign';
 
   static String masterStepsPath(String masterId) => '/master/$masterId/steps';
+  static String stepVendorsPath(String masterId, String stepId) =>
+      '/master/$masterId/step/$stepId/vendors';
   static String vendorListPath(String masterId) => '/master/$masterId';
   static String vendorDetailPath(String vendorId) => '/vendor/$vendorId';
   static String shipmentPath(String vendorId) => '/vendor/$vendorId/shipment';

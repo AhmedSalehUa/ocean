@@ -56,9 +56,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      backgroundColor: AppColors.bg,
       body: SafeArea(
-        child: Container(
-          decoration: const BoxDecoration(color: AppColors.bg),
+        child: SingleChildScrollView(
+          // Let the form scroll when the keyboard is up so the focused field
+          // is pushed above it instead of being covered / overflowing.
           padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

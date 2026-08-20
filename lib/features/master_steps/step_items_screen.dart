@@ -11,6 +11,7 @@ import '../../core/widgets/app_chip.dart';
 import '../../core/widgets/eyebrow.dart';
 import '../../core/widgets/status_pill.dart';
 import '../../core/widgets/top_bar.dart';
+import '../../data/models/enums.dart';
 import '../../data/models/vendor_po_item.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';

@@ -197,7 +197,7 @@ class MasterPoCard extends StatelessWidget {
             const SizedBox(height: 12),
             _LpoStrip(master: master, step: master.currentStep!),
           ],
-          if (master.deliveryNote != null) ...[
+          if (master.deliveryNote != null || master.canUploadDeliveryNote) ...[
             const SizedBox(height: 14),
             const Divider(height: 1, color: AppColors.lineSoft),
             const SizedBox(height: 12),
@@ -331,19 +331,29 @@ class _DeliveryNoteStrip extends StatefulWidget {
 class _DeliveryNoteStripState extends State<_DeliveryNoteStrip> {
   bool _busy = false;
 
-  DeliveryNote get _note => widget.master.deliveryNote!;
+  DeliveryNote? get _note => widget.master.deliveryNote;
 
   @override
   Widget build(BuildContext context) {
     final t = AppL10n.of(context);
     final note = _note;
     final canUpload = widget.master.canUploadDeliveryNote;
-    final statusLabel = note.status.isCompleted ? t.deliveryNoteCompleted : t.deliveryNoteTemplate;
-    final statusTone = note.status.isCompleted ? ChipTone.green : ChipTone.warn;
+    // When there's no file on the server there's nothing to download — show a
+    // placeholder and keep only the upload action (the PO is delivered).
+    final hasNote = note != null;
+    final statusLabel = hasNote && note.status.isCompleted
+        ? t.deliveryNoteCompleted
+        : t.deliveryNoteTemplate;
+    final statusTone =
+        hasNote && note.status.isCompleted ? ChipTone.green : ChipTone.warn;
 
     return Row(
       children: [
-        Icon(_iconFor(note.extension), size: 18, color: AppColors.ink2),
+        Icon(
+          hasNote ? _iconFor(note.extension) : Icons.note_add_outlined,
+          size: 18,
+          color: AppColors.ink2,
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -354,33 +364,38 @@ class _DeliveryNoteStripState extends State<_DeliveryNoteStrip> {
                 children: [
                   Expanded(
                     child: Text(
-                      note.fileName,
+                      hasNote ? note.fileName : t.deliveryNote,
                       style: AppType.caption
                           .copyWith(color: AppColors.ink2, fontWeight: FontWeight.w600),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  AppChip(label: statusLabel, tone: statusTone),
+                  if (hasNote) ...[
+                    const SizedBox(width: 6),
+                    AppChip(label: statusLabel, tone: statusTone),
+                  ],
                 ],
               ),
               const SizedBox(height: 2),
               Text(
-                '${t.deliveryNote} · ${note.prettySize}',
+                hasNote
+                    ? '${t.deliveryNote} · ${note.prettySize}'
+                    : t.deliveryNoteNotAvailable,
                 style: AppType.mono10.copyWith(color: AppColors.muted),
               ),
             ],
           ),
         ),
-        const SizedBox(width: 8),
-        _StripButton(
-          icon: Icons.download_rounded,
-          tooltip: t.downloadDeliveryNote,
-          busy: _busy,
-          onPressed: _busy ? null : _download,
-        ),
-        const SizedBox(width: 4),
+        if (hasNote) ...[
+          const SizedBox(width: 8),
+          _StripButton(
+            icon: Icons.download_rounded,
+            tooltip: t.downloadDeliveryNote,
+            busy: _busy,
+            onPressed: _busy ? null : _download,
+          ),
+        ],
         if (canUpload) ...[
           const SizedBox(width: 4),
           _StripButton(

@@ -20,6 +20,7 @@ import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
 import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
+import '../auth/auth_provider.dart';
 import '../dashboard/master_pos_provider.dart';
 
 /// First page after tapping a master PO: the master's workflow steps
@@ -45,6 +46,7 @@ class MasterStepsScreen extends StatelessWidget {
     context.watch<MasterPosProvider>();
     final master = _master(context);
     final steps = master?.steps ?? const <MasterStep>[];
+    final isRep = context.read<AuthProvider>().user?.isRepresentative ?? false;
 
     return Scaffold(
       appBar: TrailTopBar(
@@ -57,25 +59,36 @@ class MasterStepsScreen extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: steps.isEmpty
-            ? _EmptyState(message: t.noStepsYet)
-            : ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-                children: [
-                  Eyebrow('${t.masterStepsEyebrow} · ${steps.length}'),
-                  const SizedBox(height: 4),
-                  Text(t.chooseStepSubtitle, style: AppType.bodyMuted),
-                  const SizedBox(height: 16),
-                  for (var i = 0; i < steps.length; i++) ...[
-                    _StepCard(
-                      step: steps[i],
-                      localeCode: locale,
-                      onTap: () => _openStep(context, steps[i]),
-                    ),
-                    if (i < steps.length - 1) const SizedBox(height: 12),
-                  ],
-                ],
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+          children: [
+            if (steps.isEmpty)
+              _EmptyState(message: t.noStepsYet)
+            else ...[
+              Eyebrow('${t.masterStepsEyebrow} · ${steps.length}'),
+              const SizedBox(height: 4),
+              Text(t.chooseStepSubtitle, style: AppType.bodyMuted),
+              const SizedBox(height: 16),
+              for (var i = 0; i < steps.length; i++) ...[
+                _StepCard(
+                  step: steps[i],
+                  localeCode: locale,
+                  onTap: () => _openStep(context, steps[i]),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ],
+            // Representative-only entry into assignment. Kept out of the
+            // capture path: it opens the vendor list → vendor detail, where
+            // the assign-assistant action lives.
+            if (isRep) ...[
+              const SizedBox(height: 4),
+              _AssignAssistantCard(
+                onTap: () => context.push(Routes.vendorListPath(masterId)),
               ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -283,6 +296,53 @@ class _StepCard extends StatelessWidget {
       MasterStepStatus.unknown =>
         (label: t.stepStatusNotApplicable, tone: ChipTone.soft),
     };
+  }
+}
+
+/// Representative-only shortcut into per-vendor assistant assignment. Styled
+/// distinctly from the workflow steps since it's a management action, not a
+/// capture step.
+class _AssignAssistantCard extends StatelessWidget {
+  const _AssignAssistantCard({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppL10n.of(context);
+    return AppCard(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.bgDeep,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: const Icon(Icons.person_add_alt_1_outlined,
+                size: 20, color: AppColors.ink2),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t.assignAssistant,
+                  style: AppType.bodyLg.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(t.assignAssistantSubtitle, style: AppType.caption.copyWith(color: AppColors.muted)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
+        ],
+      ),
+    );
   }
 }
 

@@ -113,6 +113,8 @@ class AppL10n {
 
   // ─── Assign assistant (representative) ───
   String get assignAssistant => _t('Assign assistant', 'إسناد مندوب مساعد');
+  String get assignAssistantSubtitle =>
+      _t('Pick a vendor to assign steps', 'اختر مورّداً لإسناد خطواته');
   String get assignAssistantTitle => _t('Assign assistant', 'إسناد مندوب مساعد');
   String get selectAssistant => _t('Assistant', 'المندوب المساعد');
   String get selectSteps => _t('Steps to assign', 'الخطوات المُسندة');

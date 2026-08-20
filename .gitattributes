@@ -1,0 +1,33 @@
+# Normalize line endings for text files (LF in repo), auto-detected.
+* text=auto
+
+# Dart / config sources are text with LF endings.
+*.dart   text eol=lf
+*.yaml   text eol=lf
+*.yml    text eol=lf
+*.json   text eol=lf
+*.gradle text eol=lf
+*.xml    text eol=lf
+*.arb    text eol=lf
+*.md     text eol=lf
+*.properties text eol=lf
+
+# Binary assets — never apply EOL conversion (prevents PNG/asset corruption
+# on Windows checkouts, which breaks Android resource linking / AAPT).
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.webp   binary
+*.ico    binary
+*.icns   binary
+*.jar    binary
+*.keystore binary
+*.jks    binary
+*.ttf    binary
+*.otf    binary
+*.woff   binary
+*.woff2  binary
+*.pdf    binary
+*.mp4    binary
+*.zip    binary

@@ -84,7 +84,7 @@ class MasterStepsScreen extends StatelessWidget {
             if (isRep) ...[
               const SizedBox(height: 4),
               _AssignAssistantCard(
-                onTap: () => context.push(Routes.vendorListPath(masterId)),
+                onTap: () => context.push(Routes.assignVendorsPath(masterId)),
               ),
             ],
           ],

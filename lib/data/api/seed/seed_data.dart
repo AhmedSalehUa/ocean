@@ -102,6 +102,8 @@ class Seed {
         siteLng: 36.8219,
         priorityLabel: 'Due 14:00',
         urgent: true,
+        representativeName: 'Arjun Mehta',
+        assistantName: 'Ahmed Hassan',
         steps: masterSteps(const [
           MasterStepStatus.completed,
           MasterStepStatus.inProgress,
@@ -121,6 +123,8 @@ class Seed {
         siteLng: 36.8201,
         priorityLabel: 'Standard',
         urgent: false,
+        representativeName: 'Arjun Mehta',
+        assistantName: 'Sara Kamal',
         steps: masterSteps(const [
           MasterStepStatus.inProgress,
           MasterStepStatus.pending,
@@ -140,6 +144,8 @@ class Seed {
         siteLng: 36.8219,
         priorityLabel: 'Batch sign-off',
         urgent: false,
+        representativeName: 'Arjun Mehta',
+        assistantName: 'Ahmed Hassan',
         steps: masterSteps(const [
           MasterStepStatus.completed,
           MasterStepStatus.completed,

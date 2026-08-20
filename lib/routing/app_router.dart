@@ -12,6 +12,7 @@ import '../features/finalize/finalize_screen.dart';
 import '../features/guided_capture/guided_items_screen.dart';
 import '../features/item_loop/item_loop_screen.dart';
 import '../features/master_steps/master_steps_screen.dart';
+import '../features/master_steps/step_items_screen.dart';
 import '../features/master_steps/step_vendors_screen.dart';
 import '../features/proofs/proof_viewer_screen.dart';
 import '../features/proofs/proofs_screen.dart';
@@ -56,6 +57,13 @@ GoRouter buildRouter(AuthProvider auth) {
         path: Routes.stepVendors,
         builder: (_, s) => StepVendorsScreen(
           masterId: s.pathParameters['masterId']!,
+          stepId: s.pathParameters['stepId']!,
+        ),
+      ),
+      GoRoute(
+        path: Routes.stepItems,
+        builder: (_, s) => StepItemsScreen(
+          vendorId: s.pathParameters['vendorId']!,
           stepId: s.pathParameters['stepId']!,
         ),
       ),

@@ -18,6 +18,7 @@ import '../../../data/models/enums.dart';
 import '../../../data/models/master_po.dart';
 import '../../../data/repositories/delivery_repository.dart';
 import '../../../l10n/app_l10n.dart';
+import '../../auth/auth_provider.dart';
 import '../../../services/camera_service.dart';
 import '../../../services/file_pick_service.dart';
 import '../../../services/location_service.dart';
@@ -47,6 +48,15 @@ class MasterPoCard extends StatelessWidget {
     final hero = _has(master.vesselName)
         ? master.vesselName!
         : (_has(master.site) ? master.site! : '${t.masterFallbackTitle} ${master.masterPoNumber}');
+
+    // The dashboard only ever shows the signed-in representative's own
+    // masters, so when the payload omits the primary-rep name, fall back to
+    // the current user — the primary rep is always shown.
+    final user = context.read<AuthProvider>().user;
+    final repName = _has(master.representativeName)
+        ? master.representativeName!
+        : (user?.isRepresentative ?? false ? user!.fullName : null);
+    final assistantName = _has(master.assistantName) ? master.assistantName! : null;
 
     return AppCard(
       onTap: onTap,
@@ -142,18 +152,18 @@ class MasterPoCard extends StatelessWidget {
                 ),
             ],
           ),
-          if (_has(master.representativeName) || _has(master.assistantName)) ...[
+          if (_has(repName) || _has(assistantName)) ...[
             const SizedBox(height: 12),
-            if (_has(master.representativeName))
+            if (_has(repName))
               _PersonLine(
                 label: t.primaryRepresentative,
-                name: master.representativeName!,
+                name: repName!,
               ),
-            if (_has(master.assistantName)) ...[
-              if (_has(master.representativeName)) const SizedBox(height: 6),
+            if (_has(assistantName)) ...[
+              if (_has(repName)) const SizedBox(height: 6),
               _PersonLine(
                 label: t.subRepresentative,
-                name: master.assistantName!,
+                name: assistantName!,
               ),
             ],
           ],

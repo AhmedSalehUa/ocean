@@ -65,11 +65,11 @@ class _StepVendorsScreenState extends State<StepVendorsScreen> {
       await detail.load(vendor.id);
       detail.pinStep(widget.stepId);
       if (!mounted) return;
-      // ITEM steps open the per-item capture loop; VENDOR/LPO steps are a
-      // single photo captured on the shipment screen (which routes LPO to the
-      // master-scoped endpoint).
+      // ITEM steps open the products page first (list of items + a capture
+      // button); VENDOR steps are a single photo captured directly on the
+      // shipment screen.
       if (level == StepLevel.item) {
-        context.push(Routes.guidedItemsPath(vendor.id));
+        context.push(Routes.stepItemsPath(vendor.id, widget.stepId));
       } else {
         context.push(Routes.shipmentPath(vendor.id));
       }

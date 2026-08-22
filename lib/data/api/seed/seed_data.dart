@@ -105,6 +105,12 @@ class Seed {
         representativeName: 'Arjun Mehta',
         assistantName: 'Ahmed Hassan',
         uploadedByName: 'Mostafa Adel',
+        currentStep: const MasterCurrentStep(
+          id: 'unload',
+          nameEn: 'Site Unloading',
+          nameAr: 'تفريغ الموقع',
+          stepLevel: StepLevel.vendor,
+        ),
         steps: masterSteps(const [
           MasterStepStatus.completed,
           MasterStepStatus.inProgress,

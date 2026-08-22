@@ -57,6 +57,7 @@ class MasterPoCard extends StatelessWidget {
         ? master.representativeName!
         : (user?.isRepresentative ?? false ? user!.fullName : null);
     final assistantName = _has(master.assistantName) ? master.assistantName! : null;
+    final uploadedBy = _has(master.uploadedByName) ? master.uploadedByName! : null;
 
     return AppCard(
       onTap: onTap,
@@ -152,7 +153,7 @@ class MasterPoCard extends StatelessWidget {
                 ),
             ],
           ),
-          if (_has(repName) || _has(assistantName)) ...[
+          if (_has(repName) || _has(assistantName) || _has(uploadedBy)) ...[
             const SizedBox(height: 12),
             if (_has(repName))
               _PersonLine(
@@ -164,6 +165,14 @@ class MasterPoCard extends StatelessWidget {
               _PersonLine(
                 label: t.subRepresentative,
                 name: assistantName!,
+              ),
+            ],
+            if (_has(uploadedBy)) ...[
+              if (_has(repName) || _has(assistantName)) const SizedBox(height: 6),
+              _PersonLine(
+                label: t.uploadedBy,
+                name: uploadedBy!,
+                icon: Icons.badge_outlined,
               ),
             ],
           ],
@@ -286,15 +295,20 @@ class _InfoChip extends StatelessWidget {
 /// A labelled person row (المندوب الرئيسي / المندوب الفرعي) shown on the
 /// master card when the API surfaces the assigned rep and/or assistant.
 class _PersonLine extends StatelessWidget {
-  const _PersonLine({required this.label, required this.name});
+  const _PersonLine({
+    required this.label,
+    required this.name,
+    this.icon = Icons.person_outline_rounded,
+  });
   final String label;
   final String name;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.person_outline_rounded, size: 14, color: AppColors.muted),
+        Icon(icon, size: 14, color: AppColors.muted),
         const SizedBox(width: 6),
         Text(
           '$label: ',

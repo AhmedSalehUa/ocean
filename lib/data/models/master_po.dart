@@ -53,6 +53,9 @@ class MasterPo {
   final String? representativeName;
   final String? assistantName;
 
+  /// Employee who uploaded (تم رفعه بواسطه). Shown on the card when present.
+  final String? uploadedByName;
+
   // Mock-only convenience fields (carried alongside the wire data)
   final String? site;
   final double? siteLat;
@@ -76,6 +79,7 @@ class MasterPo {
     this.steps = const [],
     this.representativeName,
     this.assistantName,
+    this.uploadedByName,
     this.site,
     this.siteLat,
     this.siteLng,
@@ -114,6 +118,7 @@ class MasterPo {
         steps: steps,
         representativeName: representativeName,
         assistantName: assistantName,
+        uploadedByName: uploadedByName,
         site: site,
         siteLat: siteLat,
         siteLng: siteLng,
@@ -186,6 +191,16 @@ class MasterPo {
           'assistant_representative_name',
         ],
         const ['assistant', 'sub_logistics_officer', 'assistant_representative'],
+      ),
+      uploadedByName: nameFrom(
+        const [
+          'uploaded_by_name',
+          'uploaded_by',
+          'employee_name',
+          'employee',
+          'created_by_name',
+        ],
+        const ['uploaded_by', 'employee', 'created_by', 'uploader'],
       ),
       site: json['site'] as String?,
       siteLat: (json['site_lat'] as num?)?.toDouble(),

@@ -104,6 +104,7 @@ class Seed {
         urgent: true,
         representativeName: 'Arjun Mehta',
         assistantName: 'Ahmed Hassan',
+        uploadedByName: 'Mostafa Adel',
         steps: masterSteps(const [
           MasterStepStatus.completed,
           MasterStepStatus.inProgress,
@@ -125,6 +126,7 @@ class Seed {
         urgent: false,
         representativeName: 'Arjun Mehta',
         assistantName: 'Sara Kamal',
+        uploadedByName: 'Nada Fouad',
         steps: masterSteps(const [
           MasterStepStatus.inProgress,
           MasterStepStatus.pending,
@@ -146,6 +148,7 @@ class Seed {
         urgent: false,
         representativeName: 'Arjun Mehta',
         assistantName: 'Ahmed Hassan',
+        uploadedByName: 'Mostafa Adel',
         steps: masterSteps(const [
           MasterStepStatus.completed,
           MasterStepStatus.completed,

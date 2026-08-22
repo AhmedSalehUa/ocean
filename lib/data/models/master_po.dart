@@ -135,20 +135,28 @@ class MasterPo {
     final stepJson = json['current_step'];
     final stepsJson = json['steps'];
 
-    // People names arrive under several possible keys depending on the
-    // endpoint (flat name, or a nested {name} object). Read the first match
-    // tolerantly so the card can surface them whenever they are present.
-    String? nameFrom(List<String> flatKeys, List<String> objectKeys) {
-      for (final k in flatKeys) {
-        final v = json[k];
-        if (v is String && v.trim().isNotEmpty) return v.trim();
+    // People names arrive in several shapes depending on the endpoint: a
+    // plain string, a nested {name/full_name} object, or a list of either
+    // (e.g. `representative: ["Representative One"]`). Resolve any of them.
+    String? nameOf(dynamic v) {
+      if (v is String) return v.trim().isEmpty ? null : v.trim();
+      if (v is Map) {
+        final n = v['name'] ?? v['full_name'] ?? v['display_name'] ?? v['username'];
+        if (n is String && n.trim().isNotEmpty) return n.trim();
       }
-      for (final k in objectKeys) {
-        final v = json[k];
-        if (v is Map<String, dynamic>) {
-          final n = v['name'] ?? v['full_name'] ?? v['display_name'];
-          if (n is String && n.trim().isNotEmpty) return n.trim();
+      if (v is List) {
+        for (final e in v) {
+          final n = nameOf(e);
+          if (n != null) return n;
         }
+      }
+      return null;
+    }
+
+    String? nameFrom(List<String> keys) {
+      for (final k in keys) {
+        final n = nameOf(json[k]);
+        if (n != null) return n;
       }
       return null;
     }
@@ -174,34 +182,31 @@ class MasterPo {
               .toList()
             ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)))
           : const [],
-      representativeName: nameFrom(
-        const [
-          'representative_name',
-          'primary_representative_name',
-          'primary_representative',
-          'rep_name',
-        ],
-        const ['representative', 'primary_representative'],
-      ),
-      assistantName: nameFrom(
-        const [
-          'assistant_name',
-          'sub_logistics_officer_name',
-          'sub_officer_name',
-          'assistant_representative_name',
-        ],
-        const ['assistant', 'sub_logistics_officer', 'assistant_representative'],
-      ),
-      uploadedByName: nameFrom(
-        const [
-          'uploaded_by_name',
-          'uploaded_by',
-          'employee_name',
-          'employee',
-          'created_by_name',
-        ],
-        const ['uploaded_by', 'employee', 'created_by', 'uploader'],
-      ),
+      representativeName: nameFrom(const [
+        'representative',
+        'representative_name',
+        'primary_representative_name',
+        'primary_representative',
+        'rep_name',
+      ]),
+      assistantName: nameFrom(const [
+        'sub_logistics_officer',
+        'sub_logistics_officer_name',
+        'sub_officer_name',
+        'assistant_name',
+        'assistant',
+        'assistant_representative_name',
+        'assistant_representative',
+      ]),
+      uploadedByName: nameFrom(const [
+        'employee',
+        'uploaded_by_name',
+        'uploaded_by',
+        'employee_name',
+        'created_by_name',
+        'created_by',
+        'uploader',
+      ]),
       site: json['site'] as String?,
       siteLat: (json['site_lat'] as num?)?.toDouble(),
       siteLng: (json['site_lng'] as num?)?.toDouble(),

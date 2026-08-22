@@ -35,6 +35,70 @@ class DeliveryRepository {
         workflowStepIds: workflowStepIds,
       );
 
+  /// The assistant currently assigned to [stepId] anywhere under the master —
+  /// assignment is per Vendor PO, so this returns the first vendor's assignee
+  /// that covers this step (null when none). Used to show the step's assignee.
+  Future<({String? officerId, String? officerName})> stepAssignee({
+    required String masterId,
+    required String stepId,
+  }) async {
+    final vendors = (await _api.listVendorPos(masterId)).vendors;
+    for (final v in vendors) {
+      try {
+        final a = await _api.getSubLogisticsAssignment(v.id);
+        if (a.officerId != null && a.stepIds.contains(stepId)) {
+          return (officerId: a.officerId, officerName: a.officerName);
+        }
+      } catch (_) {
+        // A vendor the rep can't read / has no assignment — skip it.
+      }
+    }
+    return (officerId: null, officerName: null);
+  }
+
+  /// Assigns [stepId] to [assistantUserId] across every vendor PO under the
+  /// master (no per-vendor selection). Pass a null id to unassign the step
+  /// everywhere. Because the backend keeps one assistant per Vendor PO, a
+  /// vendor already tied to a different assistant is switched to this one for
+  /// this step. Returns how many vendors were updated.
+  Future<({int applied, int total})> assignStepAcrossVendors({
+    required String masterId,
+    required String stepId,
+    required String? assistantUserId,
+  }) async {
+    final vendors = (await _api.listVendorPos(masterId)).vendors;
+    var applied = 0;
+    for (final v in vendors) {
+      try {
+        final cur = await _api.getSubLogisticsAssignment(v.id);
+        final steps = <String>{...cur.stepIds};
+        String? officer;
+        if (assistantUserId == null) {
+          steps.remove(stepId);
+          officer = steps.isEmpty ? null : cur.officerId;
+        } else if (cur.officerId == assistantUserId) {
+          steps.add(stepId);
+          officer = assistantUserId;
+        } else {
+          // Different / no assistant → switch this vendor to the chosen one.
+          steps
+            ..clear()
+            ..add(stepId);
+          officer = assistantUserId;
+        }
+        await _api.putSubLogisticsAssignment(
+          vendorPoId: v.id,
+          subLogisticsUserId: officer,
+          workflowStepIds: steps.toList(),
+        );
+        applied++;
+      } catch (_) {
+        // Skip vendors that reject the change (e.g. step not valid there).
+      }
+    }
+    return (applied: applied, total: vendors.length);
+  }
+
   Future<VendorPo> vendor(String id) => _api.getVendorPo(id);
   Future<List<WorkflowStep>> steps(String id) => _api.getSteps(id);
   Future<ProofHistory> proofs(String id) => _api.getProofs(id);

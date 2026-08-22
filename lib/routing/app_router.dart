@@ -11,7 +11,6 @@ import '../features/handoff/handoff_screen.dart';
 import '../features/finalize/finalize_screen.dart';
 import '../features/guided_capture/guided_items_screen.dart';
 import '../features/item_loop/item_loop_screen.dart';
-import '../features/master_steps/assign_vendors_screen.dart';
 import '../features/master_steps/master_steps_screen.dart';
 import '../features/master_steps/step_items_screen.dart';
 import '../features/master_steps/step_vendors_screen.dart';
@@ -53,10 +52,6 @@ GoRouter buildRouter(AuthProvider auth) {
       GoRoute(
         path: Routes.masterSteps,
         builder: (_, s) => MasterStepsScreen(masterId: s.pathParameters['masterId']!),
-      ),
-      GoRoute(
-        path: Routes.assignVendors,
-        builder: (_, s) => AssignVendorsScreen(masterId: s.pathParameters['masterId']!),
       ),
       GoRoute(
         path: Routes.stepVendors,

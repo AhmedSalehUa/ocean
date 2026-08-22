@@ -295,6 +295,17 @@ class AppL10n {
       'One photo per vendor · across all products', 'صورة واحدة لكل مورّد · لكل المنتجات');
   String get captureScopeItem =>
       _t('Captured for each item', 'تُلتقط لكل بند على حدة');
+
+  // Step-level assistant assignment (applies to all vendors in the step).
+  String get assigneeForStep =>
+      _t('Assistant for this step', 'المندوب المساعد لهذه الخطوة');
+  String get notAssigned => _t('Not assigned', 'غير مُسند');
+  String get changeAction => _t('Change', 'تغيير');
+  String get assignAcrossVendorsHint =>
+      _t('Applies to all vendors in this step', 'يُطبَّق على كل الموردين في هذه الخطوة');
+  String assignedToVendors(int applied, int total) => _t(
+      'Assigned across $applied of $total vendors',
+      'تم الإسناد على $applied من $total مورّد');
   String get noStepsYet => _t('No steps on this order yet.', 'لا توجد خطوات على هذا الأمر بعد.');
   String get stepStatusCompleted => _t('Completed', 'مكتملة');
   String get stepStatusInProgress => _t('In progress', 'قيد التنفيذ');

@@ -300,6 +300,7 @@ class AppL10n {
   String get assigneeForStep =>
       _t('Assistant for this step', 'المندوب المساعد لهذه الخطوة');
   String get notAssigned => _t('Not assigned', 'غير مُسند');
+  String get captureImage => _t('Capture image', 'التقاط صورة');
   String get changeAction => _t('Change', 'تغيير');
   String get assignAcrossVendorsHint =>
       _t('Applies to all vendors in this step', 'يُطبَّق على كل الموردين في هذه الخطوة');

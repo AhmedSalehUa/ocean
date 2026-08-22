@@ -21,10 +21,14 @@ import '../../routing/routes.dart';
 import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
 import '../dashboard/master_pos_provider.dart';
+import 'assign_assistant_sheet.dart';
+
+/// Options offered when an LPO step is tapped.
+enum _LpoAction { capture, assign }
 
 /// First page after tapping a master PO: the master's workflow steps
 /// (spec §5 `steps` array) in a modern list. Choosing a step drills into the
-/// vendors for that step (wired next).
+/// vendors for that step, captures (LPO), or assigns an assistant.
 class MasterStepsScreen extends StatelessWidget {
   const MasterStepsScreen({super.key, required this.masterId});
   final String masterId;
@@ -85,13 +89,57 @@ class MasterStepsScreen extends StatelessWidget {
   void _openStep(BuildContext context, MasterStep step) {
     // A not-applicable step has no targets under this master → nothing to do.
     if (!step.status.isApplicable) return;
-    // LPO is captured once at the Master-PO level — there's no per-vendor
-    // breakdown, so open the camera straight away and skip the vendor list.
+    // LPO is a Master-PO-level step (no per-vendor breakdown): offer capturing
+    // its photo or assigning it to an assistant.
     if (step.stepLevel == StepLevel.lpo) {
-      _captureLpo(context, step);
+      _openLpoOptions(context, step);
       return;
     }
     context.push(Routes.stepVendorsPath(masterId, step.id));
+  }
+
+  Future<void> _openLpoOptions(BuildContext context, MasterStep step) async {
+    final t = AppL10n.of(context);
+    final locale = t.locale.languageCode;
+    final action = await showModalBottomSheet<_LpoAction>(
+      context: context,
+      backgroundColor: AppColors.bg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(step.nameFor(locale),
+                  style: AppType.bodyLg.copyWith(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.photo_camera_rounded, color: AppColors.accentInk),
+                title: Text(t.captureImage, style: AppType.body),
+                onTap: () => Navigator.of(context).pop(_LpoAction.capture),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.person_add_alt_1_outlined, color: AppColors.ink2),
+                title: Text(t.assignAssistant, style: AppType.body),
+                onTap: () => Navigator.of(context).pop(_LpoAction.assign),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (action == null || !context.mounted) return;
+    if (action == _LpoAction.capture) {
+      await _captureLpo(context, step);
+    } else {
+      await pickAndAssignStep(context, masterId: masterId, stepId: step.id);
+    }
   }
 
   /// Direct-to-camera LPO capture: snap a photo, attach GPS, and post it to

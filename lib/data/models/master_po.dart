@@ -87,7 +87,21 @@ class MasterPo {
     this.urgent = false,
   });
 
-  double get progress => vendorPoCount == 0 ? 0 : deliveredVendorPoCount / vendorPoCount;
+  /// Progress for the card bar. Prefer fine-grained step progress (rolled up
+  /// across the master's steps) so the bar climbs as steps are captured;
+  /// fall back to the delivered-vendor ratio when no steps are present.
+  double get progress {
+    var target = 0;
+    var done = 0;
+    for (final s in steps) {
+      if (!s.status.isApplicable) continue;
+      target += s.targetCount;
+      done += s.completedCount;
+    }
+    if (target > 0) return (done / target).clamp(0, 1).toDouble();
+    return vendorPoCount == 0 ? 0 : deliveredVendorPoCount / vendorPoCount;
+  }
+
   bool get isClosed => deliveredVendorPoCount >= vendorPoCount && vendorPoCount > 0;
 
   /// The rep can upload their filled delivery note only when the master PO

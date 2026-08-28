@@ -284,6 +284,7 @@ class AppL10n {
   String get primaryRepresentative => _t('Primary rep', 'المندوب الرئيسي');
   String get subRepresentative => _t('Assistant', 'المندوب الفرعي');
   String get uploadedBy => _t('Uploaded by', 'تم رفعه بواسطة');
+  String get peopleDetails => _t('Details', 'التفاصيل');
 
   // ─── Master steps (step → vendors flow) ───
   String get masterStepsTitle => _t('Workflow steps', 'خطوات سير العمل');

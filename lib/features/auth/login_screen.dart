@@ -38,8 +38,8 @@ class _LoginScreenState extends State<LoginScreen> {
         );
     if (!mounted) return;
     if (ok) {
-      final isAssistant = context.read<AuthProvider>().user?.isSubLogisticsOfficer ?? false;
-      context.go(isAssistant ? Routes.assistantHome : Routes.dashboard);
+      // Both roles use the same home/UI.
+      context.go(Routes.dashboard);
     } else {
       final err = context.read<AuthProvider>().error;
       if (err != null) {

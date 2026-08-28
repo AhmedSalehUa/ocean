@@ -163,26 +163,11 @@ class MasterPoCard extends StatelessWidget {
           ],
           if (_has(repName) || _has(assistantName) || _has(uploadedBy)) ...[
             const SizedBox(height: 12),
-            if (_has(repName))
-              _PersonLine(
-                label: t.primaryRepresentative,
-                name: repName!,
-              ),
-            if (_has(assistantName)) ...[
-              if (_has(repName)) const SizedBox(height: 6),
-              _PersonLine(
-                label: t.subRepresentative,
-                name: assistantName!,
-              ),
-            ],
-            if (_has(uploadedBy)) ...[
-              if (_has(repName) || _has(assistantName)) const SizedBox(height: 6),
-              _PersonLine(
-                label: t.uploadedBy,
-                name: uploadedBy!,
-                icon: Icons.badge_outlined,
-              ),
-            ],
+            _PeoplePanel(
+              repName: repName,
+              assistantName: assistantName,
+              uploadedBy: uploadedBy,
+            ),
           ],
           const SizedBox(height: 16),
           // ── Progress ──
@@ -296,6 +281,79 @@ class _InfoChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Collapsible panel for the master's people (rep / assistant / creator).
+/// Collapsed by default; a header row toggles it open.
+class _PeoplePanel extends StatefulWidget {
+  const _PeoplePanel({this.repName, this.assistantName, this.uploadedBy});
+  final String? repName;
+  final String? assistantName;
+  final String? uploadedBy;
+
+  @override
+  State<_PeoplePanel> createState() => _PeoplePanelState();
+}
+
+class _PeoplePanelState extends State<_PeoplePanel> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppL10n.of(context);
+    final rows = <Widget>[
+      if (_has(widget.repName))
+        _PersonLine(label: t.primaryRepresentative, name: widget.repName!),
+      if (_has(widget.assistantName))
+        _PersonLine(label: t.subRepresentative, name: widget.assistantName!),
+      if (_has(widget.uploadedBy))
+        _PersonLine(
+          label: t.uploadedBy,
+          name: widget.uploadedBy!,
+          icon: Icons.badge_outlined,
+        ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: () => setState(() => _open = !_open),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              children: [
+                Icon(Icons.groups_outlined, size: 14, color: AppColors.muted),
+                const SizedBox(width: 6),
+                Text(
+                  t.peopleDetails,
+                  style: AppType.caption
+                      .copyWith(color: AppColors.muted, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(width: 4),
+                Text('· ${rows.length}',
+                    style: AppType.mono10.copyWith(color: AppColors.muted)),
+                const Spacer(),
+                Icon(
+                  _open ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                  size: 18,
+                  color: AppColors.muted,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_open) ...[
+          const SizedBox(height: 8),
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) const SizedBox(height: 6),
+            rows[i],
+          ],
+        ],
+      ],
     );
   }
 }

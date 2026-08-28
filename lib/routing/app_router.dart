@@ -29,17 +29,14 @@ GoRouter buildRouter(AuthProvider auth) {
     redirect: (context, state) {
       final authProvider = context.read<AuthProvider>();
       final signedIn = authProvider.isSignedIn;
-      final isAssistant = authProvider.user?.isSubLogisticsOfficer ?? false;
       final loc = state.matchedLocation;
       final isLogin = loc == Routes.login;
-      // The role's home: assistants get the tasks screen, reps the dashboard.
-      final home = isAssistant ? Routes.assistantHome : Routes.dashboard;
 
       if (!signedIn && !isLogin) return Routes.login;
-      if (signedIn && isLogin) return home;
-      // Keep each role out of the other's home screen.
-      if (signedIn && isAssistant && loc == Routes.dashboard) return Routes.assistantHome;
-      if (signedIn && !isAssistant && loc == Routes.assistantHome) return Routes.dashboard;
+      // Both roles share the same home (dashboard) and the same UI; the
+      // backend scopes what each user sees.
+      if (signedIn && isLogin) return Routes.dashboard;
+      if (signedIn && loc == Routes.assistantHome) return Routes.dashboard;
       return null;
     },
     routes: [

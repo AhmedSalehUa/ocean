@@ -129,6 +129,21 @@ class _StepVendorsScreenState extends State<StepVendorsScreen> {
     }
   }
 
+  // Load the vendor then open the finalize ("Finish") screen, which validates
+  // readiness and blocks with a message if steps/items are still open.
+  Future<void> _finishVendor(VendorPo vendor) async {
+    if (_opening) return;
+    setState(() => _opening = true);
+    final detail = context.read<VendorDetailProvider>();
+    try {
+      await detail.load(vendor.id);
+      if (!mounted) return;
+      context.push(Routes.finalizePath(vendor.id));
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppL10n.of(context);
@@ -174,6 +189,23 @@ class _StepVendorsScreenState extends State<StepVendorsScreen> {
                             vendor: v,
                             onTap: () => _openVendor(v, level),
                           ),
+                          // Representatives can finalize ("Finish") a vendor PO
+                          // directly; the finalize screen validates readiness.
+                          if (_isRep && v.finalizedAt == null) ...[
+                            const SizedBox(height: 6),
+                            Align(
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: TextButton.icon(
+                                onPressed: () => _finishVendor(v),
+                                icon: const Icon(Icons.flag_outlined, size: 16),
+                                label: Text(t.confirmFinalDelivery),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.accentInk,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 10),
                         ],
                         if (p.items.isEmpty)

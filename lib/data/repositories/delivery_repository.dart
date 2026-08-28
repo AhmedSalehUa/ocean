@@ -99,6 +99,28 @@ class DeliveryRepository {
     return (applied: applied, total: vendors.length);
   }
 
+  /// Finalizes every vendor PO under the master (the master steps page's
+  /// "Finish" once all steps are done). Already-finalized vendors count as
+  /// done; a vendor the backend rejects (not ready) is skipped. Returns how
+  /// many are finalized and the total.
+  Future<({int finalized, int total})> finalizeAllVendors(String masterId) async {
+    final vendors = (await _api.listVendorPos(masterId)).vendors;
+    var finalized = 0;
+    for (final v in vendors) {
+      if (v.finalizedAt != null) {
+        finalized++;
+        continue;
+      }
+      try {
+        await _api.finalizeVendorPo(v.id);
+        finalized++;
+      } catch (_) {
+        // Not ready / rejected — leave it for the rep to resolve.
+      }
+    }
+    return (finalized: finalized, total: vendors.length);
+  }
+
   Future<VendorPo> vendor(String id) => _api.getVendorPo(id);
   Future<List<WorkflowStep>> steps(String id) => _api.getSteps(id);
   Future<ProofHistory> proofs(String id) => _api.getProofs(id);

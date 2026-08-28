@@ -309,6 +309,12 @@ class AppL10n {
   String assignedToVendors(int applied, int total) => _t(
       'Assigned across $applied of $total vendors',
       'تم الإسناد على $applied من $total مورّد');
+  String get finishMasterBody => _t(
+      'All steps are done. Finalize every vendor PO under this order?',
+      'تم إنهاء كل الخطوات. هل تريد إنهاء كل أوامر الموردين تحت هذا الأمر؟');
+  String finalizedVendors(int finalized, int total) => _t(
+      'Finalized $finalized of $total vendors',
+      'تم إنهاء $finalized من $total مورّد');
   String get noStepsYet => _t('No steps on this order yet.', 'لا توجد خطوات على هذا الأمر بعد.');
   String get stepStatusCompleted => _t('Completed', 'مكتملة');
   String get stepStatusInProgress => _t('In progress', 'قيد التنفيذ');

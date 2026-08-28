@@ -20,6 +20,7 @@ import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
 import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
+import '../auth/auth_provider.dart';
 import '../dashboard/master_pos_provider.dart';
 import 'assign_assistant_sheet.dart';
 
@@ -49,6 +50,10 @@ class MasterStepsScreen extends StatelessWidget {
     context.watch<MasterPosProvider>();
     final master = _master(context);
     final steps = master?.steps ?? const <MasterStep>[];
+    final isRep = context.read<AuthProvider>().user?.isRepresentative ?? false;
+    // "All done" = every applicable step is completed (ignoring N/A steps).
+    final applicable = steps.where((s) => s.status.isApplicable).toList();
+    final allStepsDone = applicable.isNotEmpty && applicable.every((s) => s.status.isCompleted);
 
     return Scaffold(
       appBar: TrailTopBar(
@@ -78,6 +83,16 @@ class MasterStepsScreen extends StatelessWidget {
                   onTap: () => _openStep(context, steps[i]),
                 ),
                 const SizedBox(height: 12),
+              ],
+              // Once every step is done, the rep can finalize the whole
+              // master (all its vendor POs) from here.
+              if (isRep && allStepsDone) ...[
+                const SizedBox(height: 8),
+                AppButton(
+                  label: t.confirmFinalDelivery,
+                  trailing: const Icon(Icons.flag_rounded),
+                  onPressed: () => _finishMaster(context, master!),
+                ),
               ],
             ],
           ],
@@ -193,6 +208,56 @@ class MasterStepsScreen extends StatelessWidget {
       messenger.hideCurrentSnackBar();
       AppLog.error('MasterStepsScreen._captureLpo', e, st);
       messenger.showSnackBar(SnackBar(content: Text('${t.lpoProofUploadFailed} ($e)')));
+    }
+  }
+
+  /// Finalize the whole master (all its vendor POs) once every step is done.
+  Future<void> _finishMaster(BuildContext context, MasterPo master) async {
+    final t = AppL10n.of(context);
+    final repo = context.read<DeliveryRepository>();
+    final masters = context.read<MasterPosProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(t.finalizeTitle),
+        content: Text(t.finishMasterBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t.cancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(t.confirmFinalDelivery)),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(
+      duration: const Duration(minutes: 1),
+      content: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(t.finalize)),
+        ],
+      ),
+    ));
+    try {
+      final r = await repo.finalizeAllVendors(master.id);
+      messenger.hideCurrentSnackBar();
+      await masters.refresh();
+      if (!context.mounted) return;
+      messenger.showSnackBar(
+          SnackBar(content: Text(t.finalizedVendors(r.finalized, r.total))));
+    } catch (e, st) {
+      messenger.hideCurrentSnackBar();
+      AppLog.error('MasterStepsScreen._finishMaster', e, st);
+      if (!context.mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('${t.finalizeBlocked} ($e)')));
     }
   }
 }

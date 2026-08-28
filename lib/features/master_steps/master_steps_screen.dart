@@ -30,15 +30,98 @@ enum _LpoAction { capture, assign }
 /// First page after tapping a master PO: the master's workflow steps
 /// (spec §5 `steps` array) in a modern list. Choosing a step drills into the
 /// vendors for that step, captures (LPO), or assigns an assistant.
-class MasterStepsScreen extends StatelessWidget {
+class MasterStepsScreen extends StatefulWidget {
   const MasterStepsScreen({super.key, required this.masterId});
   final String masterId;
 
+  @override
+  State<MasterStepsScreen> createState() => _MasterStepsScreenState();
+}
+
+class _MasterStepsScreenState extends State<MasterStepsScreen> {
+  // When the master-pos list response carries no `steps` (e.g. the assistant
+  // payload), derive them from the master's vendor POs.
+  List<MasterStep>? _fallbackSteps;
+  bool _loadingFallback = false;
+
   MasterPo? _master(BuildContext context) {
     for (final m in context.read<MasterPosProvider>().items) {
-      if (m.id == masterId) return m;
+      if (m.id == widget.masterId) return m;
     }
     return null;
+  }
+
+  Future<void> _loadFallbackSteps() async {
+    if (_loadingFallback) return;
+    _loadingFallback = true;
+    setState(() {});
+    final repo = context.read<DeliveryRepository>();
+    try {
+      final vendors = (await repo.listVendors(widget.masterId)).vendors;
+      // Aggregate each workflow step across the vendors into a master step.
+      final byId = <String, MasterStep>{};
+      final acc = <String, ({int target, int done})>{};
+      for (final v in vendors) {
+        final steps = await repo.steps(v.id);
+        for (final w in steps) {
+          final isItem = w.stepLevel == StepLevel.item ||
+              (w.requiresItemPhoto && !w.requiresShipmentPhoto);
+          final target = isItem ? (w.totalItems > 0 ? w.totalItems : 1) : 1;
+          final done = isItem
+              ? w.itemCompletedCount
+              : (w.shipmentCompleted ? 1 : 0);
+          final prev = acc[w.id] ?? (target: 0, done: 0);
+          acc[w.id] = (target: prev.target + target, done: prev.done + done);
+          byId[w.id] = MasterStep(
+            id: w.id,
+            nameEn: w.nameEn,
+            nameAr: w.nameAr,
+            stepLevel: w.stepLevel,
+            sortOrder: w.sortOrder,
+            isRequired: w.isRequired,
+            isFinalStep: w.isFinalStep,
+          );
+        }
+      }
+      final out = <MasterStep>[];
+      for (final e in byId.entries) {
+        final a = acc[e.key]!;
+        final status = a.target == 0
+            ? MasterStepStatus.notApplicable
+            : a.done >= a.target
+                ? MasterStepStatus.completed
+                : a.done > 0
+                    ? MasterStepStatus.inProgress
+                    : MasterStepStatus.pending;
+        final s = e.value;
+        out.add(MasterStep(
+          id: s.id,
+          nameEn: s.nameEn,
+          nameAr: s.nameAr,
+          stepLevel: s.stepLevel,
+          sortOrder: s.sortOrder,
+          isRequired: s.isRequired,
+          isFinalStep: s.isFinalStep,
+          status: status,
+          isCompleted: status == MasterStepStatus.completed,
+          targetCount: a.target,
+          completedCount: a.done,
+        ));
+      }
+      out.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      if (!mounted) return;
+      setState(() {
+        _fallbackSteps = out;
+        _loadingFallback = false;
+      });
+    } catch (e, st) {
+      AppLog.error('MasterStepsScreen._loadFallbackSteps', e, st);
+      if (!mounted) return;
+      setState(() {
+        _fallbackSteps = const [];
+        _loadingFallback = false;
+      });
+    }
   }
 
   @override
@@ -49,7 +132,12 @@ class MasterStepsScreen extends StatelessWidget {
     // capture refreshes the masters).
     context.watch<MasterPosProvider>();
     final master = _master(context);
-    final steps = master?.steps ?? const <MasterStep>[];
+    final listSteps = master?.steps ?? const <MasterStep>[];
+    // Fall back to vendor-derived steps when the master carries none.
+    if (listSteps.isEmpty && _fallbackSteps == null && !_loadingFallback && master != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadFallbackSteps());
+    }
+    final steps = listSteps.isNotEmpty ? listSteps : (_fallbackSteps ?? const <MasterStep>[]);
     final isRep = context.read<AuthProvider>().user?.isRepresentative ?? false;
     // "All done" = every applicable step is completed (ignoring N/A steps).
     final applicable = steps.where((s) => s.status.isApplicable).toList();
@@ -70,7 +158,12 @@ class MasterStepsScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           children: [
             if (steps.isEmpty)
-              _EmptyState(message: t.noStepsYet)
+              _loadingFallback
+                  ? const Padding(
+                      padding: EdgeInsets.only(top: 80),
+                      child: Center(child: CircularProgressIndicator(color: AppColors.accentInk)),
+                    )
+                  : _EmptyState(message: t.noStepsYet)
             else ...[
               Eyebrow('${t.masterStepsEyebrow} · ${steps.length}'),
               const SizedBox(height: 4),
@@ -110,7 +203,7 @@ class MasterStepsScreen extends StatelessWidget {
       _openLpoOptions(context, step);
       return;
     }
-    context.push(Routes.stepVendorsPath(masterId, step.id));
+    context.push(Routes.stepVendorsPath(widget.masterId, step.id));
   }
 
   Future<void> _openLpoOptions(BuildContext context, MasterStep step) async {
@@ -153,7 +246,7 @@ class MasterStepsScreen extends StatelessWidget {
     if (action == _LpoAction.capture) {
       await _captureLpo(context, step);
     } else {
-      await pickAndAssignStep(context, masterId: masterId, stepId: step.id);
+      await pickAndAssignStep(context, masterId: widget.masterId, stepId: step.id);
     }
   }
 
@@ -189,7 +282,7 @@ class MasterStepsScreen extends StatelessWidget {
     try {
       final fix = await location.currentFix();
       await repo.lpoPhoto(
-        masterPoId: masterId,
+        masterPoId: widget.masterId,
         stepId: step.id,
         file: file,
         lat: fix?.lat,

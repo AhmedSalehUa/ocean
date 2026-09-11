@@ -268,6 +268,7 @@ class AppL10n {
   String get stepDoneContinue => _t('Go to next step', 'الانتقال إلى الخطوة التالية');
   String get stepDoneFinalize => _t('Finalize delivery', 'إنهاء التسليم');
   String get stepDoneReturn => _t('Return', 'رجوع');
+  String get backToSteps => _t('Back to steps', 'العودة إلى الخطوات');
   String get backToMyTasks => _t('Back to my tasks', 'العودة إلى مهامي');
   String get stepDoneAwaitingUploads =>
       _t('Waiting for background uploads to finish…', 'في انتظار اكتمال الرفع في الخلفية…');

@@ -143,11 +143,22 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
     final applicable = steps.where((s) => s.status.isApplicable).toList();
     final allStepsDone = applicable.isNotEmpty && applicable.every((s) => s.status.isCompleted);
 
-    return Scaffold(
+    // The steps page can be reached by push (from the dashboard) or by `go`
+    // (returning here after completing a step, which replaces the stack).
+    // Either way "back" must land on the dashboard, never exit the app.
+    final canPop = context.canPop();
+    void goBack() => canPop ? context.pop() : context.go(Routes.dashboard);
+
+    return PopScope(
+      canPop: canPop,
+      onPopInvoked: (didPop) {
+        if (!didPop) context.go(Routes.dashboard);
+      },
+      child: Scaffold(
       appBar: TrailTopBar(
         leading: RoundIconBtn(
           icon: Icons.chevron_left_rounded,
-          onPressed: () => context.pop(),
+          onPressed: goBack,
         ),
         title: master?.masterPoNumber ?? t.masterStepsTitle,
         trailing: RoundIconBtn(icon: Icons.more_horiz_rounded, onPressed: () {}),
@@ -190,6 +201,7 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
             ],
           ],
         ),
+      ),
       ),
     );
   }

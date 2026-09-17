@@ -177,6 +177,10 @@ class AppL10n {
   String get capturedBadge => _t('Captured', 'تم التقاطه');
   String get takePhoto => _t('Take photo', 'التقاط صورة');
   String get uploadFromGallery => _t('Upload from gallery', 'رفع من المعرض');
+  String get addAnotherPhoto => _t('Add another', 'إضافة صورة');
+  String photosCaptured(int count) =>
+      _t('$count photo(s) captured', '$count صورة ملتقطة');
+  String submitPhotos(int count) => _t('Submit $count photos (PDF)', 'إرسال $count صور (PDF)');
   String get choosePhotoSource => _t('Add a photo', 'إضافة صورة');
   String get openSettings => _t('Open settings', 'فتح الإعدادات');
   String get gpsBlocked => _t('Location permission is required', 'إذن الموقع مطلوب');

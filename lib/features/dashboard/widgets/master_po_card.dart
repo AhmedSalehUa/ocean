@@ -200,9 +200,9 @@ class MasterPoCard extends StatelessWidget {
             const SizedBox(height: 12),
             _LpoStrip(master: master, step: master.currentStep!),
           ],
-          // The delivery note (download + upload) is representative-only —
-          // the backend 403s the assistant, so hide the whole strip for them.
-          if (isRep && (master.deliveryNote != null || master.canUploadDeliveryNote)) ...[
+          // Delivery note (download + upload) is available to the assistant
+          // too now (backend permits it).
+          if (master.deliveryNote != null || master.canUploadDeliveryNote) ...[
             const SizedBox(height: 14),
             const Divider(height: 1, color: AppColors.lineSoft),
             const SizedBox(height: 12),

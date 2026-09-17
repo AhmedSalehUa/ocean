@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -20,7 +22,7 @@ import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
 import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
-import '../auth/auth_provider.dart';
+import '../../services/pdf_service.dart';
 import '../dashboard/master_pos_provider.dart';
 import 'assign_assistant_sheet.dart';
 
@@ -138,8 +140,6 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) => _loadFallbackSteps());
     }
     final steps = listSteps.isNotEmpty ? listSteps : (_fallbackSteps ?? const <MasterStep>[]);
-    final isRep = context.read<AuthProvider>().user?.isRepresentative ?? false;
-    // "All done" = every applicable step is completed (ignoring N/A steps).
     final applicable = steps.where((s) => s.status.isApplicable).toList();
     final allStepsDone = applicable.isNotEmpty && applicable.every((s) => s.status.isCompleted);
 
@@ -188,9 +188,9 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
                 ),
                 const SizedBox(height: 12),
               ],
-              // Once every step is done, the rep can finalize the whole
-              // master (all its vendor POs) from here.
-              if (isRep && allStepsDone) ...[
+              // Once every step is done, the order can be finalized here —
+              // available to the assistant too when they hold the last step.
+              if (allStepsDone) ...[
                 const SizedBox(height: 8),
                 AppButton(
                   label: t.confirmFinalDelivery,
@@ -262,9 +262,9 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
     }
   }
 
-  /// Direct-to-camera LPO capture: snap a photo, attach GPS, and post it to
-  /// the master-scoped lpo-steps endpoint. Mirrors the master card's LPO
-  /// strip, minus the source picker.
+  /// Direct-to-camera LPO capture: snap one or more photos (combined into a
+  /// single PDF when more than one), attach GPS, and post it to the
+  /// master-scoped lpo-steps endpoint.
   Future<void> _captureLpo(BuildContext context, MasterStep step) async {
     final t = AppL10n.of(context);
     final repo = context.read<DeliveryRepository>();
@@ -273,8 +273,28 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
     final masters = context.read<MasterPosProvider>();
     final messenger = ScaffoldMessenger.of(context);
 
-    final file = await camera.takePhoto();
-    if (file == null || !context.mounted) return;
+    // Capture loop: after each shot, offer to add another.
+    final shots = <File>[];
+    while (true) {
+      final file = await camera.takePhoto();
+      if (file == null) break;
+      shots.add(file);
+      if (!context.mounted) return;
+      final more = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          content: Text(t.photosCaptured(shots.length)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t.done)),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, true), child: Text(t.addAnotherPhoto)),
+          ],
+        ),
+      );
+      if (more != true) break;
+      if (!context.mounted) return;
+    }
+    if (shots.isEmpty || !context.mounted) return;
 
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(SnackBar(
@@ -293,6 +313,9 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
     ));
     try {
       final fix = await location.currentFix();
+      final file = shots.length == 1
+          ? shots.first
+          : await const PdfService().imagesToPdf(shots, baseName: 'lpo-${step.id}');
       await repo.lpoPhoto(
         masterPoId: widget.masterId,
         stepId: step.id,

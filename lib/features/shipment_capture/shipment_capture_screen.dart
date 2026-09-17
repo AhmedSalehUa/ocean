@@ -12,6 +12,7 @@ import '../../core/widgets/app_button.dart';
 import '../../l10n/app_l10n.dart';
 import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
+import '../../services/pdf_service.dart';
 import '../../routing/routes.dart';
 import '../vendor_detail/vendor_detail_provider.dart';
 
@@ -34,7 +35,10 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
   bool _gpsBusy = true;
   String? _gpsError;
 
-  File? _photo;
+  // Captured shots for this single-photo step. The user can take several;
+  // on submit they're combined into one PDF (or uploaded as-is if only one).
+  final List<File> _shots = [];
+  bool _reviewing = false;
   Timer? _clock;
   String _now = '';
 
@@ -178,7 +182,10 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
     try {
       final file = await context.read<CameraService>().pickFromGallery();
       if (!mounted || file == null) return;
-      setState(() => _photo = file);
+      setState(() {
+        _shots.add(file);
+        _reviewing = true;
+      });
     } catch (e, st) {
       AppLog.error('ShipmentCaptureScreen._pickFromGallery', e, st);
       if (!mounted) return;
@@ -200,19 +207,32 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
     try {
       final shot = await c.takePicture();
       if (!mounted) return;
-      setState(() => _photo = File(shot.path));
+      setState(() {
+        _shots.add(File(shot.path));
+        _reviewing = true;
+      });
     } catch (e, st) {
       AppLog.error('ShipmentCaptureScreen._shutter', e, st);
     }
   }
 
-  void _retake() => setState(() => _photo = null);
+  // Remove the last shot and go back to the camera.
+  void _retake() => setState(() {
+        if (_shots.isNotEmpty) _shots.removeLast();
+        _reviewing = false;
+      });
+
+  // Keep the shots taken so far and return to the camera for another.
+  void _addAnother() {
+    setState(() => _reviewing = false);
+    _acquireGps();
+  }
 
   Future<void> _submit() async {
     final t = AppL10n.of(context);
     final p = context.read<VendorDetailProvider>();
     final step = p.vendor?.currentStep;
-    if (_photo == null || step == null) return;
+    if (_shots.isEmpty || step == null) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(SnackBar(
@@ -229,9 +249,21 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
         ],
       ),
     ));
+    // One shot uploads as the image; several are merged into a single PDF.
+    File file;
+    try {
+      file = _shots.length == 1
+          ? _shots.first
+          : await const PdfService().imagesToPdf(_shots, baseName: 'step-${step.id}');
+    } catch (e, st) {
+      AppLog.error('ShipmentCaptureScreen._submit.pdf', e, st);
+      messenger.hideCurrentSnackBar();
+      if (mounted) messenger.showSnackBar(SnackBar(content: Text('$e')));
+      return;
+    }
     final ok = await p.uploadShipmentPhoto(
       stepId: step.id,
-      file: _photo!,
+      file: file,
       lat: _fix?.lat,
       lng: _fix?.lng,
       accuracyMeters: _fix?.accuracyMeters,
@@ -250,11 +282,14 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
         next.id == step.id &&
         next.requiresShipmentPhoto &&
         !next.shipmentCompleted) {
-      setState(() => _photo = null);
+      setState(() {
+        _shots.clear();
+        _reviewing = false;
+      });
       _acquireGps();
       return;
     }
-    // Step done → the completion screen offers Return / Go to next step.
+    // Step done → the completion screen returns to the master's step list.
     context.replace(Routes.stepDonePath(v.id, step.id));
   }
 
@@ -298,7 +333,7 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
                     initializing: _initializing,
                     error: _cameraError,
                     camera: _camera,
-                    photo: _photo,
+                    photo: _reviewing && _shots.isNotEmpty ? _shots.last : null,
                     hint: t.frameUnloadingScene,
                     refCode: ref,
                     timeText: _now,
@@ -306,16 +341,25 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
                 ),
               ),
             ),
+            if (_shots.isNotEmpty && !_reviewing) ...[
+              const SizedBox(height: 8),
+              Text(
+                t.photosCaptured(_shots.length),
+                style: AppType.mono10.copyWith(color: Colors.white70),
+              ),
+            ],
             const SizedBox(height: 18),
             _BottomBar(
               t: t,
-              hasPhoto: _photo != null,
+              reviewing: _reviewing,
+              shotCount: _shots.length,
               busy: p.busy,
-              canFlip: _cameras.length > 1 && _photo == null,
+              canFlip: _cameras.length > 1 && !_reviewing,
               onFlip: _flip,
               onShutter: _shutter,
               onPickGallery: _pickFromGallery,
               onRetake: _retake,
+              onAddMore: _addAnother,
               onSubmit: _submit,
             ),
             const SizedBox(height: 16),
@@ -635,47 +679,63 @@ class _FocusPainter extends CustomPainter {
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.t,
-    required this.hasPhoto,
+    required this.reviewing,
+    required this.shotCount,
     required this.busy,
     required this.canFlip,
     required this.onFlip,
     required this.onShutter,
     required this.onPickGallery,
     required this.onRetake,
+    required this.onAddMore,
     required this.onSubmit,
   });
   final AppL10n t;
-  final bool hasPhoto;
+  final bool reviewing;
+  final int shotCount;
   final bool busy;
   final bool canFlip;
   final VoidCallback onFlip;
   final VoidCallback onShutter;
   final VoidCallback onPickGallery;
   final VoidCallback onRetake;
+  final VoidCallback onAddMore;
   final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
-    if (hasPhoto) {
+    if (reviewing) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: AppButton(
-                label: t.retake,
-                variant: AppBtnVariant.ghost,
-                onPressed: busy ? null : onRetake,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: t.retake,
+                    variant: AppBtnVariant.ghost,
+                    onPressed: busy ? null : onRetake,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppButton(
+                    label: t.addAnotherPhoto,
+                    variant: AppBtnVariant.ghost,
+                    leading: const Icon(Icons.add_a_photo_outlined, size: 18),
+                    onPressed: busy ? null : onAddMore,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: AppButton(
-                label: t.submit,
-                loading: busy,
-                trailing: const Icon(Icons.check_rounded),
-                onPressed: busy ? null : onSubmit,
-              ),
+            const SizedBox(height: 10),
+            AppButton(
+              label: shotCount > 1 ? t.submitPhotos(shotCount) : t.submit,
+              loading: busy,
+              trailing: const Icon(Icons.check_rounded),
+              onPressed: busy ? null : onSubmit,
             ),
           ],
         ),

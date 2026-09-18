@@ -35,10 +35,10 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
   bool _gpsBusy = true;
   String? _gpsError;
 
-  // Captured shots for this single-photo step. The user can take several;
-  // on submit they're combined into one PDF (or uploaded as-is if only one).
+  // Captured shots for this single-photo step. The user can take several and
+  // remove any before submitting; on submit they're combined into one PDF
+  // (or uploaded as-is if only one).
   final List<File> _shots = [];
-  bool _reviewing = false;
   Timer? _clock;
   String _now = '';
 
@@ -182,10 +182,7 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
     try {
       final file = await context.read<CameraService>().pickFromGallery();
       if (!mounted || file == null) return;
-      setState(() {
-        _shots.add(file);
-        _reviewing = true;
-      });
+      setState(() => _shots.add(file));
     } catch (e, st) {
       AppLog.error('ShipmentCaptureScreen._pickFromGallery', e, st);
       if (!mounted) return;
@@ -207,26 +204,16 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
     try {
       final shot = await c.takePicture();
       if (!mounted) return;
-      setState(() {
-        _shots.add(File(shot.path));
-        _reviewing = true;
-      });
+      setState(() => _shots.add(File(shot.path)));
     } catch (e, st) {
       AppLog.error('ShipmentCaptureScreen._shutter', e, st);
     }
   }
 
-  // Remove the last shot and go back to the camera.
-  void _retake() => setState(() {
-        if (_shots.isNotEmpty) _shots.removeLast();
-        _reviewing = false;
+  // Remove a specific captured shot.
+  void _removeShot(int index) => setState(() {
+        if (index >= 0 && index < _shots.length) _shots.removeAt(index);
       });
-
-  // Keep the shots taken so far and return to the camera for another.
-  void _addAnother() {
-    setState(() => _reviewing = false);
-    _acquireGps();
-  }
 
   Future<void> _submit() async {
     final t = AppL10n.of(context);
@@ -284,7 +271,6 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
         !next.shipmentCompleted) {
       setState(() {
         _shots.clear();
-        _reviewing = false;
       });
       _acquireGps();
       return;
@@ -333,7 +319,7 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
                     initializing: _initializing,
                     error: _cameraError,
                     camera: _camera,
-                    photo: _reviewing && _shots.isNotEmpty ? _shots.last : null,
+                    photo: null,
                     hint: t.frameUnloadingScene,
                     refCode: ref,
                     timeText: _now,
@@ -341,27 +327,30 @@ class _ShipmentCaptureScreenState extends State<ShipmentCaptureScreen>
                 ),
               ),
             ),
-            if (_shots.isNotEmpty && !_reviewing) ...[
-              const SizedBox(height: 8),
-              Text(
-                t.photosCaptured(_shots.length),
-                style: AppType.mono10.copyWith(color: Colors.white70),
-              ),
+            if (_shots.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              _ThumbStrip(shots: _shots, onRemove: _removeShot),
             ],
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             _BottomBar(
               t: t,
-              reviewing: _reviewing,
-              shotCount: _shots.length,
-              busy: p.busy,
-              canFlip: _cameras.length > 1 && !_reviewing,
+              canFlip: _cameras.length > 1,
               onFlip: _flip,
               onShutter: _shutter,
               onPickGallery: _pickFromGallery,
-              onRetake: _retake,
-              onAddMore: _addAnother,
-              onSubmit: _submit,
             ),
+            if (_shots.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: AppButton(
+                  label: _shots.length > 1 ? t.submitPhotos(_shots.length) : t.submit,
+                  loading: p.busy,
+                  trailing: const Icon(Icons.check_rounded),
+                  onPressed: p.busy ? null : _submit,
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
           ],
         ),
@@ -679,68 +668,19 @@ class _FocusPainter extends CustomPainter {
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.t,
-    required this.reviewing,
-    required this.shotCount,
-    required this.busy,
     required this.canFlip,
     required this.onFlip,
     required this.onShutter,
     required this.onPickGallery,
-    required this.onRetake,
-    required this.onAddMore,
-    required this.onSubmit,
   });
   final AppL10n t;
-  final bool reviewing;
-  final int shotCount;
-  final bool busy;
   final bool canFlip;
   final VoidCallback onFlip;
   final VoidCallback onShutter;
   final VoidCallback onPickGallery;
-  final VoidCallback onRetake;
-  final VoidCallback onAddMore;
-  final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
-    if (reviewing) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    label: t.retake,
-                    variant: AppBtnVariant.ghost,
-                    onPressed: busy ? null : onRetake,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppButton(
-                    label: t.addAnotherPhoto,
-                    variant: AppBtnVariant.ghost,
-                    leading: const Icon(Icons.add_a_photo_outlined, size: 18),
-                    onPressed: busy ? null : onAddMore,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            AppButton(
-              label: shotCount > 1 ? t.submitPhotos(shotCount) : t.submit,
-              loading: busy,
-              trailing: const Icon(Icons.check_rounded),
-              onPressed: busy ? null : onSubmit,
-            ),
-          ],
-        ),
-      );
-    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Row(
@@ -780,6 +720,74 @@ class _BottomBar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ThumbStrip extends StatelessWidget {
+  const _ThumbStrip({required this.shots, required this.onRemove});
+  final List<File> shots;
+  final void Function(int) onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppL10n.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16, bottom: 6),
+          child: Text(
+            t.photosCaptured(shots.length),
+            style: AppType.mono10.copyWith(color: Colors.white70, letterSpacing: 1),
+          ),
+        ),
+        SizedBox(
+          height: 66,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: shots.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (ctx, i) => _Thumb(file: shots[i], index: i, onRemove: onRemove),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Thumb extends StatelessWidget {
+  const _Thumb({required this.file, required this.index, required this.onRemove});
+  final File file;
+  final int index;
+  final void Function(int) onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.file(file, width: 64, height: 64, fit: BoxFit.cover),
+        ),
+        Positioned(
+          top: 2,
+          right: 2,
+          child: GestureDetector(
+            onTap: () => onRemove(index),
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.black87,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close_rounded, size: 15, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

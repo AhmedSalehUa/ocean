@@ -29,11 +29,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final isAssistant =
-          context.read<AuthProvider>().user?.isSubLogisticsOfficer ?? false;
-      context.read<MasterPosProvider>()
-        ..setAssistantMode(isAssistant)
-        ..refresh();
+      context.read<MasterPosProvider>().refresh();
     });
   }
 

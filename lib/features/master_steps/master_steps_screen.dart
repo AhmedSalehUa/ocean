@@ -23,6 +23,7 @@ import '../../routing/routes.dart';
 import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
 import '../../services/pdf_service.dart';
+import '../auth/auth_provider.dart';
 import '../dashboard/master_pos_provider.dart';
 import 'assign_assistant_sheet.dart';
 
@@ -221,6 +222,8 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
   Future<void> _openLpoOptions(BuildContext context, MasterStep step) async {
     final t = AppL10n.of(context);
     final locale = t.locale.languageCode;
+    // Only the representative may assign a step to an assistant.
+    final isRep = context.read<AuthProvider>().user?.isRepresentative ?? false;
     final action = await showModalBottomSheet<_LpoAction>(
       context: context,
       backgroundColor: AppColors.bg,
@@ -243,12 +246,13 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
                 title: Text(t.captureImage, style: AppType.body),
                 onTap: () => Navigator.of(context).pop(_LpoAction.capture),
               ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.person_add_alt_1_outlined, color: AppColors.ink2),
-                title: Text(t.assignAssistant, style: AppType.body),
-                onTap: () => Navigator.of(context).pop(_LpoAction.assign),
-              ),
+              if (isRep)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.person_add_alt_1_outlined, color: AppColors.ink2),
+                  title: Text(t.assignAssistant, style: AppType.body),
+                  onTap: () => Navigator.of(context).pop(_LpoAction.assign),
+                ),
             ],
           ),
         ),

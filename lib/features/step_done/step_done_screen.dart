@@ -124,7 +124,7 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Eyebrow(t.stepCurrent),
+                          Eyebrow(t.stepNext),
                           const SizedBox(height: 6),
                           Text(
                             next?.nameFor(locale) ?? t.finalizeTitle,

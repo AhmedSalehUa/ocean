@@ -7,6 +7,7 @@ import '../../core/widgets/eyebrow.dart';
 import '../../data/models/sub_logistics.dart';
 import '../../data/repositories/delivery_repository.dart';
 import '../../l10n/app_l10n.dart';
+import '../auth/auth_provider.dart';
 
 /// Result of the assistant picker sheet. [officerId] null means "unassign".
 class AssignChoice {
@@ -26,6 +27,14 @@ Future<bool> pickAndAssignStep(
   final t = AppL10n.of(context);
   final repo = context.read<DeliveryRepository>();
   final messenger = ScaffoldMessenger.of(context);
+
+  // Hard guard: only the primary representative may assign, regardless of how
+  // this was reached. The sub-logistics officer can never assign anyone.
+  final isRep = context.read<AuthProvider>().user?.isRepresentative ?? false;
+  if (!isRep) {
+    messenger.showSnackBar(SnackBar(content: Text(t.assignRepOnly)));
+    return false;
+  }
 
   List<SubLogisticsOfficer> officers;
   String? currentId;

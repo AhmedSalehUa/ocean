@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../../services/pdf_service.dart';
 import '../api/delivery_api.dart';
 import '../models/assistant_task.dart';
 import '../models/master_po.dart';
@@ -127,6 +128,14 @@ class DeliveryRepository {
 
   Future<VendorPo> start(String id) => _api.startVendorPo(id);
 
+  /// Every step proof is uploaded as a PDF. A file that is already a PDF
+  /// (e.g. several images merged by the capture screen) is sent as-is; a
+  /// single image is wrapped into a one-page PDF first.
+  Future<File> _asPdf(File file, String baseName) async {
+    if (file.path.toLowerCase().endsWith('.pdf')) return file;
+    return const PdfService().imagesToPdf([file], baseName: baseName);
+  }
+
   Future<ProofLog> shipmentPhoto({
     required String vendorPoId,
     required String stepId,
@@ -134,11 +143,11 @@ class DeliveryRepository {
     double? lat,
     double? lng,
     double? accuracyMeters,
-  }) =>
+  }) async =>
       _api.uploadShipmentPhoto(
         vendorPoId: vendorPoId,
         stepId: stepId,
-        file: file,
+        file: await _asPdf(file, 'step-$stepId'),
         lat: lat,
         lng: lng,
         accuracyMeters: accuracyMeters,
@@ -151,11 +160,11 @@ class DeliveryRepository {
     double? lat,
     double? lng,
     double? accuracyMeters,
-  }) =>
+  }) async =>
       _api.uploadLpoPhoto(
         masterPoId: masterPoId,
         stepId: stepId,
-        file: file,
+        file: await _asPdf(file, 'lpo-$stepId'),
         lat: lat,
         lng: lng,
         accuracyMeters: accuracyMeters,
@@ -169,12 +178,12 @@ class DeliveryRepository {
     double? lat,
     double? lng,
     double? accuracyMeters,
-  }) =>
+  }) async =>
       _api.uploadItemPhoto(
         vendorPoId: vendorPoId,
         itemId: itemId,
         stepId: stepId,
-        file: file,
+        file: await _asPdf(file, 'item-$itemId-$stepId'),
         lat: lat,
         lng: lng,
         accuracyMeters: accuracyMeters,

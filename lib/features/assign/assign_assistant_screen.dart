@@ -12,6 +12,7 @@ import '../../data/models/workflow_step.dart';
 import '../../data/repositories/delivery_repository.dart';
 import '../../l10n/app_l10n.dart';
 import '../../services/locale_service.dart';
+import '../auth/auth_provider.dart';
 import '../dashboard/master_pos_provider.dart' show LoadState;
 import '../vendor_detail/vendor_detail_provider.dart';
 import 'assign_assistant_provider.dart';
@@ -25,6 +26,23 @@ class AssignAssistantScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Representative-only: never let a sub-logistics officer open the assign UI.
+    final isRep = context.read<AuthProvider>().user?.isRepresentative ?? false;
+    if (!isRep) {
+      final t = AppL10n.of(context);
+      return Scaffold(
+        appBar: TrailTopBar(
+          leading: RoundIconBtn(icon: Icons.chevron_left_rounded, onPressed: () => context.pop()),
+          title: t.assignAssistantTitle,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(t.assignRepOnly, textAlign: TextAlign.center, style: AppType.bodyMuted),
+          ),
+        ),
+      );
+    }
     return ChangeNotifierProvider(
       create: (ctx) => AssignAssistantProvider(ctx.read<DeliveryRepository>())..load(vendorId),
       child: _AssignAssistantView(vendorId: vendorId),

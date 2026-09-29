@@ -136,8 +136,10 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
     context.watch<MasterPosProvider>();
     final master = _master(context);
     final listSteps = master?.steps ?? const <MasterStep>[];
-    // Fall back to vendor-derived steps when the master carries none.
-    if (listSteps.isEmpty && _fallbackSteps == null && !_loadingFallback && master != null) {
+    // Fall back to vendor-derived steps whenever the master carries none —
+    // even if the master isn't in the dashboard list (e.g. the backend
+    // dropped it for the assistant after completion). Uses widget.masterId.
+    if (listSteps.isEmpty && _fallbackSteps == null && !_loadingFallback) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _loadFallbackSteps());
     }
     final steps = listSteps.isNotEmpty ? listSteps : (_fallbackSteps ?? const <MasterStep>[]);
@@ -196,7 +198,7 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
                 AppButton(
                   label: t.confirmFinalDelivery,
                   trailing: const Icon(Icons.flag_rounded),
-                  onPressed: () => _finishMaster(context, master!),
+                  onPressed: () => _finishMaster(context),
                 ),
               ],
             ],
@@ -344,7 +346,7 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
   }
 
   /// Finalize the whole master (all its vendor POs) once every step is done.
-  Future<void> _finishMaster(BuildContext context, MasterPo master) async {
+  Future<void> _finishMaster(BuildContext context) async {
     final t = AppL10n.of(context);
     final repo = context.read<DeliveryRepository>();
     final masters = context.read<MasterPosProvider>();
@@ -379,7 +381,7 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
       ),
     ));
     try {
-      final r = await repo.finalizeAllVendors(master.id);
+      final r = await repo.finalizeAllVendors(widget.masterId);
       messenger.hideCurrentSnackBar();
       await masters.refresh();
       if (!context.mounted) return;

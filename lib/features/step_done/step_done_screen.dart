@@ -156,10 +156,20 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
                       ),
                     ],
                     const Spacer(),
-                    // No "next step" — completing a step always returns to the
-                    // master's step list (updated). Wait for uploads first.
+                    // When the vendor PO is ready, whoever finished the last
+                    // step (assistant included) can finalize the order here.
+                    if (v.readyToFinalize) ...[
+                      AppButton(
+                        label: t.confirmFinalDelivery,
+                        loading: p.busy,
+                        trailing: const Icon(Icons.flag_rounded),
+                        onPressed: blocked ? null : () => context.replace(Routes.finalizePath(v.id)),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                     AppButton(
                       label: t.backToSteps,
+                      variant: v.readyToFinalize ? AppBtnVariant.ghost : AppBtnVariant.primary,
                       loading: p.busy,
                       trailing: const Icon(Icons.list_alt_rounded),
                       onPressed: blocked ? null : () => _backToSteps(p),

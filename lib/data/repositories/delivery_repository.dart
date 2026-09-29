@@ -128,11 +128,14 @@ class DeliveryRepository {
 
   Future<VendorPo> start(String id) => _api.startVendorPo(id);
 
-  /// Every step proof is uploaded as a PDF. A file that is already a PDF
-  /// (e.g. several images merged by the capture screen) is sent as-is; a
-  /// single image is wrapped into a one-page PDF first.
+  /// Uploads go out as PDF: an image file is wrapped into a one-page PDF;
+  /// a file that is already a PDF (or another document like xlsx/docx that
+  /// the user picked) is sent as-is.
+  static const _imageExts = {'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'gif', 'bmp'};
+
   Future<File> _asPdf(File file, String baseName) async {
-    if (file.path.toLowerCase().endsWith('.pdf')) return file;
+    final ext = file.path.split('.').last.toLowerCase();
+    if (!_imageExts.contains(ext)) return file; // already pdf/doc → leave it
     return const PdfService().imagesToPdf([file], baseName: baseName);
   }
 
@@ -211,8 +214,11 @@ class DeliveryRepository {
   Future<DeliveryNote> uploadDeliveryNote({
     required String masterPoId,
     required File file,
-  }) =>
-      _api.uploadDeliveryNote(masterPoId: masterPoId, file: file);
+  }) async =>
+      _api.uploadDeliveryNote(
+        masterPoId: masterPoId,
+        file: await _asPdf(file, 'delivery-note-$masterPoId'),
+      );
   String attachmentUrl(String id) => _api.attachmentUrl(id);
 
   /// Returns an absolute URL the UI can hand to a Network image widget.

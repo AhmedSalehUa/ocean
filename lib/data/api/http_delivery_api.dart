@@ -322,6 +322,12 @@ class HttpDeliveryApi implements DeliveryApi {
     return VendorPo.fromJson(body['data'] as Map<String, dynamic>);
   }
 
+  @override
+  Future<void> finalizeMaster(String masterPoId) async {
+    final r = await _dio.post('/api/delivery/mobile/master-pos/$masterPoId/finalize');
+    _unwrap(r);
+  }
+
   Future<Directory> _deliveryNoteDir() async {
     Directory base;
     if (Platform.isAndroid) {

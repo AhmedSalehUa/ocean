@@ -83,6 +83,10 @@ abstract class DeliveryApi {
   });
   Future<VendorPo> finalizeVendorPo(String vendorPoId);
 
+  /// Ends the whole master PO in one call (not a single vendor / partial).
+  /// POST /api/delivery/mobile/master-pos/:masterPoId/finalize
+  Future<void> finalizeMaster(String masterPoId);
+
   /// Downloads the current delivery-note file for the given Master PO into
   /// the app's temporary directory and returns the saved [File]. The rep
   /// must be assigned to at least one Vendor PO under the master. Throws

@@ -122,6 +122,10 @@ class DeliveryRepository {
     return (finalized: finalized, total: vendors.length);
   }
 
+  /// Ends the whole master PO in one call (all its vendor POs at once),
+  /// rather than finalizing a single vendor (partial).
+  Future<void> finalizeMaster(String masterId) => _api.finalizeMaster(masterId);
+
   Future<VendorPo> vendor(String id) => _api.getVendorPo(id);
   Future<List<WorkflowStep>> steps(String id) => _api.getSteps(id);
   Future<ProofHistory> proofs(String id) => _api.getProofs(id);

@@ -428,6 +428,20 @@ class MockDeliveryApi implements DeliveryApi {
   }
 
   @override
+  Future<void> finalizeMaster(String masterPoId) async {
+    await _latency(400, 700);
+    // End the whole PO: finalize every vendor under the master.
+    for (final v in List.of(_vendors[masterPoId] ?? const <VendorPo>[])) {
+      if (v.finalizedAt != null) continue;
+      final hasMissing = v.items.any((i) => i.status == ItemStatus.missing);
+      _replaceVendor(v.copyWith(
+        status: hasMissing ? PoStatus.partiallyDelivered : PoStatus.fullyDelivered,
+        finalizedAt: DateTime.now(),
+      ));
+    }
+    _recomputeMaster(masterPoId);
+  }
+
   @override
   Future<File> downloadDeliveryNote(String masterPoId, {DeliveryNote? note}) {
     // Mock mode has no real files on disk; feature only makes sense against

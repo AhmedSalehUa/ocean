@@ -162,6 +162,14 @@ class MasterPoCard extends StatelessWidget {
               icon: Icons.route_outlined,
             ),
           ],
+          if (master.nextStep != null) ...[
+            SizedBox(height: master.currentStep != null ? 6 : 12),
+            _PersonLine(
+              label: t.stepNext,
+              name: master.nextStep!.nameFor(locale),
+              icon: Icons.arrow_forward_rounded,
+            ),
+          ],
           if (_has(repName) || _has(assistantName) || _has(uploadedBy)) ...[
             const SizedBox(height: 12),
             _PeoplePanel(

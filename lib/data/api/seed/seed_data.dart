@@ -111,6 +111,12 @@ class Seed {
           nameAr: 'تفريغ الموقع',
           stepLevel: StepLevel.vendor,
         ),
+        nextStep: const MasterCurrentStep(
+          id: 'verify',
+          nameEn: 'Item Verification',
+          nameAr: 'التحقق من الأصناف',
+          stepLevel: StepLevel.item,
+        ),
         steps: masterSteps(const [
           MasterStepStatus.completed,
           MasterStepStatus.inProgress,

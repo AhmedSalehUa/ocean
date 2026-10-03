@@ -43,6 +43,10 @@ class MasterPo {
   final DeliveryNote? deliveryNote;
   final MasterCurrentStep? currentStep;
 
+  /// The upcoming step, from the master-pos `next_step` field. Shown on the
+  /// card as a line under the current step when present.
+  final MasterCurrentStep? nextStep;
+
   /// Every visible workflow step on this master PO with its rolled-up status,
   /// from the master-pos response `steps` array (spec §5). Drives the
   /// per-master steps screen shown before the vendor list.
@@ -76,6 +80,7 @@ class MasterPo {
     this.portName,
     this.deliveryNote,
     this.currentStep,
+    this.nextStep,
     this.steps = const [],
     this.representativeName,
     this.assistantName,
@@ -129,6 +134,7 @@ class MasterPo {
         portName: portName,
         deliveryNote: deliveryNote ?? this.deliveryNote,
         currentStep: currentStep,
+        nextStep: nextStep,
         steps: steps,
         representativeName: representativeName,
         assistantName: assistantName,
@@ -147,6 +153,7 @@ class MasterPo {
 
     final noteJson = json['delivery_note'];
     final stepJson = json['current_step'];
+    final nextStepJson = json['next_step'];
     final stepsJson = json['steps'];
 
     // People names arrive in several shapes depending on the endpoint: a
@@ -189,6 +196,9 @@ class MasterPo {
       deliveryNote: noteJson is Map<String, dynamic> ? DeliveryNote.fromJson(noteJson) : null,
       currentStep:
           stepJson is Map<String, dynamic> ? MasterCurrentStep.fromJson(stepJson) : null,
+      nextStep: nextStepJson is Map<String, dynamic>
+          ? MasterCurrentStep.fromJson(nextStepJson)
+          : null,
       steps: stepsJson is List
           ? (stepsJson
               .whereType<Map<String, dynamic>>()

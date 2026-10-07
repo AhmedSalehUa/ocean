@@ -345,23 +345,51 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
     }
   }
 
-  /// Finish the order: open the finalize screen for a vendor PO that still
-  /// needs finalizing (which actually POSTs the finalize, with a confirm +
-  /// feedback). Works for the sub-logistics officer on their own vendor PO.
+  /// Finish the order: POST /master-pos/:id/finalize to end the whole PO
+  /// (all its vendor POs), for both the representative and the assistant.
   Future<void> _finishMaster(BuildContext context) async {
     final t = AppL10n.of(context);
     final repo = context.read<DeliveryRepository>();
+    final masters = context.read<MasterPosProvider>();
     final messenger = ScaffoldMessenger.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(t.finalizeTitle),
+        content: Text(t.finishOrderBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t.cancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(t.confirmFinalDelivery)),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(
+      duration: const Duration(minutes: 1),
+      content: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(t.finalize)),
+        ],
+      ),
+    ));
     try {
-      final vendors = (await repo.listVendors(widget.masterId)).vendors;
+      await repo.finalizeMaster(widget.masterId);
+      messenger.hideCurrentSnackBar();
+      await masters.refresh();
       if (!context.mounted) return;
-      final pending = vendors.where((v) => v.finalizedAt == null).toList();
-      if (pending.isEmpty) {
-        messenger.showSnackBar(SnackBar(content: Text(t.allFinalized)));
-        return;
-      }
-      context.push(Routes.finalizePath(pending.first.id));
+      messenger.showSnackBar(SnackBar(content: Text(t.poFinished)));
+      context.go(Routes.dashboard);
     } catch (e, st) {
+      messenger.hideCurrentSnackBar();
       AppLog.error('MasterStepsScreen._finishMaster', e, st);
       if (context.mounted) messenger.showSnackBar(SnackBar(content: Text('$e')));
     }

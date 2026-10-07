@@ -325,6 +325,10 @@ class AppL10n {
       'تم إنهاء $finalized من $total مورّد');
   String get allFinalized =>
       _t('All vendor POs are already finalized.', 'كل أوامر الموردين منتهية بالفعل.');
+  String get poFinished => _t('Order finalized', 'تم إنهاء الأمر');
+  String get finishOrderBody => _t(
+      'Finalize the whole order? This ends all its vendor POs.',
+      'هل تريد إنهاء الأمر بالكامل؟ ده بينهي كل أوامر الموردين.');
   String get noStepsYet => _t('No steps on this order yet.', 'لا توجد خطوات على هذا الأمر بعد.');
   String get stepStatusCompleted => _t('Completed', 'مكتملة');
   String get stepStatusInProgress => _t('In progress', 'قيد التنفيذ');

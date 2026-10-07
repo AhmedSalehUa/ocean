@@ -9,6 +9,7 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/eyebrow.dart';
 import '../../core/widgets/top_bar.dart';
 import '../../data/models/workflow_step.dart';
+import '../../data/repositories/delivery_repository.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
 import '../dashboard/master_pos_provider.dart';
@@ -59,6 +60,43 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
     final v = p.vendor;
     context.read<MasterPosProvider>().refresh();
     context.go(v != null ? Routes.masterStepsPath(v.masterPoId) : Routes.dashboard);
+  }
+
+  // Finish the whole order: POST /master-pos/:id/finalize (ends all its
+  // vendor POs), then return home. Works for the assistant too.
+  Future<void> _finishOrder(VendorDetailProvider p) async {
+    final v = p.vendor;
+    if (v == null) return;
+    final t = AppL10n.of(context);
+    final repo = context.read<DeliveryRepository>();
+    final masters = context.read<MasterPosProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(
+      duration: const Duration(minutes: 1),
+      content: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(t.finalize)),
+        ],
+      ),
+    ));
+    try {
+      await repo.finalizeMaster(v.masterPoId);
+      messenger.hideCurrentSnackBar();
+      await masters.refresh();
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(t.poFinished)));
+      context.go(Routes.dashboard);
+    } catch (e) {
+      messenger.hideCurrentSnackBar();
+      if (mounted) messenger.showSnackBar(SnackBar(content: Text('$e')));
+    }
   }
 
   @override
@@ -163,7 +201,7 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
                         label: t.confirmFinalDelivery,
                         loading: p.busy,
                         trailing: const Icon(Icons.flag_rounded),
-                        onPressed: blocked ? null : () => context.replace(Routes.finalizePath(v.id)),
+                        onPressed: blocked ? null : () => _finishOrder(p),
                       ),
                       const SizedBox(height: 8),
                     ],

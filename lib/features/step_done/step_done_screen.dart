@@ -109,6 +109,12 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
     final stepName = completed?.nameFor(locale) ?? '';
 
     final next = v?.currentStep;
+    // The step after the current one (for the "next step" banner).
+    final steps = v?.steps ?? const <WorkflowStep>[];
+    final curIdx = v?.currentStepId == null
+        ? -1
+        : steps.indexWhere((s) => s.id == v!.currentStepId);
+    final upcoming = (curIdx >= 0 && curIdx + 1 < steps.length) ? steps[curIdx + 1] : null;
     // Finish only on the LAST step: the step just completed was the final
     // one, or there's no next step left, or every step/item is done.
     final isLastStep = (completed?.isFinalStep ?? false) ||
@@ -170,26 +176,28 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
                           Eyebrow(t.stepCurrent),
                           const SizedBox(height: 6),
                           Text(
-                            stepName.isEmpty ? '—' : stepName,
-                            style: AppType.bodyLg,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    AppCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Eyebrow(t.stepNext),
-                          const SizedBox(height: 6),
-                          Text(
                             next?.nameFor(locale) ?? t.finalizeTitle,
                             style: AppType.bodyLg,
                           ),
                         ],
                       ),
                     ),
+                    if (upcoming != null) ...[
+                      const SizedBox(height: 12),
+                      AppCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Eyebrow(t.stepNext),
+                            const SizedBox(height: 6),
+                            Text(
+                              upcoming.nameFor(locale),
+                              style: AppType.bodyLg,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     if (pendingUploads > 0) ...[
                       const SizedBox(height: 12),
                       _StatusBanner(

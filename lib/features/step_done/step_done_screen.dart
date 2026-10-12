@@ -109,6 +109,11 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
     final stepName = completed?.nameFor(locale) ?? '';
 
     final next = v?.currentStep;
+    // Finish only on the LAST step: the step just completed was the final
+    // one, or there's no next step left, or every step/item is done.
+    final isLastStep = (completed?.isFinalStep ?? false) ||
+        next == null ||
+        (v?.readyToFinalize ?? false);
     final pendingUploads = p.pendingUploadCount;
     final failedUploads = p.failedUploadCount;
     final blocked = pendingUploads > 0 || failedUploads > 0;
@@ -208,9 +213,8 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
                       ),
                     ],
                     const Spacer(),
-                    // When the vendor PO is ready, whoever finished the last
-                    // step (assistant included) can finalize the order here.
-                    if (v.readyToFinalize) ...[
+                    // Finish (finalize the order) shows only on the last step.
+                    if (isLastStep) ...[
                       AppButton(
                         label: t.confirmFinalDelivery,
                         loading: p.busy,
@@ -221,7 +225,7 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
                     ],
                     AppButton(
                       label: t.backToSteps,
-                      variant: v.readyToFinalize ? AppBtnVariant.ghost : AppBtnVariant.primary,
+                      variant: isLastStep ? AppBtnVariant.ghost : AppBtnVariant.primary,
                       loading: p.busy,
                       trailing: const Icon(Icons.list_alt_rounded),
                       onPressed: blocked ? null : () => _backToSteps(p),

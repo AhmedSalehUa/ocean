@@ -162,6 +162,20 @@ class _StepDoneScreenState extends State<StepDoneScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Eyebrow(t.stepCurrent),
+                          const SizedBox(height: 6),
+                          Text(
+                            stepName.isEmpty ? '—' : stepName,
+                            style: AppType.bodyLg,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Eyebrow(t.stepNext),
                           const SizedBox(height: 6),
                           Text(

@@ -264,4 +264,57 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get logout => 'Sign out';
+
+  @override
+  String get primaryRepresentative => 'Primary rep';
+
+  @override
+  String get subRepresentative => 'Assistant';
+
+  @override
+  String get masterStepsTitle => 'Workflow steps';
+
+  @override
+  String get masterStepsEyebrow => 'Steps';
+
+  @override
+  String get chooseStepSubtitle => 'Choose a step to see its vendors';
+
+  @override
+  String get chooseVendorSubtitle => 'Choose a vendor to capture this step';
+
+  @override
+  String get captureScopeVendor => 'One photo per vendor · across all products';
+
+  @override
+  String get captureScopeItem => 'Captured for each item';
+
+  @override
+  String get noStepsYet => 'No steps on this order yet.';
+
+  @override
+  String get stepStatusCompleted => 'Completed';
+
+  @override
+  String get stepStatusInProgress => 'In progress';
+
+  @override
+  String get stepStatusPending => 'Pending';
+
+  @override
+  String get stepStatusNotApplicable => 'N/A';
+
+  @override
+  String get stepRequired => 'Required';
+
+  @override
+  String get stepOptional => 'Optional';
+
+  @override
+  String get stepFinal => 'Final';
+
+  @override
+  String stepTargetsProgress(Object done, Object total) {
+    return '$done/$total done';
+  }
 }

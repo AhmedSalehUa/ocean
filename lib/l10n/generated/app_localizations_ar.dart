@@ -262,4 +262,57 @@ class AppL10nAr extends AppL10n {
 
   @override
   String get logout => 'تسجيل الخروج';
+
+  @override
+  String get primaryRepresentative => 'المندوب الرئيسي';
+
+  @override
+  String get subRepresentative => 'المندوب الفرعي';
+
+  @override
+  String get masterStepsTitle => 'خطوات سير العمل';
+
+  @override
+  String get masterStepsEyebrow => 'الخطوات';
+
+  @override
+  String get chooseStepSubtitle => 'اختر خطوة لعرض موردّيها';
+
+  @override
+  String get chooseVendorSubtitle => 'اختر مورّداً لالتقاط هذه الخطوة';
+
+  @override
+  String get captureScopeVendor => 'صورة واحدة لكل مورّد · لكل المنتجات';
+
+  @override
+  String get captureScopeItem => 'تُلتقط لكل بند على حدة';
+
+  @override
+  String get noStepsYet => 'لا توجد خطوات على هذا الأمر بعد.';
+
+  @override
+  String get stepStatusCompleted => 'مكتملة';
+
+  @override
+  String get stepStatusInProgress => 'قيد التنفيذ';
+
+  @override
+  String get stepStatusPending => 'قيد الانتظار';
+
+  @override
+  String get stepStatusNotApplicable => 'لا تنطبق';
+
+  @override
+  String get stepRequired => 'إلزامية';
+
+  @override
+  String get stepOptional => 'اختيارية';
+
+  @override
+  String get stepFinal => 'نهائية';
+
+  @override
+  String stepTargetsProgress(Object done, Object total) {
+    return '$done/$total منجزة';
+  }
 }

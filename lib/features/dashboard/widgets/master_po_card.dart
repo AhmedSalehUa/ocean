@@ -224,12 +224,9 @@ class MasterPoCard extends StatelessWidget {
   ({String label, ChipTone tone}) _statusStyle(AppL10n t) {
     return switch (master.status) {
       MasterStatus.open => (label: t.masterStatusNew, tone: ChipTone.neutral),
-      MasterStatus.inProgress =>
-        (label: t.masterStatusInProgress, tone: ChipTone.warn),
-      MasterStatus.fullyDelivered =>
-        (label: t.masterStatusDelivered, tone: ChipTone.green),
-      MasterStatus.partiallyDelivered =>
-        (label: t.masterStatusPartial, tone: ChipTone.warn),
+      MasterStatus.inProgress => (label: t.masterStatusInProgress, tone: ChipTone.warn),
+      MasterStatus.fullyDelivered => (label: t.masterStatusDelivered, tone: ChipTone.green),
+      MasterStatus.partiallyDelivered => (label: t.masterStatusPartial, tone: ChipTone.warn),
       MasterStatus.closed => (label: t.masterStatusClosed, tone: ChipTone.green),
     };
   }
@@ -315,8 +312,7 @@ class _PeoplePanelState extends State<_PeoplePanel> {
   Widget build(BuildContext context) {
     final t = AppL10n.of(context);
     final rows = <Widget>[
-      if (_has(widget.repName))
-        _PersonLine(label: t.primaryRepresentative, name: widget.repName!),
+      if (_has(widget.repName)) _PersonLine(label: t.primaryRepresentative, name: widget.repName!),
       if (_has(widget.assistantName))
         _PersonLine(label: t.subRepresentative, name: widget.assistantName!),
       if (_has(widget.uploadedBy))
@@ -337,16 +333,15 @@ class _PeoplePanelState extends State<_PeoplePanel> {
             padding: const EdgeInsets.symmetric(vertical: 2),
             child: Row(
               children: [
-                Icon(Icons.groups_outlined, size: 14, color: AppColors.muted),
+                const Icon(Icons.groups_outlined, size: 14, color: AppColors.muted),
                 const SizedBox(width: 6),
                 Text(
                   t.peopleDetails,
-                  style: AppType.caption
-                      .copyWith(color: AppColors.muted, fontWeight: FontWeight.w600),
+                  style:
+                      AppType.caption.copyWith(color: AppColors.muted, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(width: 4),
-                Text('· ${rows.length}',
-                    style: AppType.mono10.copyWith(color: AppColors.muted)),
+                Text('· ${rows.length}', style: AppType.mono10.copyWith(color: AppColors.muted)),
                 const Spacer(),
                 Icon(
                   _open ? Icons.expand_less_rounded : Icons.expand_more_rounded,
@@ -432,11 +427,9 @@ class _DeliveryNoteStripState extends State<_DeliveryNoteStrip> {
     // When there's no file on the server there's nothing to download — show a
     // placeholder and keep only the upload action (the PO is delivered).
     final hasNote = note != null;
-    final statusLabel = hasNote && note.status.isCompleted
-        ? t.deliveryNoteCompleted
-        : t.deliveryNoteTemplate;
-    final statusTone =
-        hasNote && note.status.isCompleted ? ChipTone.green : ChipTone.warn;
+    final statusLabel =
+        hasNote && note.status.isCompleted ? t.deliveryNoteCompleted : t.deliveryNoteTemplate;
+    final statusTone = hasNote && note.status.isCompleted ? ChipTone.green : ChipTone.warn;
 
     return Row(
       children: [
@@ -470,9 +463,7 @@ class _DeliveryNoteStripState extends State<_DeliveryNoteStrip> {
               ),
               const SizedBox(height: 2),
               Text(
-                hasNote
-                    ? '${t.deliveryNote} · ${note.prettySize}'
-                    : t.deliveryNoteNotAvailable,
+                hasNote ? '${t.deliveryNote} · ${note.prettySize}' : t.deliveryNoteNotAvailable,
                 style: AppType.mono10.copyWith(color: AppColors.muted),
               ),
             ],

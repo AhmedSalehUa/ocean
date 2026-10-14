@@ -18,6 +18,7 @@ import '../features/proofs/proof_viewer_screen.dart';
 import '../features/proofs/proofs_screen.dart';
 import '../features/shipment_capture/shipment_capture_screen.dart';
 import '../features/step_done/step_done_screen.dart';
+import '../features/sync/sync_center_screen.dart';
 import '../features/vendor_detail/vendor_detail_screen.dart';
 import '../features/vendor_list/vendor_list_screen.dart';
 import 'routes.dart';
@@ -46,6 +47,7 @@ GoRouter buildRouter(AuthProvider auth) {
         path: Routes.assistantHome,
         builder: (_, __) => const AssistantHomeScreen(),
       ),
+      GoRoute(path: Routes.sync, builder: (_, __) => const SyncCenterScreen()),
       GoRoute(
         path: Routes.masterSteps,
         builder: (_, s) => MasterStepsScreen(masterId: s.pathParameters['masterId']!),

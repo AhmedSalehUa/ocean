@@ -10,6 +10,9 @@ import 'data/api/delivery_api.dart';
 import 'data/api/http_delivery_api.dart';
 import 'data/api/mock_delivery_api.dart';
 import 'data/api/offline_cache_store.dart';
+import 'data/api/outbox_delivery_api.dart';
+import 'data/offline/outbox_store.dart';
+import 'data/offline/sync_engine.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/delivery_repository.dart';
 import 'features/assistant/assistant_tasks_provider.dart';
@@ -53,27 +56,52 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
 
+  final connectivity = ConnectivityService();
+
   // Offline read cache (Phase 1): GET responses are cached and replayed when
   // the device can't reach the server.
   final offlineCache = OfflineCacheStore(prefs);
-  final api = useMock
+  final outbox = OutboxStore(prefs);
+  await outbox.load();
+
+  final inner = useMock
       ? MockDeliveryApi()
       : HttpDeliveryApi(baseUrl: baseUrl, cache: offlineCache);
+  // Writes queue to the outbox when offline; the sync engine replays them.
+  final api = OutboxDeliveryApi(inner: inner, outbox: outbox, connectivity: connectivity);
   // Load the cached JWT into memory now so synchronous consumers (e.g.
   // CachedNetworkImage's httpHeaders) see it on the very first proof image
   // request, not just after the first authenticated Dio call.
   await api.primeAuth();
 
+  final sync = SyncEngine(inner: inner, outbox: outbox, connectivity: connectivity)..start();
+
   final locale = LocaleService(prefs);
   await locale.hydrate();
 
-  runApp(TrailRoot(api: api, locale: locale));
+  runApp(TrailRoot(
+    api: api,
+    locale: locale,
+    connectivity: connectivity,
+    outbox: outbox,
+    sync: sync,
+  ));
 }
 
 class TrailRoot extends StatelessWidget {
-  const TrailRoot({super.key, required this.api, required this.locale});
+  const TrailRoot({
+    super.key,
+    required this.api,
+    required this.locale,
+    required this.connectivity,
+    required this.outbox,
+    required this.sync,
+  });
   final DeliveryApi api;
   final LocaleService locale;
+  final ConnectivityService connectivity;
+  final OutboxStore outbox;
+  final SyncEngine sync;
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +112,9 @@ class TrailRoot extends StatelessWidget {
       providers: [
         // Services
         ChangeNotifierProvider.value(value: locale),
-        ChangeNotifierProvider(create: (_) => ConnectivityService()),
+        ChangeNotifierProvider.value(value: connectivity),
+        ChangeNotifierProvider.value(value: outbox),
+        ChangeNotifierProvider.value(value: sync),
         Provider<LocationService>(create: (_) => LocationService()),
         Provider<CameraService>(create: (_) => CameraService()),
 

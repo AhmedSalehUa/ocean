@@ -296,6 +296,15 @@ class AppL10n {
   String get offlineBanner => _t(
       "You're offline — changes sync when you reconnect",
       'غير متصل — ستتم المزامنة عند عودة الاتصال');
+  String get syncTitle => _t('Sync', 'المزامنة');
+  String get syncAllDone => _t('Everything is synced.', 'تمت مزامنة كل شيء.');
+  String get syncNow => _t('Sync now', 'مزامنة الآن');
+  String get syncQueued => _t('Queued', 'في الانتظار');
+  String syncPending(int n) => _t('$n pending', '$n قيد الانتظار');
+  String syncFailed(int n) => _t('$n failed', '$n فشل');
+  String syncBannerPending(int n) =>
+      _t('$n change(s) waiting to sync', '$n تغيير بانتظار المزامنة');
+  String get syncBannerSyncing => _t('Syncing…', 'جارٍ المزامنة…');
 
   // ─── Master steps (step → vendors flow) ───
   String get masterStepsTitle => _t('Workflow steps', 'خطوات سير العمل');

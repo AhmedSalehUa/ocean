@@ -3,6 +3,7 @@ class Routes {
   static const login = '/login';
   static const dashboard = '/';
   static const assistantHome = '/assistant';
+  static const sync = '/sync';
   static const masterSteps = '/master/:masterId/steps';
   static const stepVendors = '/master/:masterId/step/:stepId/vendors';
   static const stepItems = '/vendor/:vendorId/step/:stepId/items';

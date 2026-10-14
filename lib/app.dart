@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/widgets/offline_banner.dart';
 import 'features/auth/auth_provider.dart';
 import 'l10n/app_l10n.dart';
 import 'routing/app_router.dart';
@@ -25,6 +26,7 @@ class _TrailAppState extends State<TrailApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       routerConfig: _router,
+      builder: (context, child) => OfflineBanner(child: child ?? const SizedBox.shrink()),
       locale: locale.locale,
       supportedLocales: AppL10n.supported,
       localizationsDelegates: const [

@@ -293,6 +293,9 @@ class AppL10n {
   String get subRepresentative => _t('Assistant', 'المندوب الفرعي');
   String get uploadedBy => _t('Uploaded by', 'تم رفعه بواسطة');
   String get peopleDetails => _t('Details', 'التفاصيل');
+  String get offlineBanner => _t(
+      "You're offline — changes sync when you reconnect",
+      'غير متصل — ستتم المزامنة عند عودة الاتصال');
 
   // ─── Master steps (step → vendors flow) ───
   String get masterStepsTitle => _t('Workflow steps', 'خطوات سير العمل');

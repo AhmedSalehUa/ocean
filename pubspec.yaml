@@ -50,6 +50,9 @@ dependencies:
   # Combine multiple captured images into one PDF (single-photo steps)
   pdf: ^3.11.1
 
+  # Offline: detect connectivity for the offline banner + sync triggers
+  connectivity_plus: ^6.1.0
+
   # Config
   flutter_dotenv: ^5.2.1
 

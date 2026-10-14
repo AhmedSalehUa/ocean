@@ -18,6 +18,7 @@ import 'features/dashboard/master_pos_provider.dart';
 import 'features/vendor_detail/vendor_detail_provider.dart';
 import 'features/vendor_list/vendor_list_provider.dart';
 import 'services/camera_service.dart';
+import 'services/connectivity_service.dart';
 import 'services/locale_service.dart';
 import 'services/location_service.dart';
 
@@ -83,6 +84,7 @@ class TrailRoot extends StatelessWidget {
       providers: [
         // Services
         ChangeNotifierProvider.value(value: locale),
+        ChangeNotifierProvider(create: (_) => ConnectivityService()),
         Provider<LocationService>(create: (_) => LocationService()),
         Provider<CameraService>(create: (_) => CameraService()),
 

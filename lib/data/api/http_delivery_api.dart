@@ -15,12 +15,14 @@ import '../models/user.dart';
 import '../models/vendor_po.dart';
 import '../models/workflow_step.dart';
 import 'delivery_api.dart';
+import 'offline_cache_store.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/envelope_interceptor.dart';
 import 'interceptors/logging_interceptor.dart';
+import 'interceptors/offline_cache_interceptor.dart';
 
 class HttpDeliveryApi implements DeliveryApi {
-  HttpDeliveryApi({required this.baseUrl, FlutterSecureStorage? storage})
+  HttpDeliveryApi({required this.baseUrl, FlutterSecureStorage? storage, OfflineCacheStore? cache})
       : _auth = AuthInterceptor(storage ?? const FlutterSecureStorage()) {
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
@@ -29,7 +31,13 @@ class HttpDeliveryApi implements DeliveryApi {
       contentType: 'application/json',
       responseType: ResponseType.json,
     ));
-    _dio.interceptors.addAll([_auth, LoggingInterceptor(), EnvelopeInterceptor()]);
+    _dio.interceptors.addAll([
+      // First: serve/replay GET responses from the offline read cache.
+      if (cache != null) OfflineCacheInterceptor(cache),
+      _auth,
+      LoggingInterceptor(),
+      EnvelopeInterceptor(),
+    ]);
   }
 
   final String baseUrl;

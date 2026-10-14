@@ -9,6 +9,7 @@ import 'core/utils/app_log.dart';
 import 'data/api/delivery_api.dart';
 import 'data/api/http_delivery_api.dart';
 import 'data/api/mock_delivery_api.dart';
+import 'data/api/offline_cache_store.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/delivery_repository.dart';
 import 'features/assistant/assistant_tasks_provider.dart';
@@ -49,13 +50,19 @@ Future<void> main() async {
 
   final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:4000';
 
-  final api = useMock ? MockDeliveryApi() : HttpDeliveryApi(baseUrl: baseUrl);
+  final prefs = await SharedPreferences.getInstance();
+
+  // Offline read cache (Phase 1): GET responses are cached and replayed when
+  // the device can't reach the server.
+  final offlineCache = OfflineCacheStore(prefs);
+  final api = useMock
+      ? MockDeliveryApi()
+      : HttpDeliveryApi(baseUrl: baseUrl, cache: offlineCache);
   // Load the cached JWT into memory now so synchronous consumers (e.g.
   // CachedNetworkImage's httpHeaders) see it on the very first proof image
   // request, not just after the first authenticated Dio call.
   await api.primeAuth();
 
-  final prefs = await SharedPreferences.getInstance();
   final locale = LocaleService(prefs);
   await locale.hydrate();
 

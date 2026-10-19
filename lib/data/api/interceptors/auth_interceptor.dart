@@ -13,6 +13,11 @@ class AuthInterceptor extends Interceptor {
     return _cachedToken;
   }
 
+  /// Read the saved token into memory (if any) so it is ready for the next
+  /// request, and report whether one exists. Used at startup to decide if a
+  /// session can be restored offline.
+  Future<bool> primeToken() async => (await _token()) != null;
+
   Future<void> setToken(String? token) async {
     _cachedToken = token;
     if (token == null) {

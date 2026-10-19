@@ -47,6 +47,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _continueOffline() {
+    if (context.read<AuthProvider>().continueOffline()) {
+      context.go(Routes.dashboard);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppL10n.of(context);
@@ -114,6 +120,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
                 onPressed: _submit,
               ),
+              if (auth.hasCachedSession) ...[
+                const SizedBox(height: 12),
+                AppButton(
+                  label: t.continueOffline,
+                  variant: AppBtnVariant.ghost,
+                  leading: const Icon(Icons.cloud_off_rounded, size: 18),
+                  onPressed: auth.status == AuthStatus.signingIn ? null : _continueOffline,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  t.offlineSessionHint,
+                  textAlign: TextAlign.center,
+                  style: AppType.caption,
+                ),
+              ],
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

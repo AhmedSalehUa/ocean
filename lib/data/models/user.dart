@@ -32,6 +32,15 @@ class User {
         phone: json['phone'] as String?,
         isActive: json['is_active'] as bool? ?? true,
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'full_name': fullName,
+        'username': username,
+        'role': role,
+        'phone': phone,
+        'is_active': isActive,
+      };
 }
 
 class AuthResult {

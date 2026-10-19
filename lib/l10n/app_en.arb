@@ -10,6 +10,8 @@
   "verifyingToken": "Verifying token…",
   "jwtFooter": "JWT · Role REPRESENTATIVE only",
   "copyright": "© Ocean Delivery · Audit ledger",
+  "continueOffline": "Continue offline",
+  "offlineSessionHint": "No internet? Enter with your last session and sync when you're back online.",
 
   "greeting": "Hi, {name} · {role}",
   "@greeting": {"placeholders": {"name": {}, "role": {}}},

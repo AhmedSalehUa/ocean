@@ -10,6 +10,8 @@
   "verifyingToken": "جارٍ التحقق من الرمز…",
   "jwtFooter": "JWT · للممثلين فقط",
   "copyright": "© أوشن للتوصيل · سجل التدقيق",
+  "continueOffline": "المتابعة بدون إنترنت",
+  "offlineSessionHint": "لا يوجد إنترنت؟ ادخل بجلستك الأخيرة وستتم المزامنة عند عودة الاتصال.",
 
   "greeting": "مرحباً، {name} · {role}",
   "@greeting": {"placeholders": {"name": {}, "role": {}}},

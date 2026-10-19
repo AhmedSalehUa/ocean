@@ -14,6 +14,11 @@ abstract class DeliveryApi {
   Future<User> me();
   Future<void> logout();
 
+  /// Whether a previously-saved auth token exists on this device. Reads the
+  /// token into memory (priming it for later requests) so a returning user's
+  /// session can be restored at startup without any network — i.e. offline.
+  Future<bool> hasStoredToken();
+
   // Master / vendor lists
   Future<List<MasterPo>> listMasterPos();
   Future<({List<VendorPo> vendors, String masterPoNumber})> listVendorPos(String masterPoId);

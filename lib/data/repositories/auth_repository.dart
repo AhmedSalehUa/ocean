@@ -12,4 +12,8 @@ class AuthRepository {
 
   Future<User> me() => _api.me();
   Future<void> logout() => _api.logout();
+
+  /// True when a JWT is saved on this device — i.e. the user signed in before
+  /// and can be restored even with no internet. Reads from secure storage.
+  Future<bool> hasStoredToken() => _api.hasStoredToken();
 }

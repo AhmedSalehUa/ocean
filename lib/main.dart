@@ -42,18 +42,36 @@ Future<void> main() async {
   final locale = LocaleService(prefs);
   await locale.hydrate();
 
-  runApp(TrailRoot(api: api, locale: locale));
+  // Restore a previous session (token + user) before the first frame so a
+  // returning user lands straight in the app — online or offline.
+  final authRepo = AuthRepository(api);
+  final authProvider = AuthProvider(authRepo, prefs);
+  await authProvider.restore();
+
+  runApp(TrailRoot(
+    api: api,
+    locale: locale,
+    authRepo: authRepo,
+    authProvider: authProvider,
+  ));
 }
 
 class TrailRoot extends StatelessWidget {
-  const TrailRoot({super.key, required this.api, required this.locale});
+  const TrailRoot({
+    super.key,
+    required this.api,
+    required this.locale,
+    required this.authRepo,
+    required this.authProvider,
+  });
   final DeliveryApi api;
   final LocaleService locale;
+  final AuthRepository authRepo;
+  final AuthProvider authProvider;
 
   @override
   Widget build(BuildContext context) {
     final deliveryRepo = DeliveryRepository(api);
-    final authRepo = AuthRepository(api);
 
     return MultiProvider(
       providers: [
@@ -67,7 +85,7 @@ class TrailRoot extends StatelessWidget {
         Provider.value(value: authRepo),
 
         // State
-        ChangeNotifierProvider(create: (_) => AuthProvider(authRepo)),
+        ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => MasterPosProvider(deliveryRepo)),
         ChangeNotifierProvider(create: (_) => VendorListProvider(deliveryRepo)),
         ChangeNotifierProvider(create: (_) => VendorDetailProvider(deliveryRepo)),

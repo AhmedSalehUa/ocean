@@ -31,6 +31,11 @@ class AppL10n {
   String get jwtFooter => _t('JWT · Role REPRESENTATIVE only', 'JWT · للممثلين فقط');
   String get copyright => _t('© Ocean Delivery · Audit ledger',
       '© أوشن للتوصيل · سجل التدقيق');
+  String get continueOffline =>
+      _t('Continue offline', 'المتابعة بدون إنترنت');
+  String get offlineSessionHint => _t(
+      'No internet? Enter with your last session and sync when you\'re back online.',
+      'لا يوجد إنترنت؟ ادخل بجلستك الأخيرة وستتم المزامنة عند عودة الاتصال.');
 
   // ─── Dashboard ───
   String greeting(String name, String role) =>

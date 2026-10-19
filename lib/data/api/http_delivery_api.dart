@@ -76,6 +76,9 @@ class HttpDeliveryApi implements DeliveryApi {
     }
   }
 
+  @override
+  Future<bool> hasStoredToken() => _auth.primeToken();
+
   // ─────────────────────────── Lists ───────────────────────────
 
   @override

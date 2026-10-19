@@ -535,6 +535,108 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Sign out'**
   String get logout;
+
+  /// No description provided for @primaryRepresentative.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary rep'**
+  String get primaryRepresentative;
+
+  /// No description provided for @subRepresentative.
+  ///
+  /// In en, this message translates to:
+  /// **'Assistant'**
+  String get subRepresentative;
+
+  /// No description provided for @masterStepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workflow steps'**
+  String get masterStepsTitle;
+
+  /// No description provided for @masterStepsEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get masterStepsEyebrow;
+
+  /// No description provided for @chooseStepSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a step to see its vendors'**
+  String get chooseStepSubtitle;
+
+  /// No description provided for @chooseVendorSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a vendor to capture this step'**
+  String get chooseVendorSubtitle;
+
+  /// No description provided for @captureScopeVendor.
+  ///
+  /// In en, this message translates to:
+  /// **'One photo per vendor · across all products'**
+  String get captureScopeVendor;
+
+  /// No description provided for @captureScopeItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Captured for each item'**
+  String get captureScopeItem;
+
+  /// No description provided for @noStepsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No steps on this order yet.'**
+  String get noStepsYet;
+
+  /// No description provided for @stepStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get stepStatusCompleted;
+
+  /// No description provided for @stepStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get stepStatusInProgress;
+
+  /// No description provided for @stepStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get stepStatusPending;
+
+  /// No description provided for @stepStatusNotApplicable.
+  ///
+  /// In en, this message translates to:
+  /// **'N/A'**
+  String get stepStatusNotApplicable;
+
+  /// No description provided for @stepRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get stepRequired;
+
+  /// No description provided for @stepOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get stepOptional;
+
+  /// No description provided for @stepFinal.
+  ///
+  /// In en, this message translates to:
+  /// **'Final'**
+  String get stepFinal;
+
+  /// No description provided for @stepTargetsProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{total} done'**
+  String stepTargetsProgress(Object done, Object total);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

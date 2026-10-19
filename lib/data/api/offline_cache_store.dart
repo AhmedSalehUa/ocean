@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Tiny key→JSON store for the last successful response of each GET endpoint,
 /// backed by [SharedPreferences] so it survives app restarts. Used by
-/// [OfflineCacheInterceptor] to serve last-synced data when the network is
+/// `HttpDeliveryApi._getJson` to serve last-synced data when the network is
 /// unreachable.
 class OfflineCacheStore {
   OfflineCacheStore(this._prefs);

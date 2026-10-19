@@ -58,12 +58,17 @@ class AuthProvider extends ChangeNotifier {
   /// working offline. A saved session is trusted; the server is only consulted
   /// (and can sign the user out) when a real request later returns 401.
   Future<void> restore() async {
-    final hasToken = await _repo.hasStoredToken();
-    final cached = _readCachedUser();
-    _hasCachedSession = hasToken && cached != null;
-    if (_hasCachedSession) {
-      _user = cached;
-      _status = AuthStatus.signedIn;
+    try {
+      final hasToken = await _repo.hasStoredToken();
+      final cached = _readCachedUser();
+      _hasCachedSession = hasToken && cached != null;
+      if (_hasCachedSession) {
+        _user = cached;
+        _status = AuthStatus.signedIn;
+      }
+    } catch (_) {
+      // Never let a restore failure block app startup — fall back to login.
+      _hasCachedSession = false;
     }
     notifyListeners();
   }

@@ -8,6 +8,7 @@ import 'app.dart';
 import 'data/api/delivery_api.dart';
 import 'data/api/http_delivery_api.dart';
 import 'data/api/mock_delivery_api.dart';
+import 'data/api/offline_cache_store.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/delivery_repository.dart';
 import 'features/auth/auth_provider.dart';
@@ -36,16 +37,19 @@ Future<void> main() async {
 
   final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:4000';
 
-  final api = useMock ? MockDeliveryApi() : HttpDeliveryApi(baseUrl: baseUrl);
-
   final prefs = await SharedPreferences.getInstance();
+  final cache = OfflineCacheStore(prefs);
+
+  final api =
+      useMock ? MockDeliveryApi() : HttpDeliveryApi(baseUrl: baseUrl, cache: cache);
+
   final locale = LocaleService(prefs);
   await locale.hydrate();
 
   // Restore a previous session (token + user) before the first frame so a
   // returning user lands straight in the app — online or offline.
   final authRepo = AuthRepository(api);
-  final authProvider = AuthProvider(authRepo, prefs);
+  final authProvider = AuthProvider(authRepo, prefs, cache: cache);
   await authProvider.restore();
 
   runApp(TrailRoot(

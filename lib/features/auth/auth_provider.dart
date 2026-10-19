@@ -4,15 +4,17 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/errors/api_exception.dart';
+import '../../data/api/offline_cache_store.dart';
 import '../../data/models/user.dart';
 import '../../data/repositories/auth_repository.dart';
 
 enum AuthStatus { signedOut, signingIn, signedIn, error }
 
 class AuthProvider extends ChangeNotifier {
-  AuthProvider(this._repo, this._prefs);
+  AuthProvider(this._repo, this._prefs, {OfflineCacheStore? cache}) : _cache = cache;
   final AuthRepository _repo;
   final SharedPreferences _prefs;
+  final OfflineCacheStore? _cache;
 
   static const _userKey = 'auth_user';
 
@@ -116,6 +118,7 @@ class AuthProvider extends ChangeNotifier {
     } finally {
       _user = null;
       await _persistUser(null);
+      await _cache?.clear();
       _hasCachedSession = false;
       _status = AuthStatus.signedOut;
       notifyListeners();

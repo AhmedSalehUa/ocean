@@ -54,21 +54,16 @@ class AuthProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
-  /// Restore a signed-in session from the saved token + user on startup — no
-  /// network required, so returning users land straight in the app and keep
-  /// working offline. A saved session is trusted; the server is only consulted
-  /// (and can sign the user out) when a real request later returns 401.
+  /// Detect whether a previous session (token + user) is saved on this device.
+  /// Does NOT sign in — the caller decides: online, the user still logs in;
+  /// offline, [continueOffline] enters with the saved session. Never throws so
+  /// it can't block app startup.
   Future<void> restore() async {
     try {
       final hasToken = await _repo.hasStoredToken();
       final cached = _readCachedUser();
       _hasCachedSession = hasToken && cached != null;
-      if (_hasCachedSession) {
-        _user = cached;
-        _status = AuthStatus.signedIn;
-      }
     } catch (e, st) {
-      // Never let a restore failure block app startup — fall back to login.
       AppLog.error('AuthProvider.restore', e, st);
       _hasCachedSession = false;
     }

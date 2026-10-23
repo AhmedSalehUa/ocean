@@ -146,6 +146,9 @@ class MockDeliveryApi implements DeliveryApi {
   @override
   Future<bool> hasStoredToken() async => _token != null;
 
+  @override
+  Future<bool> isOnline() async => true;
+
   // ─────────────────────────── Lists ───────────────────────────
 
   @override

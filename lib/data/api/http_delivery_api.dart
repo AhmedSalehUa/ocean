@@ -79,6 +79,34 @@ class HttpDeliveryApi implements DeliveryApi {
   @override
   Future<bool> hasStoredToken() async => (await _auth.ensureLoaded()) != null;
 
+  @override
+  Future<bool> isOnline() async {
+    // Dedicated short-timeout probe so startup never blocks on the 12s connect
+    // timeout. We only report OFFLINE on a definite no-network error; a slow
+    // or timing-out server (e.g. a cold free-tier backend) is treated as
+    // online so we show login rather than wrongly entering offline.
+    final probe = Dio(BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 4),
+      receiveTimeout: const Duration(seconds: 4),
+      validateStatus: (_) => true,
+    ));
+    try {
+      await probe.get('/');
+      return true; // any HTTP response → reachable
+    } on DioException catch (e) {
+      if (e.response != null) return true;
+      // No response: offline only when the device truly has no network.
+      final offline = e.type == DioExceptionType.connectionError ||
+          (e.error is SocketException);
+      return !offline;
+    } catch (_) {
+      return true; // unknown error → assume online, show login
+    } finally {
+      probe.close(force: true);
+    }
+  }
+
   // ─────────────────────────── Auth ───────────────────────────
 
   @override

@@ -63,11 +63,16 @@ Future<void> main() async {
   final locale = LocaleService(prefs);
   await locale.hydrate();
 
-  // Restore a previous session (token + user) before the first frame so a
-  // returning user lands straight in the app — online or offline.
+  // Detect a saved session before the first frame. When the device is OFFLINE
+  // and a session is saved, enter the app directly (no login possible without
+  // the network). When ONLINE, always show the login screen.
   final authRepo = AuthRepository(api);
   final authProvider = AuthProvider(authRepo, prefs, cache: cache);
   await authProvider.restore();
+  if (authProvider.hasCachedSession) {
+    final online = await api.isOnline();
+    if (!online) authProvider.continueOffline();
+  }
 
   runApp(TrailRoot(
     api: api,

@@ -22,6 +22,11 @@ abstract class DeliveryApi {
   /// restored at startup without any network — i.e. offline.
   Future<bool> hasStoredToken();
 
+  /// Quick reachability probe (short timeout). True if the backend answered
+  /// with any HTTP status; false on a connectivity failure. Used at startup to
+  /// decide whether to auto-enter with a saved session (offline) or show login.
+  Future<bool> isOnline();
+
   // Master / vendor lists
   Future<List<MasterPo>> listMasterPos();
   Future<({List<VendorPo> vendors, String masterPoNumber})> listVendorPos(String masterPoId);

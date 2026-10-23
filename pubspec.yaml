@@ -53,6 +53,13 @@ dependencies:
   # Config
   flutter_dotenv: ^5.2.1
 
+# The transitively-pulled `image` 4.11.0 calls `ZLibDecoder.decodeLazy`, which
+# archive only gained in 4.4.0. Without pinning, pub can resolve archive 4.0.9
+# and the build fails ("decodeLazy isn't defined for ZLibDecoder"). Force a
+# version that has it.
+dependency_overrides:
+  archive: ^4.5.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -143,6 +143,9 @@ class MockDeliveryApi implements DeliveryApi {
     _user = null;
   }
 
+  @override
+  Future<bool> hasStoredToken() async => _token != null;
+
   // ─────────────────────────── Lists ───────────────────────────
 
   @override

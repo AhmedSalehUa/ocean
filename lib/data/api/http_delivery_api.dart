@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -18,10 +19,12 @@ import 'delivery_api.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/envelope_interceptor.dart';
 import 'interceptors/logging_interceptor.dart';
+import 'offline_cache_store.dart';
 
 class HttpDeliveryApi implements DeliveryApi {
-  HttpDeliveryApi({required this.baseUrl, FlutterSecureStorage? storage})
-      : _auth = AuthInterceptor(storage ?? const FlutterSecureStorage()) {
+  HttpDeliveryApi({required this.baseUrl, FlutterSecureStorage? storage, OfflineCacheStore? cache})
+      : _auth = AuthInterceptor(storage ?? const FlutterSecureStorage()),
+        _cache = cache {
     _dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 12),
@@ -35,17 +38,46 @@ class HttpDeliveryApi implements DeliveryApi {
   final String baseUrl;
   late final Dio _dio;
   final AuthInterceptor _auth;
+  final OfflineCacheStore? _cache;
 
-  Map<String, dynamic> _unwrap(Response r) {
-    final body = r.data;
+  Map<String, dynamic> _unwrap(Response r) => _unwrapBody(r.data, r.statusCode);
+
+  Map<String, dynamic> _unwrapBody(dynamic body, int? statusCode) {
     if (body is! Map<String, dynamic>) {
-      throw ApiException('Malformed response', statusCode: r.statusCode);
+      throw ApiException('Malformed response', statusCode: statusCode);
     }
     if (body['success'] != true) {
-      throw ApiException(body['message']?.toString() ?? 'Request failed', statusCode: r.statusCode);
+      throw ApiException(body['message']?.toString() ?? 'Request failed', statusCode: statusCode);
     }
     return body;
   }
+
+  /// GET with a transparent offline fallback: on success the raw envelope is
+  /// cached and returned; if the network is unreachable (no HTTP response came
+  /// back) the last-cached envelope for this path is replayed so the app shows
+  /// last-synced data offline. A real server error (4xx/5xx) is never masked.
+  Future<Map<String, dynamic>> _getJson(String path) async {
+    try {
+      final r = await _dio.get(path);
+      final body = _unwrap(r);
+      _cache?.put(path, jsonEncode(r.data));
+      return body;
+    } on DioException catch (e) {
+      final cache = _cache;
+      if (e.response == null && cache != null) {
+        final cached = cache.get(path);
+        if (cached != null) {
+          try {
+            return _unwrapBody(jsonDecode(cached), 200);
+          } catch (_) {/* corrupt entry — fall through to the real error */}
+        }
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<bool> hasStoredToken() async => (await _auth.ensureLoaded()) != null;
 
   // ─────────────────────────── Auth ───────────────────────────
 
@@ -86,16 +118,14 @@ class HttpDeliveryApi implements DeliveryApi {
 
   @override
   Future<List<MasterPo>> listMasterPos() async {
-    final r = await _dio.get('/api/delivery/mobile/master-pos');
-    final body = _unwrap(r);
+    final body = await _getJson('/api/delivery/mobile/master-pos');
     final list = (body['data'] as List).cast<Map<String, dynamic>>();
     return list.map(MasterPo.fromJson).toList();
   }
 
   @override
   Future<List<AssistantTask>> listAssistantTasks() async {
-    final r = await _dio.get('/api/delivery/mobile/assistant/tasks');
-    final body = _unwrap(r);
+    final body = await _getJson('/api/delivery/mobile/assistant/tasks');
     final list = (body['data'] as List? ?? const []).cast<Map<String, dynamic>>();
     return list.map(AssistantTask.fromJson).toList();
   }
@@ -135,8 +165,7 @@ class HttpDeliveryApi implements DeliveryApi {
 
   @override
   Future<({List<VendorPo> vendors, String masterPoNumber})> listVendorPos(String masterPoId) async {
-    final r = await _dio.get('/api/delivery/mobile/master-pos/$masterPoId/vendor-pos');
-    final body = _unwrap(r);
+    final body = await _getJson('/api/delivery/mobile/master-pos/$masterPoId/vendor-pos');
     final list = (body['data'] as List).cast<Map<String, dynamic>>();
     final meta = body['meta'] as Map<String, dynamic>? ?? const {};
     return (
@@ -147,15 +176,13 @@ class HttpDeliveryApi implements DeliveryApi {
 
   @override
   Future<VendorPo> getVendorPo(String vendorPoId) async {
-    final r = await _dio.get('/api/delivery/mobile/vendor-pos/$vendorPoId');
-    final body = _unwrap(r);
+    final body = await _getJson('/api/delivery/mobile/vendor-pos/$vendorPoId');
     return VendorPo.fromJson(body['data'] as Map<String, dynamic>);
   }
 
   @override
   Future<List<WorkflowStep>> getSteps(String vendorPoId) async {
-    final r = await _dio.get('/api/delivery/mobile/vendor-pos/$vendorPoId/steps');
-    final body = _unwrap(r);
+    final body = await _getJson('/api/delivery/mobile/vendor-pos/$vendorPoId/steps');
     final data = body['data'];
 
     // Legacy shape: `data` is a flat list of step objects.
@@ -189,13 +216,12 @@ class HttpDeliveryApi implements DeliveryApi {
       return steps;
     }
 
-    throw ApiException('Unexpected /steps payload shape', statusCode: r.statusCode);
+    throw const ApiException('Unexpected /steps payload shape');
   }
 
   @override
   Future<ProofHistory> getProofs(String vendorPoId) async {
-    final r = await _dio.get('/api/delivery/mobile/vendor-pos/$vendorPoId/proofs');
-    final body = _unwrap(r);
+    final body = await _getJson('/api/delivery/mobile/vendor-pos/$vendorPoId/proofs');
     return ProofHistory.fromJson(body['data'] as Map<String, dynamic>);
   }
 

@@ -11,7 +11,12 @@ class AuthInterceptor extends Interceptor {
   String? get currentToken => _cachedToken;
 
   Future<String?> _token() async {
-    _cachedToken ??= await _storage.read(key: tokenKey);
+    try {
+      _cachedToken ??= await _storage.read(key: tokenKey);
+    } catch (_) {
+      // Secure storage can throw on some devices (locked keystore, etc.) —
+      // treat as "no token" rather than crashing session restore at startup.
+    }
     return _cachedToken;
   }
 

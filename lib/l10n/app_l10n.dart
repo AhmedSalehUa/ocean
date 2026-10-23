@@ -28,6 +28,10 @@ class AppL10n {
   String get password => _t('Password', 'كلمة المرور');
   String get continueAction => _t('Continue', 'متابعة');
   String get verifyingToken => _t('Verifying token…', 'جارٍ التحقق من الرمز…');
+  String get continueOffline => _t('Continue offline', 'المتابعة بدون إنترنت');
+  String get offlineSessionHint => _t(
+      'No internet? Enter with your last session and sync when you\'re back online.',
+      'لا يوجد إنترنت؟ ادخل بجلستك الأخيرة وستتم المزامنة عند عودة الاتصال.');
   String get jwtFooter => _t('JWT · Role REPRESENTATIVE only', 'JWT · للممثلين فقط');
   String get copyright => _t('© Ocean Delivery · Audit ledger', '© أوشن للتوصيل · سجل التدقيق');
 

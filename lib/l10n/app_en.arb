@@ -8,6 +8,8 @@
   "password": "Password",
   "continueAction": "Continue",
   "verifyingToken": "Verifying token…",
+  "continueOffline": "Continue offline",
+  "offlineSessionHint": "No internet? Enter with your last session and sync when you're back online.",
   "jwtFooter": "JWT · Role REPRESENTATIVE only",
   "copyright": "© Ocean Delivery · Audit ledger",
 

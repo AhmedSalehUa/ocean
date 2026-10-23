@@ -8,6 +8,8 @@
   "password": "كلمة المرور",
   "continueAction": "متابعة",
   "verifyingToken": "جارٍ التحقق من الرمز…",
+  "continueOffline": "المتابعة بدون إنترنت",
+  "offlineSessionHint": "لا يوجد إنترنت؟ ادخل بجلستك الأخيرة وستتم المزامنة عند عودة الاتصال.",
   "jwtFooter": "JWT · للممثلين فقط",
   "copyright": "© أوشن للتوصيل · سجل التدقيق",
 

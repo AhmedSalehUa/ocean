@@ -22,6 +22,8 @@
   "recentlyClosedSection": "مغلقة مؤخراً",
   "yardFeed": "أخبار الساحة",
 
+  "downloadSoftCopy": "تحميل أمر الشراء (PDF)",
+  "softCopyUnavailable": "تعذّر فتح الملف",
   "masterPurchaseOrder": "أمر الشراء الرئيسي",
   "vendorPos": "أوامر المورّدين",
   "vendors": "{count, plural, =1{مورّد واحد} other{{count} مورّدون}}",

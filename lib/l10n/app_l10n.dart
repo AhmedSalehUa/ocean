@@ -60,6 +60,9 @@ class AppL10n {
   // ─── Vendor list ───
   String get masterPurchaseOrder => _t('Master Purchase Order', 'أمر الشراء الرئيسي');
   String get vendorPos => _t('Vendor POs', 'أوامر المورّدين');
+  String get downloadSoftCopy => _t('Download LPO (PDF)', 'تحميل أمر الشراء (PDF)');
+  String get softCopyUnavailable =>
+      _t('Could not open the file', 'تعذّر فتح الملف');
   String vendors(int count) {
     if (isAr) return count == 1 ? 'مورّد واحد' : '$count مورّدون';
     return count == 1 ? '1 vendor' : '$count vendors';

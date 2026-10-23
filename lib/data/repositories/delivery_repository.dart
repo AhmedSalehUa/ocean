@@ -55,4 +55,5 @@ class DeliveryRepository {
   Future<VendorPo> finalize(String id) => _api.finalizeVendorPo(id);
 
   String attachmentUrl(String id) => _api.attachmentUrl(id);
+  String fileUrl(String path) => _api.absoluteUrl(path);
 }

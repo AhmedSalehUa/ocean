@@ -340,6 +340,10 @@ class MockDeliveryApi implements DeliveryApi {
   @override
   String attachmentUrl(String attachmentId) => 'mock://attachments/$attachmentId';
 
+  @override
+  String absoluteUrl(String path) =>
+      path.startsWith('http') ? path : 'mock://$path';
+
   // ─────────────────────────── Helpers ───────────────────────────
 
   ProofLog _addLog({

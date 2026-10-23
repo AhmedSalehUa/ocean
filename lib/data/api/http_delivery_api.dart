@@ -218,4 +218,11 @@ class HttpDeliveryApi implements DeliveryApi {
   @override
   String attachmentUrl(String attachmentId) =>
       '$baseUrl/api/delivery/mobile/attachments/$attachmentId/file';
+
+  @override
+  String absoluteUrl(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    final sep = path.startsWith('/') ? '' : '/';
+    return '$baseUrl$sep$path';
+  }
 }

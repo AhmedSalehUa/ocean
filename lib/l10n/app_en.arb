@@ -22,6 +22,8 @@
   "recentlyClosedSection": "Recently closed",
   "yardFeed": "Yard feed",
 
+  "downloadSoftCopy": "Download LPO (PDF)",
+  "softCopyUnavailable": "Could not open the file",
   "masterPurchaseOrder": "Master Purchase Order",
   "vendorPos": "Vendor POs",
   "vendors": "{count, plural, =1{1 vendor} other{{count} vendors}}",

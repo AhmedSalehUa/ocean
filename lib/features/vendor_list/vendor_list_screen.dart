@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/colors.dart';
 import '../../core/theme/typography.dart';
@@ -11,6 +12,7 @@ import '../../core/widgets/app_chip.dart';
 import '../../core/widgets/eyebrow.dart';
 import '../../core/widgets/top_bar.dart';
 import '../../data/models/master_po.dart';
+import '../../data/repositories/delivery_repository.dart';
 import '../../l10n/app_l10n.dart';
 import '../../routing/routes.dart';
 import '../dashboard/master_pos_provider.dart';
@@ -42,6 +44,24 @@ class _VendorListScreenState extends State<VendorListScreen> {
     return null;
   }
 
+  Future<void> _openSoftCopy(BuildContext context, MasterPo master) async {
+    final t = AppL10n.of(context);
+    final repo = context.read<DeliveryRepository>();
+    final uri = Uri.tryParse(repo.fileUrl(master.softCopyUrl!));
+    var ok = false;
+    if (uri != null) {
+      try {
+        ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (_) {
+        ok = false;
+      }
+    }
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(t.softCopyUnavailable)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppL10n.of(context);
@@ -64,6 +84,15 @@ class _VendorListScreenState extends State<VendorListScreen> {
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 40),
               children: [
+                if (master != null && master.hasSoftCopy) ...[
+                  AppButton(
+                    label: t.downloadSoftCopy,
+                    variant: AppBtnVariant.soft,
+                    leading: const Icon(Icons.picture_as_pdf_outlined),
+                    onPressed: () => _openSoftCopy(context, master),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 if (master != null) ...[
                   Eyebrow(t.masterPurchaseOrder),
                   const SizedBox(height: 4),

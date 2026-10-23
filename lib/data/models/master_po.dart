@@ -16,6 +16,10 @@ class MasterPo {
   final String? priorityLabel;
   final bool urgent;
 
+  // Soft copy (e.g. the LPO PDF) attached to the master PO, if any.
+  final String? softCopyFileName;
+  final String? softCopyUrl;
+
   const MasterPo({
     required this.id,
     required this.masterPoNumber,
@@ -29,7 +33,11 @@ class MasterPo {
     this.siteLng,
     this.priorityLabel,
     this.urgent = false,
+    this.softCopyFileName,
+    this.softCopyUrl,
   });
+
+  bool get hasSoftCopy => (softCopyUrl ?? '').isNotEmpty;
 
   double get progress => vendorPoCount == 0 ? 0 : deliveredVendorPoCount / vendorPoCount;
   bool get isClosed => deliveredVendorPoCount >= vendorPoCount && vendorPoCount > 0;
@@ -51,12 +59,17 @@ class MasterPo {
         siteLng: siteLng,
         priorityLabel: priorityLabel,
         urgent: urgent,
+        softCopyFileName: softCopyFileName,
+        softCopyUrl: softCopyUrl,
       );
 
   factory MasterPo.fromJson(Map<String, dynamic> json) {
     int _asInt(dynamic v) =>
         v is int ? v : (v is String ? int.tryParse(v) ?? 0 : (v as num?)?.toInt() ?? 0);
     DateTime? _date(dynamic v) => v == null ? null : DateTime.tryParse(v.toString());
+
+    final soft = json['soft_copy'];
+    final softMap = soft is Map ? soft.cast<String, dynamic>() : const <String, dynamic>{};
 
     return MasterPo(
       id: json['id'] as String,
@@ -71,6 +84,8 @@ class MasterPo {
       siteLng: (json['site_lng'] as num?)?.toDouble(),
       priorityLabel: json['priority_label'] as String?,
       urgent: json['urgent'] as bool? ?? false,
+      softCopyFileName: softMap['file_name']?.toString(),
+      softCopyUrl: softMap['download_url']?.toString(),
     );
   }
 }

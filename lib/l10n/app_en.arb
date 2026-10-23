@@ -99,6 +99,8 @@
 
   "masterStepsTitle": "Workflow steps",
   "masterStepsEyebrow": "Steps",
+  "downloadSoftCopy": "Download LPO (PDF)",
+  "softCopyUnavailable": "Could not open the file",
   "chooseStepSubtitle": "Choose a step to see its vendors",
   "chooseVendorSubtitle": "Choose a vendor to capture this step",
   "captureScopeVendor": "One photo per vendor · across all products",

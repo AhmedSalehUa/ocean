@@ -297,6 +297,9 @@ class AppL10n {
   // ─── Master steps (step → vendors flow) ───
   String get masterStepsTitle => _t('Workflow steps', 'خطوات سير العمل');
   String get masterStepsEyebrow => _t('Steps', 'الخطوات');
+  String get downloadSoftCopy => _t('Download LPO (PDF)', 'تحميل أمر الشراء (PDF)');
+  String get softCopyUnavailable =>
+      _t('Could not open the file', 'تعذّر فتح الملف');
   String get chooseStepSubtitle =>
       _t('Choose a step to see its vendors', 'اختر خطوة لعرض موردّيها');
   String get chooseVendorSubtitle =>

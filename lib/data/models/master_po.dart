@@ -60,6 +60,11 @@ class MasterPo {
   /// Employee who uploaded (تم رفعه بواسطه). Shown on the card when present.
   final String? uploadedByName;
 
+  /// Soft copy (e.g. the LPO PDF) attached to the master PO, if any. Parsed
+  /// from the `soft_copy` object ({file_name, download_url}).
+  final String? softCopyFileName;
+  final String? softCopyUrl;
+
   // Mock-only convenience fields (carried alongside the wire data)
   final String? site;
   final double? siteLat;
@@ -85,12 +90,16 @@ class MasterPo {
     this.representativeName,
     this.assistantName,
     this.uploadedByName,
+    this.softCopyFileName,
+    this.softCopyUrl,
     this.site,
     this.siteLat,
     this.siteLng,
     this.priorityLabel,
     this.urgent = false,
   });
+
+  bool get hasSoftCopy => (softCopyUrl ?? '').isNotEmpty;
 
   /// Progress for the card bar. Prefer fine-grained step progress (rolled up
   /// across the master's steps) so the bar climbs as steps are captured;
@@ -139,6 +148,8 @@ class MasterPo {
         representativeName: representativeName,
         assistantName: assistantName,
         uploadedByName: uploadedByName,
+        softCopyFileName: softCopyFileName,
+        softCopyUrl: softCopyUrl,
         site: site,
         siteLat: siteLat,
         siteLng: siteLng,
@@ -155,6 +166,9 @@ class MasterPo {
     final stepJson = json['current_step'];
     final nextStepJson = json['next_step'];
     final stepsJson = json['steps'];
+
+    final soft = json['soft_copy'];
+    final softMap = soft is Map ? soft.cast<String, dynamic>() : const <String, dynamic>{};
 
     // People names arrive in several shapes depending on the endpoint: a
     // plain string, a nested {name/full_name} object, or a list of either
@@ -231,6 +245,8 @@ class MasterPo {
         'created_by',
         'uploader',
       ]),
+      softCopyFileName: softMap['file_name']?.toString(),
+      softCopyUrl: softMap['download_url']?.toString(),
       site: json['site'] as String?,
       siteLat: (json['site_lat'] as num?)?.toDouble(),
       siteLng: (json['site_lng'] as num?)?.toDouble(),

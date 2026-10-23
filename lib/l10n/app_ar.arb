@@ -99,6 +99,8 @@
 
   "masterStepsTitle": "خطوات سير العمل",
   "masterStepsEyebrow": "الخطوات",
+  "downloadSoftCopy": "تحميل أمر الشراء (PDF)",
+  "softCopyUnavailable": "تعذّر فتح الملف",
   "chooseStepSubtitle": "اختر خطوة لعرض موردّيها",
   "chooseVendorSubtitle": "اختر مورّداً لالتقاط هذه الخطوة",
   "captureScopeVendor": "صورة واحدة لكل مورّد · لكل المنتجات",

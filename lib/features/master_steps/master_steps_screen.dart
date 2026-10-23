@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/errors/api_exception.dart';
 import '../../core/theme/colors.dart';
@@ -52,6 +53,27 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
       if (m.id == widget.masterId) return m;
     }
     return null;
+  }
+
+  /// Open the master PO's soft copy (e.g. the LPO PDF) in the device's
+  /// browser / viewer.
+  Future<void> _openSoftCopy(BuildContext context, MasterPo master) async {
+    final t = AppL10n.of(context);
+    final repo = context.read<DeliveryRepository>();
+    final uri = Uri.tryParse(repo.fileUrl(master.softCopyUrl!));
+    var ok = false;
+    if (uri != null) {
+      try {
+        ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (e, st) {
+        AppLog.error('MasterStepsScreen._openSoftCopy', e, st);
+        ok = false;
+      }
+    }
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(t.softCopyUnavailable)));
+    }
   }
 
   Future<void> _loadFallbackSteps() async {
@@ -171,6 +193,15 @@ class _MasterStepsScreenState extends State<MasterStepsScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           children: [
+            if (master != null && master.hasSoftCopy) ...[
+              AppButton(
+                label: t.downloadSoftCopy,
+                variant: AppBtnVariant.soft,
+                leading: const Icon(Icons.picture_as_pdf_outlined),
+                onPressed: () => _openSoftCopy(context, master),
+              ),
+              const SizedBox(height: 16),
+            ],
             if (steps.isEmpty)
               _loadingFallback
                   ? const Padding(
